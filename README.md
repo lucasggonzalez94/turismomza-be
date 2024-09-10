@@ -50,9 +50,13 @@ Una vez que el contenedor esté en funcionamiento, asegúrate de que Prisma est�
 npx prisma migrate dev
 ```
 
-Esto aplicará las migraciones definidas en tu esquema de Prisma a la base de datos PostgreSQL.
+### 6. Levantar el servidor localmente
 
-### 6. Parar y Eliminar el Contenedor
+```bash
+npm run dev
+```
+
+### 7. Parar y Eliminar el Contenedor
 
 Cuando termines de trabajar, puedes detener y eliminar el contenedor con:
 

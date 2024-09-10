@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id                 String         @id @default(uuid()) @db.Uuid
+  id                 String         @id @default(uuid())
   name               String
   email              String         @unique
   password           String
@@ -25,7 +25,7 @@ model User {
 }
 
 model Attraction {
-  id            String     @id @default(uuid()) @db.Uuid
+  id            String     @id @default(uuid())
   title         String
   description   String
   location      String
@@ -39,7 +39,7 @@ model Attraction {
 }
 
 model Comment {
-  id            String        @id @default(uuid()) @db.Uuid
+  id            String        @id @default(uuid())
   content       String
   user          User          @relation(fields: [userId], references: [id])
   userId        String
@@ -51,7 +51,7 @@ model Comment {
 }
 
 model Rating {
-  id            String     @id @default(uuid()) @db.Uuid
+  id            String     @id @default(uuid())
   stars         Int        @default(1)
   user          User       @relation(fields: [userId], references: [id])
   userId        String
@@ -61,7 +61,7 @@ model Rating {
 }
 
 model Favorite {
-  id           String     @id @default(uuid()) @db.Uuid
+  id           String     @id @default(uuid())
   user         User       @relation(fields: [userId], references: [id])
   userId       String
   attraction   Attraction @relation(fields: [attractionId], references: [id])
@@ -70,7 +70,7 @@ model Favorite {
 }
 
 model Notification {
-  id            String           @id @default(uuid()) @db.Uuid
+  id            String           @id @default(uuid())
   user          User             @relation(fields: [userId], references: [id])
   userId        String
   type          NotificationType
@@ -80,7 +80,7 @@ model Notification {
 }
 
 model LikeDislike {
-  id            String          @id @default(uuid()) @db.Uuid
+  id            String          @id @default(uuid())
   user          User            @relation(fields: [userId], references: [id])
   userId        String
   comment       Comment         @relation(fields: [commentId], references: [id])
@@ -90,7 +90,7 @@ model LikeDislike {
 }
 
 model Report {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String   @id @default(uuid())
   user        User     @relation(fields: [userId], references: [id])
   userId      String
   comment     Comment  @relation(fields: [commentId], references: [id])

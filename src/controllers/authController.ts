@@ -13,7 +13,7 @@ export const register = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -23,6 +23,7 @@ export const register = [
           email,
           password: hashedPassword,
           role: 'viewer',
+          name
         },
       });
       res.status(201).json(user);
@@ -52,7 +53,7 @@ export const login = [
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      const token = jwt.sign({ userId: user.id, role: user.rol }, process.env.ACCESS_TOKEN_SECRET as string);
+      const token = jwt.sign({ userId: user.id, role: user.role }, process.env.ACCESS_TOKEN_SECRET as string);
       res.json({ token });
     } catch (error) {
       res.status(500).json({ error: 'Error logging in' });

@@ -42,11 +42,11 @@ export const likeComment = async (req: Request, res: Response) => {
   const userId = req.user?.id;
 
   try {
-    await prisma.likes_dislikes.create({
+    await prisma.likeDislike.create({
       data: {
         userId,
         commentId,
-        tipo: 'like',
+        type: 'like',
       },
     });
     res.status(201).json({ message: 'Comment liked' });
@@ -60,11 +60,11 @@ export const dislikeComment = async (req: Request, res: Response) => {
   const userId = req.user?.id;
 
   try {
-    await prisma.likes_dislikes.create({
+    await prisma.likeDislike.create({
       data: {
         userId,
         commentId,
-        tipo: 'dislike',
+        type: 'dislike',
       },
     });
     res.status(201).json({ message: 'Comment disliked' });
