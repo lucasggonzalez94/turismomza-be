@@ -1,0 +1,41 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# TypeScript
+*.tsbuildinfo
+
+# Docker
+*.env
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Prisma
+prisma/dev.db
+
+# Logs
+*.log
+
+# Dependency directories
+jspm_packages/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Environment files
+.env
+
+# PostgreSQL data (if using Docker volumes, this may not be needed)
+postgres_data/
