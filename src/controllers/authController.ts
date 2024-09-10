@@ -5,8 +5,9 @@ import prisma from '../prismaClient';
 import { body, validationResult } from 'express-validator';
 
 export const register = [
-  body('email').isEmail(),
-  body('password').isLength({ min: 6 }),
+  body('email').isEmail().withMessage('Please enter a valid email'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+  body('name').notEmpty().withMessage('Name is required'),
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -15,9 +16,17 @@ export const register = [
 
     const { email, password, name } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-
     try {
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (existingUser) {
+        return res.status(409).json({ error: 'User with this email already exists' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 12);
+
       const user = await prisma.user.create({
         data: {
           email,
@@ -26,8 +35,14 @@ export const register = [
           name
         },
       });
-      res.status(201).json(user);
+      const token = jwt.sign(
+        { userId: user.id, role: user.role },
+        process.env.ACCESS_TOKEN_SECRET as string,
+        { expiresIn: '1h' }
+      );
+      res.status(201).json({token});
     } catch (error) {
+      console.error('Error registering user:', error);
       res.status(500).json({ error: 'Error registering user' });
     }
   }
