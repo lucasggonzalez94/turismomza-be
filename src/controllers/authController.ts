@@ -6,6 +6,7 @@ import { body, validationResult } from 'express-validator';
 
 export const register = [
   body('email').isEmail().withMessage('Please enter a valid email'),
+  // TODO: Validar password
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
   body('name').notEmpty().withMessage('Name is required'),
   async (req: Request, res: Response) => {
@@ -14,7 +15,7 @@ export const register = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, name } = req.body;
+    const { email, password: passwordBody, name } = req.body;
 
     try {
       const existingUser = await prisma.user.findUnique({
@@ -25,7 +26,7 @@ export const register = [
         return res.status(409).json({ error: 'User with this email already exists' });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 12);
+      const hashedPassword = await bcrypt.hash(passwordBody, 12);
 
       const user = await prisma.user.create({
         data: {
@@ -40,7 +41,8 @@ export const register = [
         process.env.ACCESS_TOKEN_SECRET as string,
         { expiresIn: '1h' }
       );
-      res.status(201).json({token});
+      const { id, password, two_factor_enabled, registration_date, ...restUser} = user;
+      res.status(201).json({...restUser, token});
     } catch (error) {
       console.error('Error registering user:', error);
       res.status(500).json({ error: 'Error registering user' });
@@ -49,8 +51,9 @@ export const register = [
 ];
 
 export const login = [
-  body('email').isEmail(),
-  body('password').isLength({ min: 6 }),
+  body('email').isEmail().withMessage('Please enter a valid email'),
+  // TODO: Validar password
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -69,7 +72,7 @@ export const login = [
       }
 
       const token = jwt.sign({ userId: user.id, role: user.role }, process.env.ACCESS_TOKEN_SECRET as string);
-      res.json({ token });
+      res.json({ ...user, token });
     } catch (error) {
       res.status(500).json({ error: 'Error logging in' });
     }
