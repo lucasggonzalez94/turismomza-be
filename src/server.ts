@@ -1,49 +1,27 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
+import express, { Application } from 'express';
 import dotenv from 'dotenv';
-import authRoutes from './routes/auth';
-import atraccionesRoutes from './routes/attractions';
+import authRoutes from './routes/authRoutes';
+import attractionsRoutes from './routes/attractionsRoutes';
+import commentsRoutes from './routes/commentsRoutes';
+import ratingsRoutes from './routes/ratingsRoutes';
+import favoritesRoutes from './routes/favoritesRoutes';
+import notificationsRoutes from './routes/notificationsRoutes';
 
 dotenv.config();
 
 const app: Application = express();
-const prisma = new PrismaClient();
 
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-interface JwtPayload {
-  userId: number;
-  role: string;
-}
-
-// Middleware de autenticación JWT
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user as JwtPayload;
-    next();
-  });
-};
-
-// Middleware de roles
-export const authorizeRoles = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!roles.includes(req?.user?.role)) {
-      return res.sendStatus(403);
-    }
-    next();
-  };
-};
-
+app.use(express.json());
 app.use('/api/auth', authRoutes);
-app.use('/api/attractions', atraccionesRoutes);
+app.use('/api/attractions', attractionsRoutes);
+app.use('/api/comments', commentsRoutes);
+app.use('/api/ratings', ratingsRoutes);
+app.use('/api/favorites', favoritesRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Manejo de errores generales
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
