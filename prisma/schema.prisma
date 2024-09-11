@@ -20,7 +20,7 @@ model User {
   ratings            Rating[]
   favorites          Favorite[]
   notifications      Notification[]
-  likes_dislikes     LikeDislike[]
+  likes_dislikes     Like[]
   reports            Report[]
 }
 
@@ -46,7 +46,7 @@ model Comment {
   attraction    Attraction    @relation(fields: [attractionId], references: [id])
   attractionId  String
   creation_date DateTime      @default(now())
-  likesDislikes LikeDislike[]
+  likesDislikes Like[]
   reports       Report[]
 }
 
@@ -81,13 +81,13 @@ model Notification {
   creation_date DateTime         @default(now())
 }
 
-model LikeDislike {
+model Like {
   id            String          @id @default(uuid())
   user          User            @relation(fields: [userId], references: [id])
   userId        String
   comment       Comment         @relation(fields: [commentId], references: [id])
   commentId     String
-  type          LikeDislikeType
+  like          Boolean
   creation_date DateTime        @default(now())
 
   @@unique([userId, commentId])

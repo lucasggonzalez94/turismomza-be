@@ -37,12 +37,12 @@ export const reportComment = async (req: Request, res: Response) => {
   }
 };
 
-export const likeComment = async (req: Request, res: Response) => {
+export const likeDislikeComment = async (req: Request, res: Response) => {
   const { commentId } = req.body;
   const userId = req.user?.userId;
 
   try {
-    const existingLikeDislike = await prisma.likeDislike.findUnique({
+    const existingLikeDislike = await prisma.like.findUnique({
       where: {
         userId_commentId: {
           userId,
@@ -52,10 +52,8 @@ export const likeComment = async (req: Request, res: Response) => {
     });
 
     if (existingLikeDislike) {
-      if (existingLikeDislike.type === "like") {
-        return res.status(200).json({ message: "Comment already liked" });
-      } else {
-        await prisma.likeDislike.update({
+      if (existingLikeDislike.like) {
+        await prisma.like.update({
           where: {
             userId_commentId: {
               userId,
@@ -63,68 +61,35 @@ export const likeComment = async (req: Request, res: Response) => {
             },
           },
           data: {
-            type: "like",
+            like: false,
+          },
+        });
+        return res.status(200).json({ message: "Comment updated to dislike" });
+      } else {
+        await prisma.like.update({
+          where: {
+            userId_commentId: {
+              userId,
+              commentId,
+            },
+          },
+          data: {
+            like: true,
           },
         });
         return res.status(200).json({ message: "Comment updated to like" });
       }
     } else {
-      await prisma.likeDislike.create({
+      await prisma.like.create({
         data: {
           userId,
           commentId,
-          type: "like",
+          like: true,
         },
       });
       return res.status(201).json({ message: "Comment liked" });
     }
   } catch (error) {
     res.status(500).json({ error: "Error liking comment" });
-  }
-};
-
-export const dislikeComment = async (req: Request, res: Response) => {
-  const { commentId } = req.body;
-  const userId = req.user?.userId;
-
-  try {
-    const existingLikeDislike = await prisma.likeDislike.findUnique({
-      where: {
-        userId_commentId: {
-          userId,
-          commentId,
-        },
-      },
-    });
-
-    if (existingLikeDislike) {
-      if (existingLikeDislike.type === "dislike") {
-        return res.status(200).json({ message: "Comment already disliked" });
-      } else {
-        await prisma.likeDislike.update({
-          where: {
-            userId_commentId: {
-              userId,
-              commentId,
-            },
-          },
-          data: {
-            type: "dislike",
-          },
-        });
-        return res.status(200).json({ message: "Comment updated to dislike" });
-      }
-    } else {
-      await prisma.likeDislike.create({
-        data: {
-          userId,
-          commentId,
-          type: "dislike",
-        },
-      });
-      return res.status(201).json({ message: "Comment disliked" });
-    }
-  } catch (error) {
-    res.status(500).json({ error: "Error disliking comment" });
   }
 };
