@@ -48,7 +48,15 @@ export const listAttractions = async (req: Request, res: Response) => {
   try {
     const attractions = await prisma.attraction.findMany({
       include: {
-        comments: true,
+        comments: {
+          include: {
+            likesDislikes: userId
+              ? {
+                  where: { userId },
+                }
+              : false,
+          },
+        },
         ratings: userId
           ? {
               where: { userId },
