@@ -23,7 +23,7 @@ export const createAttraction = async (req: Request, res: Response) => {
   }
 };
 
-export const listAttractions = async (res: Response) => {
+export const listAttractions = async (_: Request, res: Response) => {
   try {
     const attractions = await prisma.attraction.findMany();
     res.json(attractions);
