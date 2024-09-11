@@ -3,7 +3,7 @@ import prisma from '../prismaClient';
 
 export const addComment = async (req: Request, res: Response) => {
   const { content, attractionId } = req.body;
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
     const comment = await prisma.comment.create({
@@ -21,7 +21,7 @@ export const addComment = async (req: Request, res: Response) => {
 
 export const reportComment = async (req: Request, res: Response) => {
   const { commentId, reason } = req.body;
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
     await prisma.report.create({
@@ -39,7 +39,7 @@ export const reportComment = async (req: Request, res: Response) => {
 
 export const likeComment = async (req: Request, res: Response) => {
   const { commentId } = req.body;
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
     await prisma.likeDislike.create({
@@ -57,7 +57,7 @@ export const likeComment = async (req: Request, res: Response) => {
 
 export const dislikeComment = async (req: Request, res: Response) => {
   const { commentId } = req.body;
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
     await prisma.likeDislike.create({

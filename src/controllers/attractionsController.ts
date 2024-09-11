@@ -4,8 +4,9 @@ import { Request, Response } from 'express';
 import prisma from '../prismaClient';
 
 export const createAttraction = async (req: Request, res: Response) => {
+  // TODO: Validar categorias
   const { title, description, location, category } = req.body;
-  const userId = req.user?.id;
+  const userId = req.user!.userId;
 
   try {
     const attraction = await prisma.attraction.create({
@@ -35,10 +36,10 @@ export const listAttractions = async (_: Request, res: Response) => {
 export const editAttraction = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, description, location, category } = req.body;
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
-    const attraction = await prisma.attraction.updateMany({
+    const attraction = await prisma.attraction.update({
       where: {
         id,
         creatorId: userId,
@@ -58,10 +59,10 @@ export const editAttraction = async (req: Request, res: Response) => {
 
 export const deleteAttraction = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
-    await prisma.attraction.deleteMany({
+    await prisma.attraction.delete({
       where: {
         id,
         creatorId: userId,

@@ -3,7 +3,7 @@ import prisma from '../prismaClient';
 
 export const addRating = async (req: Request, res: Response) => {
   const { stars, attractionId } = req.body;
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
     const rating = await prisma.rating.create({

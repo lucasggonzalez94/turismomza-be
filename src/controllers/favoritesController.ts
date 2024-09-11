@@ -3,7 +3,7 @@ import prisma from '../prismaClient';
 
 export const addFavorite = async (req: Request, res: Response) => {
   const { attractionId } = req.body;
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
     const favorite = await prisma.favorite.create({
@@ -20,7 +20,7 @@ export const addFavorite = async (req: Request, res: Response) => {
 
 export const removeFavorite = async (req: Request, res: Response) => {
   const { attractionId } = req.body;
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
     await prisma.favorite.deleteMany({

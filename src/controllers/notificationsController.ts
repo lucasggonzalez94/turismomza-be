@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../prismaClient';
 
 export const getNotifications = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const userId = req.user?.userId;
 
   try {
     const notifications = await prisma.notification.findMany({
