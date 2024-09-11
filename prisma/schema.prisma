@@ -58,6 +58,8 @@ model Rating {
   attraction    Attraction @relation(fields: [attractionId], references: [id])
   attractionId  String
   creation_date DateTime   @default(now())
+
+  @@unique([userId, attractionId])
 }
 
 model Favorite {

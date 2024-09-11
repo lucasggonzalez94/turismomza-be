@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 // Middleware para autenticar el token
 const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
