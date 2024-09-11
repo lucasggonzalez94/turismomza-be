@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import prisma from '../prismaClient';
+import { Request, Response } from "express";
+import prisma from "../prismaClient";
 
 export const addComment = async (req: Request, res: Response) => {
   const { content, attractionId } = req.body;
@@ -15,7 +15,7 @@ export const addComment = async (req: Request, res: Response) => {
     });
     res.status(201).json(comment);
   } catch (error) {
-    res.status(500).json({ error: 'Error adding comment' });
+    res.status(500).json({ error: "Error adding comment" });
   }
 };
 
@@ -31,9 +31,9 @@ export const reportComment = async (req: Request, res: Response) => {
         reason,
       },
     });
-    res.status(201).json({ message: 'Report submitted' });
+    res.status(201).json({ message: "Report submitted" });
   } catch (error) {
-    res.status(500).json({ error: 'Error reporting comment' });
+    res.status(500).json({ error: "Error reporting comment" });
   }
 };
 
@@ -42,16 +42,44 @@ export const likeComment = async (req: Request, res: Response) => {
   const userId = req.user?.userId;
 
   try {
-    await prisma.likeDislike.create({
-      data: {
-        userId,
-        commentId,
-        type: 'like',
+    const existingLikeDislike = await prisma.likeDislike.findUnique({
+      where: {
+        userId_commentId: {
+          userId,
+          commentId,
+        },
       },
     });
-    res.status(201).json({ message: 'Comment liked' });
+
+    if (existingLikeDislike) {
+      if (existingLikeDislike.type === "like") {
+        return res.status(200).json({ message: "Comment already liked" });
+      } else {
+        await prisma.likeDislike.update({
+          where: {
+            userId_commentId: {
+              userId,
+              commentId,
+            },
+          },
+          data: {
+            type: "like",
+          },
+        });
+        return res.status(200).json({ message: "Comment updated to like" });
+      }
+    } else {
+      await prisma.likeDislike.create({
+        data: {
+          userId,
+          commentId,
+          type: "like",
+        },
+      });
+      return res.status(201).json({ message: "Comment liked" });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Error liking comment' });
+    res.status(500).json({ error: "Error liking comment" });
   }
 };
 
@@ -60,15 +88,43 @@ export const dislikeComment = async (req: Request, res: Response) => {
   const userId = req.user?.userId;
 
   try {
-    await prisma.likeDislike.create({
-      data: {
-        userId,
-        commentId,
-        type: 'dislike',
+    const existingLikeDislike = await prisma.likeDislike.findUnique({
+      where: {
+        userId_commentId: {
+          userId,
+          commentId,
+        },
       },
     });
-    res.status(201).json({ message: 'Comment disliked' });
+
+    if (existingLikeDislike) {
+      if (existingLikeDislike.type === "dislike") {
+        return res.status(200).json({ message: "Comment already disliked" });
+      } else {
+        await prisma.likeDislike.update({
+          where: {
+            userId_commentId: {
+              userId,
+              commentId,
+            },
+          },
+          data: {
+            type: "dislike",
+          },
+        });
+        return res.status(200).json({ message: "Comment updated to dislike" });
+      }
+    } else {
+      await prisma.likeDislike.create({
+        data: {
+          userId,
+          commentId,
+          type: "dislike",
+        },
+      });
+      return res.status(201).json({ message: "Comment disliked" });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Error disliking comment' });
+    res.status(500).json({ error: "Error disliking comment" });
   }
 };

@@ -87,6 +87,8 @@ model LikeDislike {
   commentId     String
   type          LikeDislikeType
   creation_date DateTime        @default(now())
+
+  @@unique([userId, commentId])
 }
 
 model Report {
