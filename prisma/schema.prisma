@@ -49,7 +49,7 @@ model Comment {
   attraction    Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   attractionId  String
   creation_date DateTime   @default(now())
-  likesDislikes Like[]
+  likes Like[]
   reports       Report[]
 }
 

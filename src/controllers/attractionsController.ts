@@ -68,48 +68,29 @@ export const createAttraction = [
 ];
 
 export const listAttractions = async (req: Request, res: Response) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-
-  if (!!token) {
-    jwt.verify(
-      token,
-      process.env.ACCESS_TOKEN_SECRET as string,
-      (_, decoded) => {
-        if (decoded && typeof decoded !== "string") {
-          req.user = {
-            userId: decoded.userId,
-            role: decoded.role,
-          };
-        }
-      }
-    );
-  }
-  const userId = req?.user?.userId;
-
   try {
     const attractions = await prisma.attraction.findMany({
       include: {
         images: true,
-        comments: {
-          include: {
-            likesDislikes: userId
-              ? {
-                  where: { userId },
-                }
-              : false,
-          },
-        },
-        ratings: userId
-          ? {
-              where: { userId },
-            }
-          : false,
-        favorites: userId
-          ? {
-              where: { userId },
-            }
-          : false,
+        ratings: true
+      },
+    });
+    res.json(attractions);
+  } catch (error) {
+    res.status(500).json({ error: "Error listing attractions" });
+  }
+};
+
+export const listAttraction = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const attractions = await prisma.attraction.findUnique({
+      where: {
+        id
+      },
+      include: {
+        images: true,
+        ratings: true
       },
     });
     res.json(attractions);
@@ -184,7 +165,7 @@ export const editAttraction = [
           images: true,
           comments: {
             include: {
-              likesDislikes: userId
+              likes: userId
                 ? {
                     where: { userId },
                   }

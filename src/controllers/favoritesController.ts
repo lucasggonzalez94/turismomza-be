@@ -35,3 +35,16 @@ export const addOrRemoveFavorite = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error adding to favorites' });
   }
 };
+
+export const listFavorites = async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+
+  try {
+    const favorites = await prisma.favorite.findMany({
+      where: { userId },
+    });
+    res.json(favorites);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching favorites' });
+  }
+}
