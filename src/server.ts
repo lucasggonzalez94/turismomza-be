@@ -7,6 +7,7 @@ import attractionsRoutes from './routes/attractionsRoutes';
 import commentsRoutes from './routes/commentsRoutes';
 import ratingsRoutes from './routes/ratingsRoutes';
 import favoritesRoutes from './routes/favoritesRoutes';
+import notificationsRoutes from './routes/notificationsRoutes';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/attractions', attractionsRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/ratings', ratingsRoutes);
 app.use('/api/favorites', favoritesRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Manejo de errores generales
 app.use((err: Error, _: express.Request, res: express.Response) => {
