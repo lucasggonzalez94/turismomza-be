@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../prismaClient";
-import { Server } from 'socket.io';
+import { Server } from "socket.io";
 
 const io = new Server();
 
@@ -14,16 +14,16 @@ const sendNotitificationLike = async (commentId: string) => {
     await prisma.notification.create({
       data: {
         userId: comment.userId,
-        message: 'Liked your comment.',
-        type: 'like'
+        message: "Liked your comment.",
+        type: "like",
       },
     });
 
-    io.to(comment.userId).emit('notification', {
-      message: 'Liked your comment.',
+    io.to(comment.userId).emit("notification", {
+      message: "Liked your comment.",
     });
   }
-}
+};
 
 export const addComment = async (req: Request, res: Response) => {
   const { content, attractionId } = req.body;
@@ -48,11 +48,11 @@ export const addComment = async (req: Request, res: Response) => {
         data: {
           userId: attraction.creatorId,
           message: `New comment on your attraction: ${comment.content}`,
-          type: 'comment'
+          type: "comment",
         },
       });
 
-      io.to(attraction.creatorId).emit('notification', {
+      io.to(attraction.creatorId).emit("notification", {
         message: `New comment on your attraction: ${comment.content}`,
       });
     }
@@ -78,7 +78,9 @@ export const editComment = async (req: Request, res: Response) => {
     }
 
     if (existingComment.userId !== userId) {
-      return res.status(403).json({ error: "You can only edit your own comments" });
+      return res
+        .status(403)
+        .json({ error: "You can only edit your own comments" });
     }
 
     const updatedComment = await prisma.comment.update({
@@ -106,14 +108,16 @@ export const deleteComment = async (req: Request, res: Response) => {
     }
 
     if (existingComment.userId !== userId) {
-      return res.status(403).json({ error: "You can only delete your own comments" });
+      return res
+        .status(403)
+        .json({ error: "You can only delete your own comments" });
     }
 
     await prisma.comment.delete({
       where: { id: commentId },
     });
 
-    res.json({ message: "Comment deleted" });
+    res.status(204).json({ok: true});
   } catch (error) {
     res.status(500).json({ error: "Error deleting comment" });
   }
@@ -142,7 +146,7 @@ export const likeDislikeComment = async (req: Request, res: Response) => {
   const userId = req.user?.userId;
 
   try {
-    const existingLikeDislike = await prisma.like.findUnique({
+    const existingLike = await prisma.like.findUnique({
       where: {
         userId_commentId: {
           userId,
@@ -151,35 +155,16 @@ export const likeDislikeComment = async (req: Request, res: Response) => {
       },
     });
 
-    if (existingLikeDislike) {
-      if (existingLikeDislike.like) {
-        await prisma.like.update({
-          where: {
-            userId_commentId: {
-              userId,
-              commentId,
-            },
+    if (existingLike) {
+      await prisma.like.delete({
+        where: {
+          userId_commentId: {
+            userId,
+            commentId,
           },
-          data: {
-            like: false,
-          },
-        });
-        return res.status(200).json({ message: "Comment updated to dislike" });
-      } else {
-        await prisma.like.update({
-          where: {
-            userId_commentId: {
-              userId,
-              commentId,
-            },
-          },
-          data: {
-            like: true,
-          },
-        });
-        await sendNotitificationLike(commentId);
-        return res.status(200).json({ message: "Comment updated to like" });
-      }
+        },
+      });
+      res.status(204).json({ok: true});
     } else {
       await prisma.like.create({
         data: {
