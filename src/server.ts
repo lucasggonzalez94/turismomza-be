@@ -24,7 +24,7 @@ app.use('/api/favorites', favoritesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
 // Manejo de errores generales
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _: express.Request, res: express.Response) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
