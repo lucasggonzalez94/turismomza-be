@@ -63,6 +63,62 @@ export const addComment = async (req: Request, res: Response) => {
   }
 };
 
+export const editComment = async (req: Request, res: Response) => {
+  const { commentId } = req.params;
+  const { content } = req.body;
+  const userId = req.user?.userId;
+
+  try {
+    const existingComment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!existingComment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    if (existingComment.userId !== userId) {
+      return res.status(403).json({ error: "You can only edit your own comments" });
+    }
+
+    const updatedComment = await prisma.comment.update({
+      where: { id: commentId },
+      data: { content },
+    });
+
+    res.json(updatedComment);
+  } catch (error) {
+    res.status(500).json({ error: "Error updating comment" });
+  }
+};
+
+export const deleteComment = async (req: Request, res: Response) => {
+  const { commentId } = req.params;
+  const userId = req.user?.userId;
+
+  try {
+    const existingComment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!existingComment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    if (existingComment.userId !== userId) {
+      return res.status(403).json({ error: "You can only delete your own comments" });
+    }
+
+    await prisma.comment.delete({
+      where: { id: commentId },
+    });
+
+    res.json({ message: "Comment deleted" });
+  } catch (error) {
+    res.status(500).json({ error: "Error deleting comment" });
+  }
+};
+
 export const reportComment = async (req: Request, res: Response) => {
   const { commentId, reason } = req.body;
   const userId = req.user?.userId;
