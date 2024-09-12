@@ -25,6 +25,25 @@ const sendNotitificationLike = async (commentId: string) => {
   }
 };
 
+export const listCommentsByAttraction = async (req: Request, res: Response) => {
+  const { attractionId } = req.params;
+
+  try {
+    const comments = await prisma.comment.findMany({
+      where: {
+        attractionId
+      },
+      include: {
+        likes: true
+      }
+    });
+  
+    res.json(comments);
+  } catch {
+    res.status(500).json({ error: "Error listing attractions" });
+  }
+};
+
 export const addComment = async (req: Request, res: Response) => {
   const { content, attractionId } = req.body;
   const userId = req.user?.userId;
@@ -58,7 +77,7 @@ export const addComment = async (req: Request, res: Response) => {
     }
 
     res.status(201).json(comment);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error adding comment" });
   }
 };
@@ -89,7 +108,7 @@ export const editComment = async (req: Request, res: Response) => {
     });
 
     res.json(updatedComment);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error updating comment" });
   }
 };
@@ -118,7 +137,7 @@ export const deleteComment = async (req: Request, res: Response) => {
     });
 
     res.status(204).json({ok: true});
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error deleting comment" });
   }
 };
@@ -136,7 +155,7 @@ export const reportComment = async (req: Request, res: Response) => {
       },
     });
     res.status(201).json({ message: "Report submitted" });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error reporting comment" });
   }
 };
@@ -176,7 +195,7 @@ export const likeDislikeComment = async (req: Request, res: Response) => {
       await sendNotitificationLike(commentId);
       return res.status(201).json({ message: "Comment liked" });
     }
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error liking comment" });
   }
 };

@@ -9,7 +9,7 @@ export const getNotifications = async (req: Request, res: Response) => {
       where: { userId },
     });
     res.json(notifications);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Error fetching notifications' });
   }
 };
@@ -23,7 +23,7 @@ export const markAsRead = async (req: Request, res: Response) => {
       data: { read: true },
     });
     res.status(200).json({ message: 'Notification marked as read' });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Error marking notification as read' });
   }
 };

@@ -64,7 +64,7 @@ export const register = [
         ...restUser
       } = user;
       res.status(201).json({ ...restUser, token });
-    } catch (error) {
+    } catch {
       console.error("Error registering user:", error);
       res.status(500).json({ error: "Error registering user" });
     }
@@ -131,7 +131,7 @@ export const login = [
         ...restUser
       } = user;
       res.status(200).json({ ...restUser, token });
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: "Error logging in" });
     }
   },
@@ -165,7 +165,7 @@ export const verifyTwoFactorCode = async (req: Request, res: Response) => {
 
       res.json({ accessToken });
     }
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error verifying code" });
   }
 };
@@ -186,7 +186,7 @@ export const enableTwoFactorAuth = async (req: Request, res: Response) => {
     res
       .status(200)
       .json({ message: "Two-factor authentication enabled", user });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error enabling two-factor authentication" });
   }
 };
@@ -211,7 +211,7 @@ export const disableTwoFactorAuth = async (req: Request, res: Response) => {
     res
       .status(200)
       .json({ message: "Two-factor authentication disabled", user });
-  } catch (error) {
+  } catch {
     res
       .status(500)
       .json({ error: "Error disabling two-factor authentication" });

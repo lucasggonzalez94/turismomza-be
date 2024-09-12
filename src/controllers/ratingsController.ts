@@ -38,7 +38,7 @@ export const addRating = async (req: Request, res: Response) => {
       });
       res.status(201).json(newRating);
     }
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error adding rating" });
   }
 };
