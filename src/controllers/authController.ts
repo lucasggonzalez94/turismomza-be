@@ -169,3 +169,51 @@ export const verifyTwoFactorCode = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error verifying code" });
   }
 };
+
+export const enableTwoFactorAuth = async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+
+  try {
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { two_factor_enabled: true },
+    });
+
+    res
+      .status(200)
+      .json({ message: "Two-factor authentication enabled", user });
+  } catch (error) {
+    res.status(500).json({ error: "Error enabling two-factor authentication" });
+  }
+};
+
+export const disableTwoFactorAuth = async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+
+  try {
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        two_factor_enabled: false,
+        two_factor_code: null,
+        two_factor_expires: null,
+      },
+    });
+
+    res
+      .status(200)
+      .json({ message: "Two-factor authentication disabled", user });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Error disabling two-factor authentication" });
+  }
+};
