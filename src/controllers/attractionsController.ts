@@ -1,29 +1,70 @@
 // src/controllers/atraccionesController.ts
 
-import { NextFunction, Request, Response } from "express";
-import prisma from "../prismaClient";
+import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { v2 as cloudinary } from "cloudinary";
+import multer from "multer";
+import streamifier from "streamifier";
 
-export const createAttraction = async (req: Request, res: Response) => {
-  // TODO: Validar categorias
-  const { title, description, location, category } = req.body;
-  const userId = req.user!.userId;
+import prisma from "../prismaClient";
 
-  try {
-    const attraction = await prisma.attraction.create({
-      data: {
-        title,
-        description,
-        location,
-        category,
-        creatorId: userId,
-      },
-    });
-    res.status(201).json(attraction);
-  } catch (error) {
-    res.status(500).json({ error: "Error creating attraction" });
-  }
-};
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+export const createAttraction = [
+  upload.array("images"),
+  async (req: Request, res: Response) => {
+    // TODO: Validar categorias
+    const { title, description, location, category } = req.body;
+    const userId = req.user!.userId;
+
+    try {
+      const attraction = await prisma.attraction.create({
+        data: {
+          title,
+          description,
+          location,
+          category,
+          creatorId: userId,
+        },
+      });
+      if (Array.isArray(req.files) && req.files.length > 0) {
+        await Promise.all(
+          req.files.map((file) => {
+            return new Promise((resolve, reject) => {
+              const uploadStream = cloudinary.uploader.upload_stream(
+                { resource_type: "image" },
+                async (error, result) => {
+                  if (error) {
+                    reject(new Error("Error uploading image to Cloudinary"));
+                  } else if (result) {
+                    const savedImage = await prisma.image.create({
+                      data: {
+                        url: result.secure_url,
+                        attractionId: attraction.id,
+                      },
+                    });
+                    resolve(savedImage);
+                  }
+                }
+              );
+              streamifier.createReadStream(file.buffer).pipe(uploadStream);
+            });
+          })
+        );
+      }
+      res.status(201).json(attraction);
+    } catch (error) {
+      res.status(500).json({ error: "Error creating attraction" });
+    }
+  },
+];
 
 export const listAttractions = async (req: Request, res: Response) => {
   const authHeader = req.headers["authorization"];
@@ -48,6 +89,7 @@ export const listAttractions = async (req: Request, res: Response) => {
   try {
     const attractions = await prisma.attraction.findMany({
       include: {
+        images: true,
         comments: {
           include: {
             likesDislikes: userId

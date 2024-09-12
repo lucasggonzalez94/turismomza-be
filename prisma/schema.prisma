@@ -35,6 +35,7 @@ model Attraction {
   creator       User       @relation("CreatorAttractions", fields: [creatorId], references: [id])
   creatorId     String
   creation_date DateTime   @default(now())
+  images        Image[]
   comments      Comment[]
   ratings       Rating[]
   favorites     Favorite[]
@@ -105,6 +106,13 @@ model Report {
   commentId   String
   reason      String
   report_date DateTime @default(now())
+}
+
+model Image {
+  id           String     @id @default(uuid())
+  url          String
+  attraction   Attraction @relation(fields: [attractionId], references: [id])
+  attractionId String
 }
 
 enum Role {

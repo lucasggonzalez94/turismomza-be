@@ -31,9 +31,14 @@ ACCESS_TOKEN_SECRET=<secreto_jwt>
 PORT=3001
 
 # Credenciales de la base de datos PostgreSQL
-POSTGRES_USER=<usuario>
-POSTGRES_PASSWORD=<contraseña>
-POSTGRES_DB=<nombre_base_datos>
+POSTGRES_USER=<user>
+POSTGRES_PASSWORD=<password>
+POSTGRES_DB=<db_name>
+
+# Credenciales de Cloudinary
+CLOUDINARY_CLOUD_NAME=<cloud_name>
+CLOUDINARY_API_KEY=<your_api_key>
+CLOUDINARY_API_SECRET=<your_api_secret>
 ```
 
 ### 4. Levantar la Base de Datos con Docker
@@ -55,13 +60,3 @@ npx prisma migrate dev
 ```bash
 npm run dev
 ```
-
-### 7. Parar y Eliminar el Contenedor
-
-Cuando termines de trabajar, puedes detener y eliminar el contenedor con:
-
-```bash
-docker-compose down
-```
-
-Esto detendrá y eliminará el contenedor, pero conservará los datos en el volumen postgres_data.
