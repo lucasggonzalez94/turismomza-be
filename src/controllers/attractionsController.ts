@@ -121,66 +121,96 @@ export const listAttractions = async (req: Request, res: Response) => {
 export const editAttraction = [
   upload.array("images"),
   async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { title, description, location, category = [] } = req.body;
+    const { id } = req.params;
+    const userId = req.user!.userId;
+    const { title, description, location, category = [] } = req.body;
 
-  try {
-    const existingAttraction = await prisma.attraction.findUnique({
-      where: { id },
-      include: { images: true }
-    });
+    try {
+      const existingAttraction = await prisma.attraction.findUnique({
+        where: { id },
+        include: { images: true },
+      });
 
-    if (!existingAttraction) {
-      return res.status(404).json({ error: 'Attraction not found' });
-    }
+      if (!existingAttraction) {
+        return res.status(404).json({ error: "Attraction not found" });
+      }
 
-    const deleteImagePromises = existingAttraction.images.map(image => {
-      return cloudinary.uploader.destroy(image.public_id);
-    });
-    await Promise.all(deleteImagePromises);
+      const deleteImagePromises = existingAttraction.images.map((image) => {
+        return cloudinary.uploader.destroy(image.public_id);
+      });
+      await Promise.all(deleteImagePromises);
 
-    await prisma.image.deleteMany({
-      where: { attractionId: id }
-    });
+      await prisma.image.deleteMany({
+        where: { attractionId: id },
+      });
 
-    if (Array.isArray(req.files) && req.files.length > 0) {
-      await Promise.all(
-        req.files.map((file) => {
-          return new Promise((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-              { resource_type: "image" },
-              async (error, result) => {
-                if (error) {
-                  reject(new Error("Error uploading image to Cloudinary"));
-                } else if (result) {
-                  const savedImage = await prisma.image.create({
-                    data: {
-                      url: result.secure_url,
-                      public_id: result.public_id,
-                      attractionId: id,
-                    },
-                  });
-                  resolve(savedImage);
+      if (Array.isArray(req.files) && req.files.length > 0) {
+        await Promise.all(
+          req.files.map((file) => {
+            return new Promise((resolve, reject) => {
+              const uploadStream = cloudinary.uploader.upload_stream(
+                { resource_type: "image" },
+                async (error, result) => {
+                  if (error) {
+                    reject(new Error("Error uploading image to Cloudinary"));
+                  } else if (result) {
+                    const savedImage = await prisma.image.create({
+                      data: {
+                        url: result.secure_url,
+                        public_id: result.public_id,
+                        attractionId: id,
+                      },
+                    });
+                    resolve(savedImage);
+                  }
                 }
+              );
+              streamifier.createReadStream(file.buffer).pipe(uploadStream);
+            });
+          })
+        );
+      }
+
+      const updatedAttraction = await prisma.attraction.update({
+        where: { id },
+        data: {
+          title,
+          description,
+          location,
+          category,
+          creatorId: userId,
+        },
+        include: {
+          images: true,
+          comments: {
+            include: {
+              likesDislikes: userId
+                ? {
+                    where: { userId },
+                  }
+                : false,
+            },
+          },
+          ratings: userId
+            ? {
+                where: { userId },
               }
-            );
-            streamifier.createReadStream(file.buffer).pipe(uploadStream);
-          });
-        })
-      );
+            : false,
+          favorites: userId
+            ? {
+                where: { userId },
+              }
+            : false,
+        },
+      });
+
+      res.json(updatedAttraction);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error updating attraction" });
     }
-
-    const updatedAttraction = await prisma.attraction.findUnique({
-      where: { id },
-      include: { images: true }
-    });
-
-    res.json(updatedAttraction);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error updating attraction' });
-  }
-}];
+  },
+];
 
 export const deleteAttraction = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -194,7 +224,6 @@ export const deleteAttraction = async (req: Request, res: Response) => {
     await Promise.all(
       images.map(async (image) => {
         await cloudinary.uploader.destroy(image.public_id);
-        await prisma.image.delete({ where: { id: image.id } });
       })
     );
 
@@ -207,7 +236,7 @@ export const deleteAttraction = async (req: Request, res: Response) => {
 
     res.status(204).send();
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ error: "Error deleting attraction" });
   }
 };
