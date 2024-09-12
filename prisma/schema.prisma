@@ -69,6 +69,8 @@ model Favorite {
   attraction   Attraction @relation(fields: [attractionId], references: [id])
   attractionId String
   added_date   DateTime   @default(now())
+
+  @@unique([userId, attractionId])
 }
 
 model Notification {
