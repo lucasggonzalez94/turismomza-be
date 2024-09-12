@@ -42,13 +42,13 @@ model Attraction {
 }
 
 model Comment {
-  id            String        @id @default(uuid())
+  id            String     @id @default(uuid())
   content       String
-  user          User          @relation(fields: [userId], references: [id])
+  user          User       @relation(fields: [userId], references: [id])
   userId        String
-  attraction    Attraction    @relation(fields: [attractionId], references: [id])
+  attraction    Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   attractionId  String
-  creation_date DateTime      @default(now())
+  creation_date DateTime   @default(now())
   likesDislikes Like[]
   reports       Report[]
 }
@@ -58,7 +58,7 @@ model Rating {
   stars         Int        @default(1)
   user          User       @relation(fields: [userId], references: [id])
   userId        String
-  attraction    Attraction @relation(fields: [attractionId], references: [id])
+  attraction    Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   attractionId  String
   creation_date DateTime   @default(now())
 
@@ -69,7 +69,7 @@ model Favorite {
   id           String     @id @default(uuid())
   user         User       @relation(fields: [userId], references: [id])
   userId       String
-  attraction   Attraction @relation(fields: [attractionId], references: [id])
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   attractionId String
   added_date   DateTime   @default(now())
 
@@ -78,7 +78,7 @@ model Favorite {
 
 model Notification {
   id            String           @id @default(uuid())
-  user          User             @relation(fields: [userId], references: [id])
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
   type          NotificationType
   message       String
@@ -87,13 +87,13 @@ model Notification {
 }
 
 model Like {
-  id            String          @id @default(uuid())
-  user          User            @relation(fields: [userId], references: [id])
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
   userId        String
-  comment       Comment         @relation(fields: [commentId], references: [id])
+  comment       Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
   commentId     String
   like          Boolean
-  creation_date DateTime        @default(now())
+  creation_date DateTime @default(now())
 
   @@unique([userId, commentId])
 }
@@ -102,7 +102,7 @@ model Report {
   id          String   @id @default(uuid())
   user        User     @relation(fields: [userId], references: [id])
   userId      String
-  comment     Comment  @relation(fields: [commentId], references: [id])
+  comment     Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
   commentId   String
   reason      String
   report_date DateTime @default(now())
@@ -110,8 +110,9 @@ model Report {
 
 model Image {
   id           String     @id @default(uuid())
+  public_id    String
   url          String
-  attraction   Attraction @relation(fields: [attractionId], references: [id])
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   attractionId String
 }
 
@@ -125,9 +126,4 @@ enum NotificationType {
   comment
   rating
   like
-}
-
-enum LikeDislikeType {
-  like
-  dislike
 }
