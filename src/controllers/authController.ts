@@ -27,7 +27,7 @@ export const register = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password: passwordBody, name } = req.body;
+    const { email, password: passwordReq, name } = req.body;
 
     try {
       const existingUser = await prisma.user.findUnique({
@@ -40,7 +40,7 @@ export const register = [
           .json({ error: "User with this email already exists" });
       }
 
-      const hashedPassword = await bcrypt.hash(passwordBody, 12);
+      const hashedPassword = await bcrypt.hash(passwordReq, 12);
 
       const user = await prisma.user.create({
         data: {
@@ -58,7 +58,8 @@ export const register = [
       const {
         id,
         password,
-        two_factor_enabled,
+        two_factor_code,
+        two_factor_expires,
         registration_date,
         ...restUser
       } = user;
@@ -82,14 +83,14 @@ export const login = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { email, password: passwordReq } = req.body;
 
     try {
       const user = await prisma.user.findUnique({
         where: { email },
       });
 
-      if (!user || !(await bcrypt.compare(password, user.password))) {
+      if (!user || !(await bcrypt.compare(passwordReq, user.password))) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
@@ -118,9 +119,18 @@ export const login = [
 
       const token = jwt.sign(
         { userId: user.id, role: user.role },
-        process.env.ACCESS_TOKEN_SECRET as string
+        process.env.ACCESS_TOKEN_SECRET as string,
+        { expiresIn: "1h" }
       );
-      res.json({ ...user, token });
+      const {
+        id,
+        password,
+        two_factor_code,
+        two_factor_expires,
+        registration_date,
+        ...restUser
+      } = user;
+      res.status(200).json({ ...restUser, token });
     } catch (error) {
       res.status(500).json({ error: "Error logging in" });
     }
