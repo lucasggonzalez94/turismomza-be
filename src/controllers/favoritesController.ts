@@ -49,6 +49,9 @@ export const listFavoritesByUser = async (req: Request, res: Response) => {
 
   try {
     const favoriteAttractions = await prisma.favorite.findMany({
+      where: {
+        userId
+      },
       include: {
         attraction: {
           include: {
