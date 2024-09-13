@@ -47,7 +47,7 @@ model Attraction {
   duration      String?
   minAge        Int?
   maxPersons    Int?
-  price         Int?
+  price         Float?
   images        Image[]
   comments      Comment[]
   ratings       Rating[]
