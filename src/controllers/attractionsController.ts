@@ -117,7 +117,8 @@ export const listAttractions = async (_: Request, res: Response) => {
       },
     });
     res.json(attractions);
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error listing attractions" });
   }
 };
@@ -135,7 +136,8 @@ export const listAttraction = async (req: Request, res: Response) => {
       },
     });
     res.json(attractions);
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error listing attractions" });
   }
 };
@@ -263,7 +265,8 @@ export const editAttraction = [
       });
 
       res.json(updatedAttraction);
-    } catch {
+    } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Error updating attraction" });
     }
   },
@@ -292,7 +295,8 @@ export const deleteAttraction = async (req: Request, res: Response) => {
     });
 
     res.status(204).send();
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error deleting attraction" });
   }
 };

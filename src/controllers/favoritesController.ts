@@ -39,7 +39,8 @@ export const addOrRemoveFavorite = [
       });
       res.status(201).json(favorite);
     }
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error adding to favorites" });
   }
 }];
@@ -67,7 +68,8 @@ export const listFavoritesByUser = async (req: Request, res: Response) => {
     );
 
     res.json(attractions);
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error fetching favorites" });
   }
 };

@@ -32,12 +32,12 @@ app.use('/api/favorites', favoritesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
 // Manejo de errores generales
-app.use((err: Error, _: express.Request, res: express.Response) => {
+app.use((err: Error, _: express.Request, res: express.Response, __: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on PORT ${PORT}`);
 });

@@ -19,7 +19,7 @@ export const createAttractionValidator = [
             return true;
           }
           throw new Error('Services must be an array');
-        } catch (err) {
+        } catch {
           throw new Error('Services must be a valid JSON array');
         }
       }

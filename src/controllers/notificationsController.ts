@@ -11,7 +11,8 @@ export const getNotifications = async (req: Request, res: Response) => {
       where: { userId },
     });
     res.json(notifications);
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error fetching notifications" });
   }
 };
@@ -31,7 +32,8 @@ export const markAsRead = [
       data: { read: true },
     });
     res.status(200).json({ message: "Notification marked as read" });
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error marking notification as read" });
   }
 }];

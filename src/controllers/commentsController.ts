@@ -48,7 +48,8 @@ export const listCommentsByAttraction = async (req: Request, res: Response) => {
     });
 
     res.json(comments);
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error listing attractions" });
   }
 };
@@ -93,7 +94,8 @@ export const addComment = [
       }
 
       res.status(201).json(comment);
-    } catch {
+    } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Error adding comment" });
     }
   },
@@ -131,7 +133,8 @@ export const editComment = [
       });
 
       res.json(updatedComment);
-    } catch {
+    } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Error updating comment" });
     }
   },
@@ -161,7 +164,8 @@ export const deleteComment = async (req: Request, res: Response) => {
     });
 
     res.status(204).json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error deleting comment" });
   }
 };
@@ -185,7 +189,8 @@ export const reportComment = [
         },
       });
       res.status(201).json({ message: "Report submitted" });
-    } catch {
+    } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Error reporting comment" });
     }
   },
@@ -232,7 +237,8 @@ export const likeDislikeComment = [
         await sendNotitificationLike(commentId);
         return res.status(201).json({ message: "Comment liked" });
       }
-    } catch {
+    } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Error liking comment" });
     }
   },
