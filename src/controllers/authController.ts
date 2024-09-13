@@ -65,7 +65,6 @@ export const register = [
       } = user;
       res.status(201).json({ ...restUser, token });
     } catch {
-      console.error("Error registering user:", error);
       res.status(500).json({ error: "Error registering user" });
     }
   },

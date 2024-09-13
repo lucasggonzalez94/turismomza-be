@@ -1,10 +1,10 @@
 // src/controllers/atraccionesController.ts
 
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import streamifier from "streamifier";
+import { body, validationResult } from "express-validator";
 
 import prisma from "../prismaClient";
 
@@ -18,8 +18,62 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 export const createAttraction = [
+  body("title").trim().notEmpty().withMessage("Title is required"),
+  body("description").notEmpty().withMessage("Description is required"),
+  body("location").notEmpty().withMessage("Location is required"),
+  body("category").notEmpty().withMessage("Category is required"),
+  body("recomended")
+    .optional()
+    .isString()
+    .withMessage("Recomended must be a string"),
+  body("services").isArray().withMessage("Services must be an array"),
+  body("contactNumber")
+    .optional()
+    .isString()
+    .withMessage("Contact number must be a string"),
+  body("email").optional().isEmail().withMessage("Please enter a valid email"),
+  body("webSite").optional().isURL().withMessage("Please enter a valid URL"),
+  body("instagram")
+    .optional()
+    .isString()
+    .withMessage("Instagram must be a string"),
+  body("facebook")
+    .optional()
+    .isString()
+    .withMessage("Facebook must be a string"),
+  body("timeOpen")
+    .optional()
+    .isString()
+    .withMessage("Time Open must be a string"),
+  body("timeClose")
+    .optional()
+    .isString()
+    .withMessage("Time Close must be a string"),
+  body("duration")
+    .optional()
+    .isString()
+    .withMessage("Duration must be a string"),
+  body("minAge")
+    .toInt()
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("Min age must be a valid number"),
+  body("maxPersons")
+    .toInt()
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Max persons must be a valid number"),
+  body("price")
+    .toFloat()
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("Price must be a valid number"),
   upload.array("images"),
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     // TODO: Validar categorias
     const {
       title,
@@ -60,9 +114,9 @@ export const createAttraction = [
           timeOpen,
           timeClose,
           duration,
-          minAge: minAge ? Number(minAge) : null,
-          maxPersons: maxPersons ? Number(maxPersons) : null,
-          price: price ? Number(price) : null,
+          minAge,
+          maxPersons,
+          price,
         },
       });
       if (Array.isArray(req.files) && req.files.length > 0) {
@@ -93,7 +147,7 @@ export const createAttraction = [
       }
       res.status(201).json(attraction);
     } catch (error) {
-      console.error(error)
+      console.error(error);
       res.status(500).json({ error: "Error creating attraction" });
     }
   },
