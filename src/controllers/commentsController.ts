@@ -100,6 +100,10 @@ export const addComment = [
 export const editComment = [
   ...editCommentValidator,
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     const { commentId } = req.params;
     const { content } = req.body;
     const userId = req.user?.userId;
@@ -163,6 +167,10 @@ export const deleteComment = async (req: Request, res: Response) => {
 export const reportComment = [
   ...reportCommentValidator,
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     const { commentId, reason } = req.body;
     const userId = req.user?.userId;
 
@@ -184,6 +192,10 @@ export const reportComment = [
 export const likeDislikeComment = [
   ...likeDislikeCommentValidator,
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     const { commentId } = req.body;
     const userId = req.user?.userId;
 
