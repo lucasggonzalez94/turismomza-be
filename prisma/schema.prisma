@@ -32,9 +32,22 @@ model Attraction {
   description   String
   location      String
   category      String
+  recomended    String?
   creator       User       @relation("CreatorAttractions", fields: [creatorId], references: [id])
   creatorId     String
   creation_date DateTime   @default(now())
+  services      String[]
+  contactNumber String?
+  email         String?
+  webSite       String?
+  instagram     String?
+  facebook      String?
+  timeOpen      String?
+  timeClose     String?
+  duration      String?
+  minAge        Int?
+  maxPersons    Int?
+  price         Int?
   images        Image[]
   comments      Comment[]
   ratings       Rating[]
@@ -49,7 +62,7 @@ model Comment {
   attraction    Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   attractionId  String
   creation_date DateTime   @default(now())
-  likes Like[]
+  likes         Like[]
   reports       Report[]
 }
 

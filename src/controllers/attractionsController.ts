@@ -21,7 +21,25 @@ export const createAttraction = [
   upload.array("images"),
   async (req: Request, res: Response) => {
     // TODO: Validar categorias
-    const { title, description, location, category } = req.body;
+    const {
+      title,
+      description,
+      location,
+      category,
+      recomended,
+      services,
+      contactNumber,
+      email,
+      webSite,
+      instagram,
+      facebook,
+      timeOpen,
+      timeClose,
+      duration,
+      minAge,
+      maxPersons,
+      price,
+    } = req.body;
     const userId = req.user!.userId;
 
     try {
@@ -32,6 +50,19 @@ export const createAttraction = [
           location,
           category,
           creatorId: userId,
+          recomended,
+          services,
+          contactNumber,
+          email,
+          webSite,
+          instagram,
+          facebook,
+          timeOpen,
+          timeClose,
+          duration,
+          minAge: minAge ? Number(minAge) : null,
+          maxPersons: maxPersons ? Number(maxPersons) : null,
+          price: price ? Number(price) : null,
         },
       });
       if (Array.isArray(req.files) && req.files.length > 0) {
@@ -61,18 +92,20 @@ export const createAttraction = [
         );
       }
       res.status(201).json(attraction);
-    } catch {
+    } catch (error) {
+      console.error(error)
       res.status(500).json({ error: "Error creating attraction" });
     }
   },
 ];
 
-export const listAttractions = async (req: Request, res: Response) => {
+// TODO: Agregar filtros
+export const listAttractions = async (_: Request, res: Response) => {
   try {
     const attractions = await prisma.attraction.findMany({
       include: {
         images: true,
-        ratings: true
+        ratings: true,
       },
     });
     res.json(attractions);
@@ -86,11 +119,11 @@ export const listAttraction = async (req: Request, res: Response) => {
   try {
     const attractions = await prisma.attraction.findUnique({
       where: {
-        id
+        id,
       },
       include: {
         images: true,
-        ratings: true
+        ratings: true,
       },
     });
     res.json(attractions);
