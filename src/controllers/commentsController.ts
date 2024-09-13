@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
-import prisma from "../prismaClient";
 import { Server } from "socket.io";
+import { validationResult } from "express-validator";
+
+import prisma from "../prismaClient";
+import { addCommentValidator } from "../validators/comments";
 
 const io = new Server();
 
@@ -31,56 +34,63 @@ export const listCommentsByAttraction = async (req: Request, res: Response) => {
   try {
     const comments = await prisma.comment.findMany({
       where: {
-        attractionId
+        attractionId,
       },
       include: {
-        likes: true
-      }
+        likes: true,
+      },
     });
-  
+
     res.json(comments);
   } catch {
     res.status(500).json({ error: "Error listing attractions" });
   }
 };
 
-export const addComment = async (req: Request, res: Response) => {
-  const { content, attractionId } = req.body;
-  const userId = req.user?.userId;
+export const addComment = [
+  ...addCommentValidator,
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const { content, attractionId } = req.body;
+    const userId = req.user?.userId;
 
-  try {
-    const comment = await prisma.comment.create({
-      data: {
-        content,
-        userId,
-        attractionId,
-      },
-    });
-
-    const attraction = await prisma.attraction.findUnique({
-      where: { id: attractionId },
-      select: { creatorId: true },
-    });
-
-    if (attraction?.creatorId) {
-      await prisma.notification.create({
+    try {
+      const comment = await prisma.comment.create({
         data: {
-          userId: attraction.creatorId,
-          message: `New comment on your attraction: ${comment.content}`,
-          type: "comment",
+          content,
+          userId,
+          attractionId,
         },
       });
 
-      io.to(attraction.creatorId).emit("notification", {
-        message: `New comment on your attraction: ${comment.content}`,
+      const attraction = await prisma.attraction.findUnique({
+        where: { id: attractionId },
+        select: { creatorId: true },
       });
-    }
 
-    res.status(201).json(comment);
-  } catch {
-    res.status(500).json({ error: "Error adding comment" });
-  }
-};
+      if (attraction?.creatorId) {
+        await prisma.notification.create({
+          data: {
+            userId: attraction.creatorId,
+            message: `New comment on your attraction: ${comment.content}`,
+            type: "comment",
+          },
+        });
+
+        io.to(attraction.creatorId).emit("notification", {
+          message: `New comment on your attraction: ${comment.content}`,
+        });
+      }
+
+      res.status(201).json(comment);
+    } catch {
+      res.status(500).json({ error: "Error adding comment" });
+    }
+  },
+];
 
 export const editComment = async (req: Request, res: Response) => {
   const { commentId } = req.params;
@@ -136,7 +146,7 @@ export const deleteComment = async (req: Request, res: Response) => {
       where: { id: commentId },
     });
 
-    res.status(204).json({ok: true});
+    res.status(204).json({ ok: true });
   } catch {
     res.status(500).json({ error: "Error deleting comment" });
   }
@@ -183,7 +193,7 @@ export const likeDislikeComment = async (req: Request, res: Response) => {
           },
         },
       });
-      res.status(204).json({ok: true});
+      res.status(204).json({ ok: true });
     } else {
       await prisma.like.create({
         data: {

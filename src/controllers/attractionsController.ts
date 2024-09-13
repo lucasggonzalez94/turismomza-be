@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import streamifier from "streamifier";
-import { body, validationResult } from "express-validator";
+import { validationResult } from "express-validator";
 
 import prisma from "../prismaClient";
 import { createAttractionValidator } from "../validators/attractions";
