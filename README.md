@@ -1,6 +1,6 @@
 # TURISMOMZA
 
-Este repositorio contiene la aplicación de turismo para la provincia de Mendoza, Argentina. A continuación, encontrarás las instrucciones para levantar la base de datos PostgreSQL localmente utilizando Docker.
+Este repositorio contiene la API de turismo para la provincia de Mendoza, Argentina. A continuación, encontrarás las instrucciones para levantar la base de datos PostgreSQL y la API localmente utilizando Docker.
 
 ## Requisitos
 
