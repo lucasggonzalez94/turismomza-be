@@ -3,7 +3,12 @@ import { Server } from "socket.io";
 import { validationResult } from "express-validator";
 
 import prisma from "../prismaClient";
-import { addCommentValidator } from "../validators/comments";
+import {
+  addCommentValidator,
+  editCommentValidator,
+  likeDislikeCommentValidator,
+  reportCommentValidator,
+} from "../validators/comments";
 
 const io = new Server();
 
@@ -92,36 +97,39 @@ export const addComment = [
   },
 ];
 
-export const editComment = async (req: Request, res: Response) => {
-  const { commentId } = req.params;
-  const { content } = req.body;
-  const userId = req.user?.userId;
+export const editComment = [
+  ...editCommentValidator,
+  async (req: Request, res: Response) => {
+    const { commentId } = req.params;
+    const { content } = req.body;
+    const userId = req.user?.userId;
 
-  try {
-    const existingComment = await prisma.comment.findUnique({
-      where: { id: commentId },
-    });
+    try {
+      const existingComment = await prisma.comment.findUnique({
+        where: { id: commentId },
+      });
 
-    if (!existingComment) {
-      return res.status(404).json({ error: "Comment not found" });
+      if (!existingComment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      if (existingComment.userId !== userId) {
+        return res
+          .status(403)
+          .json({ error: "You can only edit your own comments" });
+      }
+
+      const updatedComment = await prisma.comment.update({
+        where: { id: commentId },
+        data: { content },
+      });
+
+      res.json(updatedComment);
+    } catch {
+      res.status(500).json({ error: "Error updating comment" });
     }
-
-    if (existingComment.userId !== userId) {
-      return res
-        .status(403)
-        .json({ error: "You can only edit your own comments" });
-    }
-
-    const updatedComment = await prisma.comment.update({
-      where: { id: commentId },
-      data: { content },
-    });
-
-    res.json(updatedComment);
-  } catch {
-    res.status(500).json({ error: "Error updating comment" });
-  }
-};
+  },
+];
 
 export const deleteComment = async (req: Request, res: Response) => {
   const { commentId } = req.params;
@@ -152,40 +160,35 @@ export const deleteComment = async (req: Request, res: Response) => {
   }
 };
 
-export const reportComment = async (req: Request, res: Response) => {
-  const { commentId, reason } = req.body;
-  const userId = req.user?.userId;
+export const reportComment = [
+  ...reportCommentValidator,
+  async (req: Request, res: Response) => {
+    const { commentId, reason } = req.body;
+    const userId = req.user?.userId;
 
-  try {
-    await prisma.report.create({
-      data: {
-        commentId,
-        userId,
-        reason,
-      },
-    });
-    res.status(201).json({ message: "Report submitted" });
-  } catch {
-    res.status(500).json({ error: "Error reporting comment" });
-  }
-};
-
-export const likeDislikeComment = async (req: Request, res: Response) => {
-  const { commentId } = req.body;
-  const userId = req.user?.userId;
-
-  try {
-    const existingLike = await prisma.like.findUnique({
-      where: {
-        userId_commentId: {
-          userId,
+    try {
+      await prisma.report.create({
+        data: {
           commentId,
+          userId,
+          reason,
         },
-      },
-    });
+      });
+      res.status(201).json({ message: "Report submitted" });
+    } catch {
+      res.status(500).json({ error: "Error reporting comment" });
+    }
+  },
+];
 
-    if (existingLike) {
-      await prisma.like.delete({
+export const likeDislikeComment = [
+  ...likeDislikeCommentValidator,
+  async (req: Request, res: Response) => {
+    const { commentId } = req.body;
+    const userId = req.user?.userId;
+
+    try {
+      const existingLike = await prisma.like.findUnique({
         where: {
           userId_commentId: {
             userId,
@@ -193,19 +196,30 @@ export const likeDislikeComment = async (req: Request, res: Response) => {
           },
         },
       });
-      res.status(204).json({ ok: true });
-    } else {
-      await prisma.like.create({
-        data: {
-          userId,
-          commentId,
-          like: true,
-        },
-      });
-      await sendNotitificationLike(commentId);
-      return res.status(201).json({ message: "Comment liked" });
+
+      if (existingLike) {
+        await prisma.like.delete({
+          where: {
+            userId_commentId: {
+              userId,
+              commentId,
+            },
+          },
+        });
+        res.status(204).json({ ok: true });
+      } else {
+        await prisma.like.create({
+          data: {
+            userId,
+            commentId,
+            like: true,
+          },
+        });
+        await sendNotitificationLike(commentId);
+        return res.status(201).json({ message: "Comment liked" });
+      }
+    } catch {
+      res.status(500).json({ error: "Error liking comment" });
     }
-  } catch {
-    res.status(500).json({ error: "Error liking comment" });
-  }
-};
+  },
+];
