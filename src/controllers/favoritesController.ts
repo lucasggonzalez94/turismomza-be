@@ -49,16 +49,15 @@ export const listFavoritesByUser = async (req: Request, res: Response) => {
 
   try {
     const favoriteAttractions = await prisma.favorite.findMany({
-      where: { userId },
       include: {
         attraction: {
           include: {
             images: true,
-            comments: true
+            comments: true,
           },
         },
       },
-    });
+    }) as { attraction: { images: any[], comments: any[] } }[];
 
     const attractions = favoriteAttractions.map(
       (favorite) => favorite.attraction

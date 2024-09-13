@@ -1,5 +1,3 @@
-// src/controllers/atraccionesController.ts
-
 import { Request, Response } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
@@ -77,7 +75,7 @@ export const createAttraction = [
       });
       if (Array.isArray(req.files) && req.files.length > 0) {
         await Promise.all(
-          req.files.map((file) => {
+          req.files!.map((file: Express.Multer.File) => {
             return new Promise((resolve, reject) => {
               const uploadStream = cloudinary.uploader.upload_stream(
                 { resource_type: "image" },
@@ -187,7 +185,7 @@ export const editAttraction = [
         return res.status(404).json({ error: "Attraction not found" });
       }
 
-      const deleteImagePromises = existingAttraction.images.map((image) => {
+      const deleteImagePromises = existingAttraction.images.map((image: { public_id: string }) => {
         return cloudinary.uploader.destroy(image.public_id);
       });
       await Promise.all(deleteImagePromises);
@@ -198,7 +196,7 @@ export const editAttraction = [
 
       if (Array.isArray(req.files) && req.files.length > 0) {
         await Promise.all(
-          req.files.map((file) => {
+          req.files!.map((file: Express.Multer.File) => {
             return new Promise((resolve, reject) => {
               const uploadStream = cloudinary.uploader.upload_stream(
                 { resource_type: "image" },
