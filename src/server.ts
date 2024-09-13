@@ -26,7 +26,6 @@ io.on('connection', (socket) => {
   });
 });
 
-app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/attractions', attractionsRoutes);
 app.use('/api/comments', commentsRoutes);

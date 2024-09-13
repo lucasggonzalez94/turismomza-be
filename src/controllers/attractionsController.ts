@@ -18,6 +18,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 export const createAttraction = [
+  upload.array("images"),
   body("title").trim().notEmpty().withMessage("Title is required"),
   body("description").notEmpty().withMessage("Description is required"),
   body("location").notEmpty().withMessage("Location is required"),
@@ -26,7 +27,7 @@ export const createAttraction = [
     .optional()
     .isString()
     .withMessage("Recomended must be a string"),
-  body("services").isArray().withMessage("Services must be an array"),
+  body("services").optional().isArray().withMessage("Services must be an array"),
   body("contactNumber")
     .optional()
     .isString()
@@ -68,7 +69,6 @@ export const createAttraction = [
     .optional()
     .isInt({ min: 0 })
     .withMessage("Price must be a valid number"),
-  upload.array("images"),
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
