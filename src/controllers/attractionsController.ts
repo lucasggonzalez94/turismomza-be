@@ -279,7 +279,7 @@ export const deleteAttraction = async (req: Request, res: Response) => {
     });
 
     await Promise.all(
-      images.map(async (image) => {
+      images.map(async (image: { public_id: string }) => {
         await cloudinary.uploader.destroy(image.public_id);
       })
     );
