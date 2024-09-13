@@ -54,7 +54,7 @@ export const listFavoritesByUser = async (req: Request, res: Response) => {
         attraction: {
           include: {
             images: true,
-            ratings: true,
+            comments: true
           },
         },
       },

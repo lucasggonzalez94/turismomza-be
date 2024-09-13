@@ -115,7 +115,7 @@ export const listAttractions = async (_: Request, res: Response) => {
     const attractions = await prisma.attraction.findMany({
       include: {
         images: true,
-        ratings: true,
+        comments: true
       },
     });
     res.json(attractions);
@@ -133,7 +133,7 @@ export const listAttraction = async (req: Request, res: Response) => {
       },
       include: {
         images: true,
-        ratings: true,
+        comments: true
       },
     });
     res.json(attractions);
@@ -256,11 +256,6 @@ export const editAttraction = [
                 : false,
             },
           },
-          ratings: userId
-            ? {
-                where: { userId },
-              }
-            : false,
           favorites: userId
             ? {
                 where: { userId },
