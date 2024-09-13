@@ -43,6 +43,7 @@ export const listCommentsByAttraction = async (req: Request, res: Response) => {
       },
       include: {
         likes: true,
+        reports: true,
       },
     });
 
@@ -106,7 +107,7 @@ export const editComment = [
       return res.status(400).json({ errors: errors.array() });
     }
     const { commentId } = req.params;
-    const { content } = req.body;
+    const { content, rating } = req.body;
     const userId = req.user?.userId;
 
     try {
@@ -126,7 +127,7 @@ export const editComment = [
 
       const updatedComment = await prisma.comment.update({
         where: { id: commentId },
-        data: { content },
+        data: { content, rating },
       });
 
       res.json(updatedComment);
