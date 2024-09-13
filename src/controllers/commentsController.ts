@@ -59,13 +59,14 @@ export const addComment = [
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    const { content, attractionId } = req.body;
+    const { content, rating, attractionId } = req.body;
     const userId = req.user?.userId;
 
     try {
       const comment = await prisma.comment.create({
         data: {
           content,
+          rating,
           userId,
           attractionId,
         },
