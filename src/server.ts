@@ -28,7 +28,6 @@ io.on('connection', (socket) => {
 
 try {
   console.log('Running migrations...');
-  execSync('npx prisma generate');
   execSync('npx prisma migrate deploy --schema=./prisma/schema.prisma');
   console.log('Migrations completed successfully');
 } catch (err) {
