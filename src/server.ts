@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import { execSync } from 'child_process';
 import authRoutes from './routes/authRoutes';
 import attractionsRoutes from './routes/attractionsRoutes';
 import commentsRoutes from './routes/commentsRoutes';
@@ -24,6 +25,14 @@ io.on('connection', (socket) => {
     console.log(`User disconnected: ${socket.id}`);
   });
 });
+
+try {
+  console.log('Running migrations...');
+  execSync('npx prisma migrate deploy');  // Ejecuta las migraciones
+  console.log('Migrations completed successfully');
+} catch (err) {
+  console.error('Error running migrations:', err);
+}
 
 app.use('/api/auth', authRoutes);
 app.use('/api/attractions', attractionsRoutes);
