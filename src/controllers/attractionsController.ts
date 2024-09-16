@@ -3,6 +3,8 @@ import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import streamifier from "streamifier";
 import { validationResult } from "express-validator";
+import axios from "axios";
+const Clarifai = require('clarifai');
 
 import prisma from "../prismaClient";
 import { createAttractionValidator } from "../validators/attractions";
@@ -15,6 +17,40 @@ cloudinary.config({
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+async function moderateText(content: string) {
+  const apiKey = process.env.PERSPECTIVE_API_KEY;
+  const url = `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${apiKey}`;
+
+  const response = await axios.post(url, {
+    comment: { text: content },
+    languages: ["es"],
+    requestedAttributes: { TOXICITY: {} },
+  });
+
+  const toxicityScore =
+    response.data.attributeScores.TOXICITY.summaryScore.value;
+  return toxicityScore < 0.4;
+}
+
+const clarifai = new Clarifai.App({
+  apiKey: process.env.CLARIFAI_API_KEY
+});
+
+const filterInappropriateContent = (results: any[]) => {
+  return results.some((concept: { name: string, value: number }) => 
+    (concept.name === 'explicit' || concept.name === 'gore' || concept.name === 'suggestive' || concept.name === 'drug') && concept.value > 0.9
+  );
+}
+
+async function analyzeImage(imageUrl: string) {
+  try {
+    const response = await clarifai.models.predict(Clarifai.MODERATION_MODEL, imageUrl);
+    return filterInappropriateContent(response.outputs[0].data.concepts);
+  } catch (error) {
+    throw new Error('Error analizando la imagen');
+  }
+}
 
 export const createAttraction = [
   upload.array("images"),
@@ -47,6 +83,11 @@ export const createAttraction = [
     const userId = req.user!.userId;
 
     try {
+      const isTextAppropriate = await moderateText(`Título: ${title} Descripción: ${description}`);
+      if (!isTextAppropriate) {
+        return res.status(400).json({ error: "Inappropriate text detected" });
+      }
+
       const attraction = await prisma.attraction.create({
         data: {
           title,
@@ -65,6 +106,7 @@ export const createAttraction = [
           price,
         },
       });
+
       if (Array.isArray(req.files) && req.files.length > 0) {
         await Promise.all(
           req.files!.map((file: Express.Multer.File) => {
@@ -75,6 +117,15 @@ export const createAttraction = [
                   if (error) {
                     reject(new Error("Error uploading image to Cloudinary"));
                   } else if (result) {
+                    const isImageAppropriate = await analyzeImage(
+                      result.secure_url
+                    );
+                    if (isImageAppropriate) {
+                      return res
+                        .status(400)
+                        .json({ error: "Inappropriate image detected" });
+                    }
+
                     const savedImage = await prisma.image.create({
                       data: {
                         url: result.secure_url,
@@ -105,7 +156,7 @@ export const listAttractions = async (_: Request, res: Response) => {
     const attractions = await prisma.attraction.findMany({
       include: {
         images: true,
-        comments: true
+        comments: true,
       },
     });
     res.json(attractions);
@@ -124,7 +175,7 @@ export const listAttraction = async (req: Request, res: Response) => {
       },
       include: {
         images: true,
-        comments: true
+        comments: true,
       },
     });
     res.json(attractions);
@@ -166,6 +217,11 @@ export const editAttraction = [
     }
 
     try {
+      const isTextAppropriate = await moderateText(`Título: ${title} Descripción: ${description}`);
+      if (!isTextAppropriate) {
+        return res.status(400).json({ error: "Inappropriate text detected" });
+      }
+
       const existingAttraction = await prisma.attraction.findUnique({
         where: { id },
         include: { images: true },
@@ -175,9 +231,11 @@ export const editAttraction = [
         return res.status(404).json({ error: "Attraction not found" });
       }
 
-      const deleteImagePromises = existingAttraction.images.map((image: { public_id: string }) => {
-        return cloudinary.uploader.destroy(image.public_id);
-      });
+      const deleteImagePromises = existingAttraction.images.map(
+        (image: { public_id: string }) => {
+          return cloudinary.uploader.destroy(image.public_id);
+        }
+      );
       await Promise.all(deleteImagePromises);
 
       await prisma.image.deleteMany({
@@ -194,6 +252,15 @@ export const editAttraction = [
                   if (error) {
                     reject(new Error("Error uploading image to Cloudinary"));
                   } else if (result) {
+                    const isImageAppropriate = await analyzeImage(
+                      result.secure_url
+                    );
+                    if (isImageAppropriate) {
+                      return res
+                        .status(400)
+                        .json({ error: "Inappropriate image detected" });
+                    }
+                    
                     const savedImage = await prisma.image.create({
                       data: {
                         url: result.secure_url,

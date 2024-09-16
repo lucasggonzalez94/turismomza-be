@@ -39,6 +39,9 @@ POSTGRES_DB=<db_name>
 CLOUDINARY_CLOUD_NAME=<cloud_name>
 CLOUDINARY_API_KEY=<your_api_key>
 CLOUDINARY_API_SECRET=<your_api_secret>
+
+# API Key Clarifai
+CLARIFAI_API_KEY=<your_api_key>
 ```
 
 ### 4. Levantar la Base de Datos con Docker

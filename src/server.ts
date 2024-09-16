@@ -3,6 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import { execSync } from 'child_process';
+
 import authRoutes from './routes/authRoutes';
 import attractionsRoutes from './routes/attractionsRoutes';
 import commentsRoutes from './routes/commentsRoutes';
