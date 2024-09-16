@@ -23,6 +23,7 @@ model User {
   notifications      Notification[]
   likes_dislikes     Like[]
   reports            Report[]
+  advertisements     Advertisement[]
 }
 
 model Attraction {
@@ -46,6 +47,19 @@ model Attraction {
   images        Image[]
   comments      Comment[]
   favorites     Favorite[]
+  advertisements Advertisement[]
+}
+
+model Advertisement {
+  id              String    @id @default(uuid())
+  attraction      Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  attractionId    String
+  user            User       @relation(fields: [userId], references: [id])
+  userId          String
+  startDate       DateTime
+  endDate         DateTime
+  amountPaid      Float
+  isActive        Boolean    @default(true)
 }
 
 model Comment {
@@ -120,7 +134,5 @@ enum Role {
 
 enum NotificationType {
   comment
-  // TODO: Quitar tipo rating
-  rating
   like
 }
