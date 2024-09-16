@@ -150,13 +150,26 @@ export const createAttraction = [
   },
 ];
 
-// TODO: Agregar filtros
-export const listAttractions = async (_: Request, res: Response) => {
+export const listAttractions = async (req: Request, res: Response) => {
   try {
+    const { title, description, creatorId, category, location, priceMin, priceMax } = req.query;
+
     const attractions = await prisma.attraction.findMany({
+      where: {
+        title: title ? { contains: title as string, mode: "insensitive" } : undefined,
+        description: description ? { contains: description as string, mode: "insensitive" } : undefined,
+        creatorId: creatorId ? { equals: creatorId as string } : undefined,
+        category: category ? { equals: category as string } : undefined,
+        location: location ? { contains: location as string, mode: "insensitive" } : undefined,
+        price: {
+          gte: priceMin ? parseFloat(priceMin as string) : undefined,
+          lte: priceMax ? parseFloat(priceMax as string) : undefined,
+        },
+      },
       include: {
         images: true,
         comments: true,
+        creator: true
       },
     });
     res.json(attractions);
