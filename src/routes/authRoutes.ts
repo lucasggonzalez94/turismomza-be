@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { register, login, verifyTwoFactorCode, disableTwoFactorAuth, enableTwoFactorAuth } from '../controllers/authController';
-import authenticateToken from '../middleware/authMiddleware';
+import { register, login, verifyTwoFactorCode, disableTwoFactorAuth, enableTwoFactorAuth, listUsers } from '../controllers/authController';
+import { authenticateToken, authorizeAdmin } from '../middleware/authMiddleware';
 
 const router = Router();
 
+router.get('/users', authenticateToken, authorizeAdmin, listUsers);
 router.post('/register', register);
 router.post('/login', login);
 router.post('/verify-2fa', verifyTwoFactorCode);

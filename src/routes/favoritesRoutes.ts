@@ -2,7 +2,7 @@
 
 import { Router } from 'express';
 import { addOrRemoveFavorite, listFavoritesByUser } from '../controllers/favoritesController';
-import authenticateToken from '../middleware/authMiddleware';
+import { authenticateToken } from '../middleware/authMiddleware';
 
 const router = Router();
 

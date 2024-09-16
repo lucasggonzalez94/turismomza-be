@@ -138,6 +138,29 @@ export const login = [
   },
 ];
 
+export const listUsers = async (_: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        registration_date: true,
+        password: false,
+        two_factor_code: false,
+        two_factor_enabled: false,
+        two_factor_expires: false,
+      },
+    });
+
+    res.json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error listing users" });
+  }
+};
+
 export const verifyTwoFactorCode = async (req: Request, res: Response) => {
   const { user, code } = req.body;
 

@@ -8,7 +8,7 @@ import {
   deleteAttraction,
   listAttraction,
 } from "../controllers/attractionsController";
-import authenticateToken from "../middleware/authMiddleware";
+import { authenticateToken } from "../middleware/authMiddleware";
 
 const router = Router();
 
