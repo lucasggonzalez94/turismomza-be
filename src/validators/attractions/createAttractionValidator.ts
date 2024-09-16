@@ -5,10 +5,6 @@ export const createAttractionValidator = [
   body('description').notEmpty().withMessage('Description is required'),
   body('location').notEmpty().withMessage('Location is required'),
   body('category').notEmpty().withMessage('Category is required'),
-  body('recomended')
-    .optional()
-    .isString()
-    .withMessage('Recomended must be a string'),
   body('services')
     .optional()
     .custom((value) => {
@@ -48,20 +44,6 @@ export const createAttractionValidator = [
     .optional()
     .isString()
     .withMessage('Time Close must be a string'),
-  body('duration')
-    .optional()
-    .isString()
-    .withMessage('Duration must be a string'),
-  body('minAge')
-    .toInt()
-    .optional()
-    .isInt({ min: 0 })
-    .withMessage('Min age must be a valid number'),
-  body('maxPersons')
-    .toInt()
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Max persons must be a valid number'),
   body('price')
     .toFloat()
     .optional()

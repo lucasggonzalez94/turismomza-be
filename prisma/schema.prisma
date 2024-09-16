@@ -31,7 +31,6 @@ model Attraction {
   description   String
   location      String
   category      String
-  recomended    String?
   creator       User       @relation("CreatorAttractions", fields: [creatorId], references: [id])
   creatorId     String
   creation_date DateTime   @default(now())
@@ -43,9 +42,6 @@ model Attraction {
   facebook      String?
   timeOpen      String?
   timeClose     String?
-  duration      String?
-  minAge        Int?
-  maxPersons    Int?
   price         Float?
   images        Image[]
   comments      Comment[]
@@ -124,6 +120,7 @@ enum Role {
 
 enum NotificationType {
   comment
+  // TODO: Quitar tipo rating
   rating
   like
 }

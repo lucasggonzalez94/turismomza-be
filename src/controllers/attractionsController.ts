@@ -29,7 +29,6 @@ export const createAttraction = [
       description,
       location,
       category,
-      recomended,
       contactNumber,
       email,
       webSite,
@@ -37,9 +36,6 @@ export const createAttraction = [
       facebook,
       timeOpen,
       timeClose,
-      duration,
-      minAge,
-      maxPersons,
       price,
     } = req.body;
 
@@ -58,7 +54,6 @@ export const createAttraction = [
           location,
           category,
           creatorId: userId,
-          recomended,
           services,
           contactNumber,
           email,
@@ -67,9 +62,6 @@ export const createAttraction = [
           facebook,
           timeOpen,
           timeClose,
-          duration,
-          minAge,
-          maxPersons,
           price,
         },
       });
@@ -158,7 +150,6 @@ export const editAttraction = [
       description,
       location,
       category,
-      recomended,
       contactNumber,
       email,
       webSite,
@@ -166,9 +157,6 @@ export const editAttraction = [
       facebook,
       timeOpen,
       timeClose,
-      duration,
-      minAge,
-      maxPersons,
       price,
     } = req.body;
 
@@ -231,7 +219,6 @@ export const editAttraction = [
           location,
           category,
           creatorId: userId,
-          recomended,
           services,
           contactNumber,
           email,
@@ -240,9 +227,6 @@ export const editAttraction = [
           facebook,
           timeOpen,
           timeClose,
-          duration,
-          minAge,
-          maxPersons,
           price,
         },
         include: {
