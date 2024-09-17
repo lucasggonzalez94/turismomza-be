@@ -3,6 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 
+import advertisementsRoutes from './routes/advertisementsRoutes';
 import authRoutes from './routes/authRoutes';
 import attractionsRoutes from './routes/attractionsRoutes';
 import commentsRoutes from './routes/commentsRoutes';
@@ -26,6 +27,7 @@ io.on('connection', (socket) => {
   });
 });
 
+app.use('/api/advertisements', advertisementsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/attractions', attractionsRoutes);
 app.use('/api/comments', commentsRoutes);

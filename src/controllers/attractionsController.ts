@@ -7,7 +7,7 @@ import axios from "axios";
 const Clarifai = require('clarifai');
 
 import prisma from "../prismaClient";
-import { createAttractionValidator } from "../validators/attractions";
+import { createAttractionValidator } from "../validators";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
