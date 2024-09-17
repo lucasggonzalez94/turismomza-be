@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../prismaClient";
 import { validationResult } from "express-validator";
-import { addOrRemoveFavoriteValidator } from "../validators/favorites";
+import { addOrRemoveFavoriteValidator } from "../validators";
 
 export const addOrRemoveFavorite = [
   ...addOrRemoveFavoriteValidator,

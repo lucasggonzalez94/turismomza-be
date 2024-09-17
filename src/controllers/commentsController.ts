@@ -8,7 +8,7 @@ import {
   editCommentValidator,
   likeDislikeCommentValidator,
   reportCommentValidator,
-} from "../validators/comments";
+} from "../validators";
 
 const io = new Server();
 
