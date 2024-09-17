@@ -1,14 +1,24 @@
 // src/routes/atraccionesRoutes.ts
 
 import { Router } from "express";
-import { authenticateToken } from "../middleware/authMiddleware";
-import { createAdvertisement, updateAdvertisement } from "../controllers/advertisementsController";
+import {
+  authenticateToken,
+  authorizeAdmin,
+} from "../middleware/authMiddleware";
+import {
+  createAdvertisement,
+  deleteAdvertisement,
+  listAdvertisements,
+  listAdvertisementsByUser,
+  updateAdvertisement,
+} from "../controllers/advertisementsController";
 
 const router = Router();
 
 router.post("/", authenticateToken, createAdvertisement);
 router.put("/:id", authenticateToken, updateAdvertisement);
-router.get("/", authenticateToken, createAdvertisement);
-router.delete("/:id", authenticateToken, createAdvertisement);
+router.get("/", authorizeAdmin, listAdvertisements);
+router.get("/:userId", authenticateToken, listAdvertisementsByUser);
+router.delete("/:id", authenticateToken, deleteAdvertisement);
 
 export default router;

@@ -85,3 +85,39 @@ export const listAdvertisements = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error listing advertisements" });
   }
 };
+
+export const listAdvertisementsByUser = async (req: Request, res: Response) => {
+  const { isActive, startDate, endDate } = req.query;
+  const { userId } = req.params;
+
+  try {
+    const advertisements = await prisma.advertisement.findMany({
+      where: {
+        isActive: Boolean(isActive),
+        startDate: startDate
+          ? { gte: new Date(startDate as string) }
+          : undefined,
+        endDate: endDate ? { lte: new Date(startDate as string) } : undefined,
+        userId
+      },
+    });
+    res.json(advertisements);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error listing advertisements" });
+  }
+};
+
+export const deleteAdvertisement = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.advertisement.delete({
+      where: { id },
+    });
+    res.status(204).send();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error deleting advertisement" });
+  }
+};
