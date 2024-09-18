@@ -1,5 +1,3 @@
-// src/routes/atraccionesRoutes.ts
-
 import { Router } from "express";
 import {
   authenticateToken,
