@@ -3,8 +3,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { body, validationResult } from "express-validator";
+import { v2 as cloudinary } from "cloudinary";
+import multer from "multer";
 
 import prisma from "../prismaClient";
+import { registerValidator } from "../validators";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -13,14 +16,17 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD,
   },
 });
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 export const register = [
-  body("email").isEmail().withMessage("Please enter a valid email"),
-  // TODO: Validar password
-  body("password")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
-  body("name").notEmpty().withMessage("Name is required"),
+  ...registerValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -134,6 +140,57 @@ export const login = [
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error logging in" });
+    }
+  },
+];
+
+export const updateUser = [
+  upload.single("profilePicture"),
+  ...registerValidator,
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password: passwordReq, name } = req.body;
+    const userId = req.user!.userId;
+    const role = req.user!.role;
+    const { file } = req;
+
+    try {
+      const hashedPassword = await bcrypt.hash(passwordReq, 12);
+
+      if (file) {
+        // TODO: Analizar imagen
+        const result = await cloudinary.uploader.upload(file.path);
+        
+        await prisma.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            profilePicture: result.secure_url,
+          },
+        });
+      }
+
+      await prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          email,
+          password: hashedPassword,
+          role,
+          name,
+        },
+      });
+
+      res.status(200).json({ ok: true });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error updating user" });
     }
   },
 ];

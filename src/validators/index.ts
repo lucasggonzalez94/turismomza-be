@@ -1,5 +1,6 @@
 export * from './advertisements/createAdvertisementValidator';
 export * from './attractions/createAttractionValidator';
+export * from './auth/registerValidator';
 export * from './comments/addCommentValidator';
 export * from './comments/editCommentValidator';
 export * from './comments/likeDislikeCommentValidator';

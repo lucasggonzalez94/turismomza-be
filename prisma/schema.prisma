@@ -12,6 +12,7 @@ model User {
   name               String
   email              String         @unique
   password           String
+  profilePicture     String?
   role               Role
   two_factor_enabled Boolean        @default(false)
   two_factor_code    String?
