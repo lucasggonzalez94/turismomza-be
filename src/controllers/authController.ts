@@ -154,13 +154,27 @@ export const updateUser = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password: passwordReq, name } = req.body;
+    const { email, password: passwordReq, name, currentPassword } = req.body;
     const userId = req.user!.userId;
-    const role = req.user!.role;
     const { file } = req;
 
     try {
-      const hashedPassword = await bcrypt.hash(passwordReq, 12);
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
+
+      if (!isPasswordValid) {
+        return res.status(403).json({ error: "Current password is incorrect" });
+      }
 
       if (file) {
         const result = await cloudinary.uploader.upload(file.path);
@@ -179,21 +193,31 @@ export const updateUser = [
             });
           }
         }
+      };
+
+      let updatedData: any = {};
+      
+      if (name && name !== user.name) {
+        updatedData.name = name;
+      }
+
+      if (email && email !== user.email) {
+        updatedData.email = email;
+      }
+
+      if (passwordReq) {
+        const hashedPassword = await bcrypt.hash(passwordReq, 12);
+        updatedData.password = hashedPassword;
       }
 
       await prisma.user.update({
         where: {
           id: userId,
         },
-        data: {
-          email,
-          password: hashedPassword,
-          role,
-          name,
-        },
+        data: updatedData,
       });
 
-      res.status(200).json({ ok: true });
+      res.status(200).json({ ok: true, message: "User updated successfully" });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error updating user" });
