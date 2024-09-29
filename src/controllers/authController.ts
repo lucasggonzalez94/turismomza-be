@@ -8,6 +8,7 @@ import multer from "multer";
 
 import prisma from "../prismaClient";
 import { registerValidator } from "../validators";
+import { analyzeImage } from "../helpers";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -162,17 +163,22 @@ export const updateUser = [
       const hashedPassword = await bcrypt.hash(passwordReq, 12);
 
       if (file) {
-        // TODO: Analizar imagen
         const result = await cloudinary.uploader.upload(file.path);
-        
-        await prisma.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            profilePicture: result.secure_url,
-          },
-        });
+
+        if (result?.secure_url) {
+          const isImageAppropriate = await analyzeImage(result.secure_url);
+
+          if (isImageAppropriate) {
+            await prisma.user.update({
+              where: {
+                id: userId,
+              },
+              data: {
+                profilePicture: result.secure_url,
+              },
+            });
+          }
+        }
       }
 
       await prisma.user.update({

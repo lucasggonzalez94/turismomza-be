@@ -4,10 +4,10 @@ import multer from "multer";
 import streamifier from "streamifier";
 import { validationResult } from "express-validator";
 import axios from "axios";
-const Clarifai = require('clarifai');
 
 import prisma from "../prismaClient";
 import { createAttractionValidator } from "../validators";
+import { analyzeImage } from "../helpers";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -31,25 +31,6 @@ async function moderateText(content: string) {
   const toxicityScore =
     response.data.attributeScores.TOXICITY.summaryScore.value;
   return toxicityScore < 0.4;
-}
-
-const clarifai = new Clarifai.App({
-  apiKey: process.env.CLARIFAI_API_KEY
-});
-
-const filterInappropriateContent = (results: any[]) => {
-  return results.some((concept: { name: string, value: number }) => 
-    (concept.name === 'explicit' || concept.name === 'gore' || concept.name === 'suggestive' || concept.name === 'drug') && concept.value > 0.9
-  );
-}
-
-async function analyzeImage(imageUrl: string) {
-  try {
-    const response = await clarifai.models.predict(Clarifai.MODERATION_MODEL, imageUrl);
-    return filterInappropriateContent(response.outputs[0].data.concepts);
-  } catch (error) {
-    throw new Error('Error analizando la imagen');
-  }
 }
 
 export const createAttraction = [
