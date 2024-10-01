@@ -88,7 +88,6 @@ export const listAdvertisements = async (req: Request, res: Response) => {
 };
 
 export const listAdvertisementsByUser = async (req: Request, res: Response) => {
-  console.log('Entro')
   const { isActive, startDate, endDate } = req.query;
   const { userId } = req.params;
 
