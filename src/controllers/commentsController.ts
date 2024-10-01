@@ -33,27 +33,6 @@ const sendNotitificationLike = async (commentId: string) => {
   }
 };
 
-export const listCommentsByAttraction = async (req: Request, res: Response) => {
-  const { attractionId } = req.params;
-
-  try {
-    const comments = await prisma.comment.findMany({
-      where: {
-        attractionId,
-      },
-      include: {
-        likes: true,
-        reports: true,
-      },
-    });
-
-    res.json(comments);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error listing attractions" });
-  }
-};
-
 export const addComment = [
   ...addCommentValidator,
   async (req: Request, res: Response) => {

@@ -9,8 +9,22 @@ export const getNotifications = async (req: Request, res: Response) => {
   try {
     const notifications = await prisma.notification.findMany({
       where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profilePicture: true,
+          },
+        },
+      },
     });
-    res.json(notifications);
+
+    const notificationsWithoutReaded = notifications?.filter(
+      (notification) => !notification?.read
+    );
+    
+    res.json(notificationsWithoutReaded);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error fetching notifications" });

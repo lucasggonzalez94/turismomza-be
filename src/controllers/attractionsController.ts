@@ -64,7 +64,9 @@ export const createAttraction = [
     const userId = req.user!.userId;
 
     try {
-      const isTextAppropriate = await moderateText(`Título: ${title} Descripción: ${description}`);
+      const isTextAppropriate = await moderateText(
+        `Título: ${title} Descripción: ${description}`
+      );
       if (!isTextAppropriate) {
         return res.status(400).json({ error: "Inappropriate text detected" });
       }
@@ -133,24 +135,62 @@ export const createAttraction = [
 
 export const listAttractions = async (req: Request, res: Response) => {
   try {
-    const { title, description, creatorId, category, location, priceMin, priceMax } = req.query;
+    const {
+      title,
+      description,
+      creatorId,
+      category,
+      location,
+      priceMin,
+      priceMax,
+    } = req.query;
 
     const attractions = await prisma.attraction.findMany({
       where: {
-        title: title ? { contains: title as string, mode: "insensitive" } : undefined,
-        description: description ? { contains: description as string, mode: "insensitive" } : undefined,
+        title: title
+          ? { contains: title as string, mode: "insensitive" }
+          : undefined,
+        description: description
+          ? { contains: description as string, mode: "insensitive" }
+          : undefined,
         creatorId: creatorId ? { equals: creatorId as string } : undefined,
         category: category ? { equals: category as string } : undefined,
-        location: location ? { contains: location as string, mode: "insensitive" } : undefined,
+        location: location
+          ? { contains: location as string, mode: "insensitive" }
+          : undefined,
         price: {
           gte: priceMin ? parseFloat(priceMin as string) : undefined,
           lte: priceMax ? parseFloat(priceMax as string) : undefined,
         },
       },
       include: {
-        images: true,
-        comments: true,
-        creator: true
+        images: {
+          select: {
+            url: true,
+          },
+        },
+        comments: {
+          select: {
+            content: true,
+            rating: true,
+            user: {
+              select: {
+                name: true,
+              },
+            },
+            creation_date: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+            reports: true,
+          },
+        },
       },
     });
     res.json(attractions);
@@ -168,8 +208,33 @@ export const listAttraction = async (req: Request, res: Response) => {
         id,
       },
       include: {
-        images: true,
-        comments: true,
+        images: {
+          select: {
+            url: true,
+          },
+        },
+        comments: {
+          select: {
+            content: true,
+            rating: true,
+            user: {
+              select: {
+                name: true,
+              },
+            },
+            creation_date: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+            reports: true,
+          },
+        },
       },
     });
     res.json(attractions);
@@ -211,7 +276,9 @@ export const editAttraction = [
     }
 
     try {
-      const isTextAppropriate = await moderateText(`Título: ${title} Descripción: ${description}`);
+      const isTextAppropriate = await moderateText(
+        `Título: ${title} Descripción: ${description}`
+      );
       if (!isTextAppropriate) {
         return res.status(400).json({ error: "Inappropriate text detected" });
       }
@@ -254,7 +321,7 @@ export const editAttraction = [
                         .status(400)
                         .json({ error: "Inappropriate image detected" });
                     }
-                    
+
                     const savedImage = await prisma.image.create({
                       data: {
                         url: result.secure_url,
