@@ -17,10 +17,10 @@ const router = Router();
 
 router.post("/", authenticateToken, createAdvertisement);
 router.put("/:id", authenticateToken, updateAdvertisement);
-router.get("/", authorizeAdmin, listAdvertisements);
+router.get("/", authenticateToken, authorizeAdmin, listAdvertisements);
 router.get("/:userId", authenticateToken, listAdvertisementsByUser);
 router.delete("/:id", authenticateToken, deleteAdvertisement);
-router.put('/impression/:id', incrementImpressions);
-router.put('/click/:id', incrementClicks);
+router.put("/impression/:adId", incrementImpressions);
+router.put("/click/:adId", incrementClicks);
 
 export default router;

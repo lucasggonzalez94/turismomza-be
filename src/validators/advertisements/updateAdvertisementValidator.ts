@@ -1,15 +1,23 @@
 import { body } from "express-validator";
 
 export const updateAdvertisementValidator = [
-  body("attractionId").notEmpty().withMessage("Attraction id is required"),
   body("startDate")
-    .isDate()
+    .isISO8601()
+    .optional()
     .notEmpty()
     .withMessage("Start date must be a valid date"),
   body("endDate")
-    .isDate()
+    .isISO8601()
+    .optional()
     .notEmpty()
     .withMessage("Start date must be a valid date"),
-  body("price").toFloat().isFloat().withMessage("Price must be a valid number"),
-  body("isActive").isBoolean().withMessage("IsActive must be a valid value"),
+  body("amountPaid")
+    .toFloat()
+    .isFloat({ min: 0 })
+    .optional()
+    .withMessage("Amount must be a valid number greater than or equal to 0"),
+  body("isActive")
+    .isBoolean()
+    .optional()
+    .withMessage("IsActive must be a valid value"),
 ];

@@ -51,10 +51,10 @@ export const updateAdvertisement = [
       const advertisement = await prisma.advertisement.update({
         where: { id },
         data: {
-          startDate: startDate ? new Date(startDate) : undefined,
-          endDate: endDate ? new Date(endDate) : undefined,
-          amountPaid,
-          isActive,
+          startDate: startDate ?? undefined,
+          endDate: endDate ?? undefined,
+          amountPaid: amountPaid ?? undefined,
+          isActive: isActive ?? undefined,
         },
       });
       res.json(advertisement);
@@ -71,14 +71,15 @@ export const listAdvertisements = async (req: Request, res: Response) => {
   try {
     const advertisements = await prisma.advertisement.findMany({
       where: {
-        isActive: Boolean(isActive),
+        isActive: isActive !== undefined ? Boolean(isActive) : undefined,
         startDate: startDate
           ? { gte: new Date(startDate as string) }
           : undefined,
-        endDate: endDate ? { lte: new Date(startDate as string) } : undefined,
-        userId: userId ? { equals: userId as string } : undefined,
+        endDate: endDate ? { lte: new Date(endDate as string) } : undefined,
+        userId: userId ? (userId as string) : undefined,
       },
     });
+
     res.json(advertisements);
   } catch (error) {
     console.error(error);
@@ -87,27 +88,28 @@ export const listAdvertisements = async (req: Request, res: Response) => {
 };
 
 export const listAdvertisementsByUser = async (req: Request, res: Response) => {
+  console.log('Entro')
   const { isActive, startDate, endDate } = req.query;
   const { userId } = req.params;
 
   try {
     const advertisements = await prisma.advertisement.findMany({
       where: {
-        isActive: Boolean(isActive),
+        isActive: isActive !== undefined ? Boolean(isActive) : undefined,
         startDate: startDate
           ? { gte: new Date(startDate as string) }
           : undefined,
-        endDate: endDate ? { lte: new Date(startDate as string) } : undefined,
+        endDate: endDate ? { lte: new Date(endDate as string) } : undefined,
         userId,
       },
       select: {
         clicks: true,
-        impressions: true
+        impressions: true,
       },
     });
 
     const advertisementsWithCTR = advertisements?.map((advertisement) => ({
-      ...advertisements,
+      ...advertisement,
       ctr: (advertisement?.clicks / advertisement?.impressions) * 100,
     }));
 
@@ -134,7 +136,7 @@ export const deleteAdvertisement = async (req: Request, res: Response) => {
 
 export const incrementImpressions = async (req: Request, res: Response) => {
   try {
-    const { id: advertisementId } = req?.params;
+    const { adId: advertisementId } = req?.params;
 
     await prisma.advertisement.update({
       where: { id: advertisementId },
@@ -150,7 +152,7 @@ export const incrementImpressions = async (req: Request, res: Response) => {
 
 export const incrementClicks = async (req: Request, res: Response) => {
   try {
-    const { id: advertisementId } = req?.params;
+    const { adId: advertisementId } = req?.params;
 
     await prisma.advertisement.update({
       where: { id: advertisementId },
