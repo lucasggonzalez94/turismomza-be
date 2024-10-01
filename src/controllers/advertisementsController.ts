@@ -100,14 +100,16 @@ export const listAdvertisementsByUser = async (req: Request, res: Response) => {
         endDate: endDate ? { lte: new Date(startDate as string) } : undefined,
         userId,
       },
+      select: {
+        clicks: true,
+        impressions: true
+      },
     });
 
-    const advertisementsWithCTR = advertisements?.map(
-      (advertisement: Advertisement) => ({
-        ...advertisements,
-        ctr: (advertisement?.clicks / advertisement?.impressions) * 100,
-      })
-    );
+    const advertisementsWithCTR = advertisements?.map((advertisement) => ({
+      ...advertisements,
+      ctr: (advertisement?.clicks / advertisement?.impressions) * 100,
+    }));
 
     res.json(advertisementsWithCTR);
   } catch (error) {
