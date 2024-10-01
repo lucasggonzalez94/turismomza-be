@@ -3,8 +3,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { body, validationResult } from "express-validator";
+import { v2 as cloudinary } from "cloudinary";
+import multer from "multer";
 
 import prisma from "../prismaClient";
+import { registerValidator } from "../validators";
+import { analyzeImage } from "../helpers";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -13,14 +17,17 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD,
   },
 });
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 export const register = [
-  body("email").isEmail().withMessage("Please enter a valid email"),
-  // TODO: Validar password
-  body("password")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
-  body("name").notEmpty().withMessage("Name is required"),
+  ...registerValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -134,6 +141,86 @@ export const login = [
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error logging in" });
+    }
+  },
+];
+
+export const updateUser = [
+  upload.single("profilePicture"),
+  ...registerValidator,
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password: passwordReq, name, currentPassword } = req.body;
+    const userId = req.user!.userId;
+    const { file } = req;
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
+
+      if (!isPasswordValid) {
+        return res.status(403).json({ error: "Current password is incorrect" });
+      }
+
+      if (file) {
+        const result = await cloudinary.uploader.upload(file.path);
+
+        if (result?.secure_url) {
+          const isImageAppropriate = await analyzeImage(result.secure_url);
+
+          if (isImageAppropriate) {
+            await prisma.user.update({
+              where: {
+                id: userId,
+              },
+              data: {
+                profilePicture: result.secure_url,
+              },
+            });
+          }
+        }
+      };
+
+      let updatedData: any = {};
+      
+      if (name && name !== user.name) {
+        updatedData.name = name;
+      }
+
+      if (email && email !== user.email) {
+        updatedData.email = email;
+      }
+
+      if (passwordReq) {
+        const hashedPassword = await bcrypt.hash(passwordReq, 12);
+        updatedData.password = hashedPassword;
+      }
+
+      await prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: updatedData,
+      });
+
+      res.status(200).json({ ok: true, message: "User updated successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error updating user" });
     }
   },
 ];
