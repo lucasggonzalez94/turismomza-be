@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Advertisement, PrismaClient } from "@prisma/client";
 import { validationResult } from "express-validator";
 import { createAdvertisementValidator } from "../validators";
 import { updateAdvertisementValidator } from "../validators/advertisements/updateAdvertisementValidator";
@@ -98,10 +98,18 @@ export const listAdvertisementsByUser = async (req: Request, res: Response) => {
           ? { gte: new Date(startDate as string) }
           : undefined,
         endDate: endDate ? { lte: new Date(startDate as string) } : undefined,
-        userId
+        userId,
       },
     });
-    res.json(advertisements);
+
+    const advertisementsWithCTR = advertisements?.map(
+      (advertisement: Advertisement) => ({
+        ...advertisements,
+        ctr: (advertisement?.clicks / advertisement?.impressions) * 100,
+      })
+    );
+
+    res.json(advertisementsWithCTR);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error listing advertisements" });
@@ -119,5 +127,37 @@ export const deleteAdvertisement = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error deleting advertisement" });
+  }
+};
+
+export const incrementImpressions = async (req: Request, res: Response) => {
+  try {
+    const { id: advertisementId } = req?.params;
+
+    await prisma.advertisement.update({
+      where: { id: advertisementId },
+      data: { impressions: { increment: 1 } },
+    });
+
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ ok: false });
+  }
+};
+
+export const incrementClicks = async (req: Request, res: Response) => {
+  try {
+    const { id: advertisementId } = req?.params;
+
+    await prisma.advertisement.update({
+      where: { id: advertisementId },
+      data: { clicks: { increment: 1 } },
+    });
+
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ ok: false });
   }
 };
