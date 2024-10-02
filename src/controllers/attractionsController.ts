@@ -189,6 +189,7 @@ export const listAttractions = async (req: Request, res: Response) => {
       location,
       priceMin,
       priceMax,
+      sponsored,
     } = req.query;
 
     verifyActiveAds();
@@ -255,6 +256,10 @@ export const listAttractions = async (req: Request, res: Response) => {
         );
       })
     );
+
+    if (sponsored) {
+      return res.json(sponsoredAttractions);
+    }
 
     const regularAttractions = allAttractions?.map((attraction) => {
       const { advertisements, ...attractionWithoutAds } = attraction;
