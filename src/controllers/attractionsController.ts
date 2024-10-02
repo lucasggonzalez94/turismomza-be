@@ -62,6 +62,7 @@ export const createAttraction = [
     }
 
     const userId = req.user!.userId;
+    const userRole = req.user!.role;
 
     try {
       const isTextAppropriate = await moderateText(
@@ -69,6 +70,17 @@ export const createAttraction = [
       );
       if (!isTextAppropriate) {
         return res.status(400).json({ error: "Inappropriate text detected" });
+      }
+
+      if (userRole === 'viewer') {
+        await prisma.user.update({
+          where: {
+            id: userId
+          },
+          data: {
+            role: 'publisher'
+          }
+        });
       }
 
       const attraction = await prisma.attraction.create({
