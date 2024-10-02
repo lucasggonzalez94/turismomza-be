@@ -157,7 +157,29 @@ export const listAttractions = async (req: Request, res: Response) => {
       priceMax,
     } = req.query;
 
-    const attractions = await prisma.attraction.findMany({
+    const activeAdvertisements = await prisma.advertisement.findMany({
+      where: {
+        isActive: true,
+        endDate: {
+          lt: new Date(),
+        },
+      },
+    });
+
+    if (activeAdvertisements.length > 0) {
+      const expiredAdIds = activeAdvertisements.map((ad) => ad.id);
+
+      await prisma.advertisement.updateMany({
+        where: {
+          id: { in: expiredAdIds },
+        },
+        data: {
+          isActive: false,
+        },
+      });
+    }
+
+    const allAttractions = await prisma.attraction.findMany({
       where: {
         title: title
           ? { contains: title as string, mode: "insensitive" }
@@ -176,6 +198,7 @@ export const listAttractions = async (req: Request, res: Response) => {
         },
       },
       include: {
+        advertisements: true,
         images: {
           select: {
             url: true,
@@ -206,7 +229,32 @@ export const listAttractions = async (req: Request, res: Response) => {
         },
       },
     });
-    res.json(attractions);
+
+    const sponsoredAttractions = allAttractions.filter((attraction) => {
+      return attraction.advertisements.some(
+        (ad) => ad.isActive && ad.endDate >= new Date()
+      );
+    });
+
+    const regularAttractions = allAttractions?.map((attraction) => {
+      const { advertisements, ...attractionWithoutAds } = attraction;
+      return attractionWithoutAds;
+    });
+
+    const finalAttractions: any[] = [];
+    const chunkSize = 6;
+    let sponsoredIndex = 0;
+
+    for (let i = 0; i < regularAttractions.length; i += chunkSize) {
+      finalAttractions.push(...regularAttractions.slice(i, i + chunkSize));
+
+      if (sponsoredIndex < sponsoredAttractions.length) {
+        finalAttractions.push(sponsoredAttractions[sponsoredIndex]);
+        sponsoredIndex++;
+      }
+    }
+
+    res.json(finalAttractions);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error listing attractions" });
