@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import streamifier from "streamifier";
@@ -243,6 +243,10 @@ export const listAttractions = async (req: Request, res: Response) => {
         },
       },
     });
+
+    if (creatorId) {
+      return res.json(allAttractions);
+    }
 
     const sponsoredAttractions = shuffleArray(
       allAttractions.filter((attraction) => {
