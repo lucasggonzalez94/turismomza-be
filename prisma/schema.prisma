@@ -12,7 +12,7 @@ model User {
   name               String
   email              String          @unique
   password           String
-  profilePicture     String?
+  profilePicture     ProfilePicture?
   role               Role
   two_factor_enabled Boolean         @default(false)
   two_factor_code    String?
@@ -110,6 +110,14 @@ model Like {
   creation_date DateTime @default(now())
 
   @@unique([userId, commentId])
+}
+
+model ProfilePicture {
+  id        String @id @default(uuid())
+  public_id String
+  url       String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String @unique
 }
 
 model Report {

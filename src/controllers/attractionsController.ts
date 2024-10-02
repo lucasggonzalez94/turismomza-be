@@ -72,14 +72,14 @@ export const createAttraction = [
         return res.status(400).json({ error: "Inappropriate text detected" });
       }
 
-      if (userRole === 'viewer') {
+      if (userRole === "viewer") {
         await prisma.user.update({
           where: {
-            id: userId
+            id: userId,
           },
           data: {
-            role: 'publisher'
-          }
+            role: "publisher",
+          },
         });
       }
 
@@ -179,6 +179,7 @@ export const listAttractions = async (req: Request, res: Response) => {
         images: {
           select: {
             url: true,
+            public_id: true,
           },
         },
         comments: {
@@ -223,6 +224,7 @@ export const listAttraction = async (req: Request, res: Response) => {
         images: {
           select: {
             url: true,
+            public_id: true,
           },
         },
         comments: {

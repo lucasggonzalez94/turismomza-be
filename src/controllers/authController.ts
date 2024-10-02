@@ -59,21 +59,20 @@ export const register = [
           role: "viewer",
           name,
         },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePicture: true,
+          role: true,
+        },
       });
       const token = jwt.sign(
         { userId: user.id, role: user.role },
         process.env.ACCESS_TOKEN_SECRET as string,
         { expiresIn: "1h" }
       );
-      const {
-        id,
-        password,
-        two_factor_code,
-        two_factor_expires,
-        registration_date,
-        ...restUser
-      } = user;
-      res.status(201).json({ ...restUser, token });
+      res.status(201).json({ user, token });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error registering user" });
@@ -94,6 +93,9 @@ export const login = [
     try {
       const user = await prisma.user.findUnique({
         where: { email },
+        include: {
+          profilePicture: true
+        }
       });
 
       if (!user || !(await bcrypt.compare(passwordReq, user.password))) {
@@ -108,7 +110,7 @@ export const login = [
           data: {
             two_factor_code: code,
             two_factor_expires: new Date(Date.now() + 10 * 60 * 1000),
-          }, // Expira en 10 minutos
+          },
         });
 
         await transporter.sendMail({
@@ -160,6 +162,7 @@ export const updateUser = [
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
+        include: { profilePicture: true },
       });
 
       if (!user) {
@@ -176,6 +179,15 @@ export const updateUser = [
       }
 
       if (file) {
+        if (user.profilePicture) {
+          const publicId = user.profilePicture.public_id;
+          await cloudinary.uploader.destroy(publicId);
+
+          await prisma.profilePicture.delete({
+            where: { userId },
+          });
+        }
+
         const uploadStream = cloudinary.uploader.upload_stream(
           { resource_type: "image" },
           async (error, result) => {
@@ -189,12 +201,11 @@ export const updateUser = [
             if (result?.secure_url) {
               const isImageAppropriate = await analyzeImage(result.secure_url);
               if (isImageAppropriate) {
-                await prisma.user.update({
-                  where: {
-                    id: userId,
-                  },
+                await prisma.profilePicture.create({
                   data: {
-                    profilePicture: result.secure_url,
+                    public_id: result.public_id,
+                    url: result.secure_url,
+                    userId,
                   },
                 });
               }
