@@ -232,6 +232,15 @@ export const updateUser = [
       if (passwordReq) {
         const hashedPassword = await bcrypt.hash(passwordReq, 12);
         updatedData.password = hashedPassword;
+
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: user.email,
+          subject: "Tu contraseña ha sido actualizada",
+          text: `Hola ${user.name},\n\nTu contraseña ha sido actualizada exitosamente. Si no fuiste tú quien realizó este cambio, por favor contacta a nuestro soporte.\n\nSaludos,\nEl equipo de Turismomza.`,
+        };
+
+        await transporter.sendMail(mailOptions);
       }
 
       await prisma.user.update({

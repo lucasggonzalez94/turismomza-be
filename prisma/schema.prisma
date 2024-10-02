@@ -45,6 +45,7 @@ model Attraction {
   timeOpen       String?
   timeClose      String?
   price          Float?
+  currencyPrice  CurrencyType? @default(ars)
   images         Image[]
   comments       Comment[]
   favorites      Favorite[]
@@ -147,4 +148,9 @@ enum Role {
 enum NotificationType {
   comment
   like
+}
+
+enum CurrencyType {
+  ars
+  usd
 }

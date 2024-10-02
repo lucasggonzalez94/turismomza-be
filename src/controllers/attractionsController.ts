@@ -18,7 +18,7 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-async function moderateText(content: string) {
+const moderateText = async (content: string) => {
   const apiKey = process.env.PERSPECTIVE_API_KEY;
   const url = `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${apiKey}`;
 
@@ -31,7 +31,39 @@ async function moderateText(content: string) {
   const toxicityScore =
     response.data.attributeScores.TOXICITY.summaryScore.value;
   return toxicityScore < 0.4;
-}
+};
+
+const verifyActiveAds = async () => {
+  const activeAdvertisements = await prisma.advertisement.findMany({
+    where: {
+      isActive: true,
+      endDate: {
+        lt: new Date(),
+      },
+    },
+  });
+
+  if (activeAdvertisements.length > 0) {
+    const expiredAdIds = activeAdvertisements.map((ad) => ad.id);
+
+    await prisma.advertisement.updateMany({
+      where: {
+        id: { in: expiredAdIds },
+      },
+      data: {
+        isActive: false,
+      },
+    });
+  }
+};
+
+const shuffleArray = (array: any[]) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1)); // Elegir índice aleatorio
+    [array[i], array[j]] = [array[j], array[i]]; // Intercambiar elementos
+  }
+  return array;
+};
 
 export const createAttraction = [
   upload.array("images"),
@@ -54,6 +86,7 @@ export const createAttraction = [
       timeOpen,
       timeClose,
       price,
+      currencyPrice,
     } = req.body;
 
     let services = [];
@@ -99,6 +132,7 @@ export const createAttraction = [
           timeOpen,
           timeClose,
           price,
+          currencyPrice,
         },
       });
 
@@ -157,27 +191,7 @@ export const listAttractions = async (req: Request, res: Response) => {
       priceMax,
     } = req.query;
 
-    const activeAdvertisements = await prisma.advertisement.findMany({
-      where: {
-        isActive: true,
-        endDate: {
-          lt: new Date(),
-        },
-      },
-    });
-
-    if (activeAdvertisements.length > 0) {
-      const expiredAdIds = activeAdvertisements.map((ad) => ad.id);
-
-      await prisma.advertisement.updateMany({
-        where: {
-          id: { in: expiredAdIds },
-        },
-        data: {
-          isActive: false,
-        },
-      });
-    }
+    verifyActiveAds();
 
     const allAttractions = await prisma.attraction.findMany({
       where: {
@@ -230,11 +244,13 @@ export const listAttractions = async (req: Request, res: Response) => {
       },
     });
 
-    const sponsoredAttractions = allAttractions.filter((attraction) => {
-      return attraction.advertisements.some(
-        (ad) => ad.isActive && ad.endDate >= new Date()
-      );
-    });
+    const sponsoredAttractions = shuffleArray(
+      allAttractions.filter((attraction) => {
+        return attraction.advertisements.some(
+          (ad) => ad.isActive && ad.endDate >= new Date()
+        );
+      })
+    );
 
     const regularAttractions = allAttractions?.map((attraction) => {
       const { advertisements, ...attractionWithoutAds } = attraction;
@@ -306,6 +322,29 @@ export const listAttraction = async (req: Request, res: Response) => {
   }
 };
 
+export const listAttractionsByUser = async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  try {
+    const attractions = await prisma.attraction.findMany({
+      where: {
+        creatorId: userId,
+      },
+      include: {
+        images: {
+          select: {
+            url: true,
+            public_id: true,
+          },
+        },
+      },
+    });
+    res.json(attractions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error listing attractions" });
+  }
+};
+
 export const editAttraction = [
   upload.array("images"),
   ...createAttractionValidator,
@@ -330,6 +369,7 @@ export const editAttraction = [
       timeOpen,
       timeClose,
       price,
+      currencyPrice,
     } = req.body;
 
     let services = [];
@@ -418,6 +458,7 @@ export const editAttraction = [
           timeOpen,
           timeClose,
           price,
+          currencyPrice,
         },
         include: {
           images: true,
