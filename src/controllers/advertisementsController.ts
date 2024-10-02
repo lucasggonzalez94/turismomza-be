@@ -101,6 +101,17 @@ export const listAdvertisementsByUser = async (req: Request, res: Response) => {
         endDate: endDate ? { lte: new Date(endDate as string) } : undefined,
         userId,
       },
+      select: {
+        id: true,
+        attractionId: true,
+        userId: true,
+        startDate: true,
+        endDate: true,
+        amountPaid: true,
+        isActive: true,
+        impressions: true,
+        clicks: true,
+      },
     });
 
     const advertisementsWithCTR = advertisements?.map((advertisement) => ({
