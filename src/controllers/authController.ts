@@ -2,13 +2,16 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import { body, validationResult } from "express-validator";
+import { validationResult } from "express-validator";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 
 import prisma from "../prismaClient";
 import { registerValidator } from "../validators";
 import { analyzeImage } from "../helpers";
+import { loginValidator } from "../validators/auth/loginValidator";
+import { updateValidator } from "../validators/auth/updateValidator";
+import { Readable } from "stream";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -79,11 +82,7 @@ export const register = [
 ];
 
 export const login = [
-  body("email").isEmail().withMessage("Please enter a valid email"),
-  // TODO: Validar password
-  body("password")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
+  ...loginValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -147,7 +146,7 @@ export const login = [
 
 export const updateUser = [
   upload.single("profilePicture"),
-  ...registerValidator,
+  ...updateValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -177,26 +176,40 @@ export const updateUser = [
       }
 
       if (file) {
-        const result = await cloudinary.uploader.upload(file.path);
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { resource_type: "image" },
+          async (error, result) => {
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              return res
+                .status(500)
+                .json({ error: "Error uploading to Cloudinary" });
+            }
 
-        if (result?.secure_url) {
-          const isImageAppropriate = await analyzeImage(result.secure_url);
-
-          if (isImageAppropriate) {
-            await prisma.user.update({
-              where: {
-                id: userId,
-              },
-              data: {
-                profilePicture: result.secure_url,
-              },
-            });
+            if (result?.secure_url) {
+              const isImageAppropriate = await analyzeImage(result.secure_url);
+              if (isImageAppropriate) {
+                await prisma.user.update({
+                  where: {
+                    id: userId,
+                  },
+                  data: {
+                    profilePicture: result.secure_url,
+                  },
+                });
+              }
+            }
           }
-        }
-      };
+        );
+
+        const bufferStream = new Readable();
+        bufferStream.push(file.buffer);
+        bufferStream.push(null);
+        bufferStream.pipe(uploadStream);
+      }
 
       let updatedData: any = {};
-      
+
       if (name && name !== user.name) {
         updatedData.name = name;
       }
