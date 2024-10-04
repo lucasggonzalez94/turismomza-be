@@ -197,7 +197,6 @@ export const updateUser = [
                 .status(500)
                 .json({ error: "Error uploading to Cloudinary" });
             }
-
             if (result?.secure_url) {
               const isImageAppropriate = await analyzeImage(result.secure_url);
               if (isImageAppropriate) {
@@ -208,6 +207,8 @@ export const updateUser = [
                     userId,
                   },
                 });
+              } else {
+                return res.status(500).json({ message: 'Inapropiated image' });
               }
             }
           }
