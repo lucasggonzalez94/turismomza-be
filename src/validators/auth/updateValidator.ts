@@ -6,6 +6,7 @@ export const updateValidator = [
     .isLength({ min: 8 })
     .withMessage("Current password must be at least 6 characters long"),
   body("password")
+    .optional()
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters long")
     .matches(/[A-Z]/)
