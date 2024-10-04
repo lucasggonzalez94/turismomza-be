@@ -94,8 +94,8 @@ export const login = [
       const user = await prisma.user.findUnique({
         where: { email },
         include: {
-          profilePicture: true
-        }
+          profilePicture: true,
+        },
       });
 
       if (!user || !(await bcrypt.compare(passwordReq, user.password))) {
@@ -271,6 +271,7 @@ export const listUsers = async (_: Request, res: Response) => {
         two_factor_code: false,
         two_factor_enabled: false,
         two_factor_expires: false,
+        profilePicture: true,
       },
     });
 
