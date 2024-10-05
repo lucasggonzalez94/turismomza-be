@@ -10,6 +10,7 @@ import prisma from "../prismaClient";
 import { createAttractionValidator } from "../validators";
 import { analyzeImage } from "../helpers";
 import { verifyActiveAds } from "./advertisementsController";
+import { updateAttractionValidator } from "../validators/attractions/updateAttractionValidator";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -477,7 +478,7 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
 
 export const editAttraction = [
   upload.array("images"),
-  ...createAttractionValidator,
+  ...updateAttractionValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
