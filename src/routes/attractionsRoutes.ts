@@ -4,7 +4,7 @@ import {
   listAttractions,
   editAttraction,
   deleteAttraction,
-  listAttraction,
+  listAttractionBySlug,
 } from "../controllers/attractionsController";
 import { authenticateToken } from "../middleware/authMiddleware";
 
@@ -12,7 +12,7 @@ const router = Router();
 
 router.get("/", listAttractions);
 router.post("/", authenticateToken, createAttraction);
-router.get("/:id", listAttraction);
+router.get("/:slug", listAttractionBySlug);
 router.put("/:id", authenticateToken, editAttraction);
 router.delete("/:id", authenticateToken, deleteAttraction);
 

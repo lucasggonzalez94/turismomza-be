@@ -348,12 +348,12 @@ export const listAttractions = async (req: Request, res: Response) => {
   }
 };
 
-export const listAttraction = async (req: Request, res: Response) => {
-  const { id } = req.params;
+export const listAttractionBySlug = async (req: Request, res: Response) => {
+  const { slug } = req.params;
   try {
     const attractions = await prisma.attraction.findUnique({
       where: {
-        id,
+        slug,
       },
       include: {
         images: {
