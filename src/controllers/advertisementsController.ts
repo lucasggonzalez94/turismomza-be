@@ -6,6 +6,30 @@ import { updateAdvertisementValidator } from "../validators/advertisements/updat
 
 const prisma = new PrismaClient();
 
+export const verifyActiveAds = async () => {
+  const activeAdvertisements = await prisma.advertisement.findMany({
+    where: {
+      isActive: true,
+      endDate: {
+        lt: new Date(),
+      },
+    },
+  });
+
+  if (activeAdvertisements.length > 0) {
+    const expiredAdIds = activeAdvertisements.map((ad) => ad.id);
+
+    await prisma.advertisement.updateMany({
+      where: {
+        id: { in: expiredAdIds },
+      },
+      data: {
+        isActive: false,
+      },
+    });
+  }
+};
+
 export const createAdvertisement = [
   ...createAdvertisementValidator,
   async (req: Request, res: Response) => {
@@ -69,6 +93,8 @@ export const listAdvertisements = async (req: Request, res: Response) => {
   const { isActive, startDate, endDate, userId } = req.query;
 
   try {
+    verifyActiveAds();
+
     const advertisements = await prisma.advertisement.findMany({
       where: {
         isActive: isActive !== undefined ? Boolean(isActive) : undefined,
@@ -92,6 +118,8 @@ export const listAdvertisementsByUser = async (req: Request, res: Response) => {
   const { userId } = req.params;
 
   try {
+    verifyActiveAds();
+
     const advertisements = await prisma.advertisement.findMany({
       where: {
         isActive: isActive !== undefined ? Boolean(isActive) : undefined,

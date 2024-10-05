@@ -8,6 +8,7 @@ import axios from "axios";
 import prisma from "../prismaClient";
 import { createAttractionValidator } from "../validators";
 import { analyzeImage } from "../helpers";
+import { verifyActiveAds } from "./advertisementsController";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -31,30 +32,6 @@ const moderateText = async (content: string) => {
   const toxicityScore =
     response.data.attributeScores.TOXICITY.summaryScore.value;
   return toxicityScore < 0.4;
-};
-
-const verifyActiveAds = async () => {
-  const activeAdvertisements = await prisma.advertisement.findMany({
-    where: {
-      isActive: true,
-      endDate: {
-        lt: new Date(),
-      },
-    },
-  });
-
-  if (activeAdvertisements.length > 0) {
-    const expiredAdIds = activeAdvertisements.map((ad) => ad.id);
-
-    await prisma.advertisement.updateMany({
-      where: {
-        id: { in: expiredAdIds },
-      },
-      data: {
-        isActive: false,
-      },
-    });
-  }
 };
 
 const shuffleArray = (array: any[]) => {
