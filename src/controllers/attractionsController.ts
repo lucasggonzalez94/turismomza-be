@@ -289,19 +289,30 @@ export const listAttractions = async (req: Request, res: Response) => {
       return res.json(sponsoredAttractions);
     }
 
-    const regularAttractions = attractions?.map((attraction) => {
-      const { advertisements, ...attractionWithoutAds } = attraction;
-      return attractionWithoutAds;
-    });
-
     const finalAttractions: any[] = [];
+    if (sponsoredAttractions.length > 0) {
+      finalAttractions.push(sponsoredAttractions[0]);
+    }
+
+    const regularAttractions = attractions
+      ?.filter(
+        (attraction) =>
+          !sponsoredAttractions.some(
+            (sponsored) => sponsored.id === attraction.id
+          )
+      )
+      ?.map((attraction) => {
+        const { advertisements, ...attractionWithoutAds } = attraction;
+        return attractionWithoutAds;
+      });
+
     const chunkSize = 6;
-    let sponsoredIndex = 0;
+    let sponsoredIndex = 1;
 
     for (let i = 0; i < regularAttractions.length; i += chunkSize) {
       finalAttractions.push(...regularAttractions.slice(i, i + chunkSize));
 
-      if (sponsoredIndex < sponsoredAttractions.length) {
+      if (sponsoredIndex === 0 || sponsoredIndex < sponsoredAttractions.length) {
         finalAttractions.push(sponsoredAttractions[sponsoredIndex]);
         sponsoredIndex++;
       }
