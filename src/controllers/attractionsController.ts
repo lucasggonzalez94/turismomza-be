@@ -572,17 +572,24 @@ export const editAttraction = [
         );
       }
 
-      const slug = await generateUniqueSlug(title);
+      if (title) {
+        const slug = await generateUniqueSlug(title);
+
+        await prisma.attraction.update({
+          where: { id },
+          data: {
+            slug,
+          },
+        });
+      }
 
       const updatedAttraction = await prisma.attraction.update({
         where: { id },
         data: {
           title,
-          slug,
           description,
           location,
           category,
-          creatorId: userId,
           services,
           contactNumber,
           email,
