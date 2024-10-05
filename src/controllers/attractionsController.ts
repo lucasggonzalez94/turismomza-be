@@ -269,21 +269,15 @@ export const listAttractions = async (req: Request, res: Response) => {
           },
         },
         favorites: {
-          where: {
-            userId: creatorId as string,
-          },
           select: {
             id: true,
+            userId: true,
           },
         },
       },
       skip,
       take: pageSizeNumber,
     });
-
-    if (creatorId) {
-      return res.json(attractions);
-    }
 
     const sponsoredAttractions = shuffleArray(
       attractions.filter((attraction) => {
@@ -297,7 +291,7 @@ export const listAttractions = async (req: Request, res: Response) => {
       return res.json(sponsoredAttractions);
     }
 
-    const finalAttractions: any[] = [];
+    let finalAttractions: any[] = [];
     if (sponsoredAttractions.length > 0) {
       finalAttractions.push(sponsoredAttractions[0]);
     }
@@ -320,18 +314,33 @@ export const listAttractions = async (req: Request, res: Response) => {
     for (let i = 0; i < regularAttractions.length; i += chunkSize) {
       finalAttractions.push(...regularAttractions.slice(i, i + chunkSize));
 
-      if (sponsoredIndex === 0 || sponsoredIndex < sponsoredAttractions.length) {
+      if (
+        sponsoredIndex === 0 ||
+        sponsoredIndex < sponsoredAttractions.length
+      ) {
         finalAttractions.push(sponsoredAttractions[sponsoredIndex]);
         sponsoredIndex++;
       }
     }
+
+    const favoriteAttractions = finalAttractions.map((attraction) => {
+      const favoriteByCreator = attraction?.favorites?.some(
+        (fav: any) => fav.userId === creatorId
+      );
+      const isFavorite = attraction.favorites.length > 0 && favoriteByCreator;
+      const { favorites, ...attractionWithoutFavorites } = attraction;
+      return {
+        ...attractionWithoutFavorites,
+        isFavorite,
+      };
+    });
 
     res.json({
       total: totalAttractions,
       page: pageNumber,
       pageSize,
       totalPages: Math.ceil(totalAttractions / pageSizeNumber),
-      data: finalAttractions,
+      data: favoriteAttractions,
     });
   } catch (error) {
     console.error(error);
