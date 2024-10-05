@@ -4,6 +4,7 @@ import multer from "multer";
 import streamifier from "streamifier";
 import { validationResult } from "express-validator";
 import axios from "axios";
+import slugify from "slugify";
 
 import prisma from "../prismaClient";
 import { createAttractionValidator } from "../validators";
@@ -40,6 +41,25 @@ const shuffleArray = (array: any[]) => {
     [array[i], array[j]] = [array[j], array[i]]; // Intercambiar elementos
   }
   return array;
+};
+
+const generateUniqueSlug = async (title: string) => {
+  const baseSlug = slugify(title, { lower: true, remove: /[*+~.()'"!:@]/g });
+  let slug = baseSlug;
+  let attractionExists = await prisma.attraction.findUnique({
+    where: { slug },
+  });
+  let count = 1;
+
+  while (attractionExists) {
+    slug = `${baseSlug}-${count}`;
+    attractionExists = await prisma.attraction.findUnique({
+      where: { slug },
+    });
+    count++;
+  }
+
+  return slug;
 };
 
 export const createAttraction = [
@@ -82,6 +102,8 @@ export const createAttraction = [
         return res.status(400).json({ error: "Inappropriate text detected" });
       }
 
+      const slug = await generateUniqueSlug(title);
+
       if (userRole === "viewer") {
         await prisma.user.update({
           where: {
@@ -96,6 +118,7 @@ export const createAttraction = [
       const attraction = await prisma.attraction.create({
         data: {
           title,
+          slug,
           description,
           location,
           category,
@@ -520,10 +543,13 @@ export const editAttraction = [
         );
       }
 
+      const slug = await generateUniqueSlug(title);
+
       const updatedAttraction = await prisma.attraction.update({
         where: { id },
         data: {
           title,
+          slug,
           description,
           location,
           category,
