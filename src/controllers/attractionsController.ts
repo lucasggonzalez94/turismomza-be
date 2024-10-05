@@ -268,6 +268,14 @@ export const listAttractions = async (req: Request, res: Response) => {
             reports: true,
           },
         },
+        favorites: {
+          where: {
+            userId: creatorId as string,
+          },
+          select: {
+            id: true,
+          },
+        },
       },
       skip,
       take: pageSizeNumber,
