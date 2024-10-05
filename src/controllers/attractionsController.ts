@@ -157,21 +157,47 @@ export const createAttraction = [
 ];
 
 export const listAttractions = async (req: Request, res: Response) => {
-  try {
-    const {
-      title,
-      description,
-      creatorId,
-      category,
-      location,
-      priceMin,
-      priceMax,
-      sponsored,
-    } = req.query;
+  const {
+    title,
+    description,
+    creatorId,
+    category,
+    location,
+    priceMin,
+    priceMax,
+    sponsored,
+    page = 1,
+    pageSize = 10,
+  } = req.query;
 
+  const pageNumber = parseInt(page as string, 10);
+  const pageSizeNumber = parseInt(pageSize as string, 10);
+  const skip = (pageNumber - 1) * pageSizeNumber;
+
+  try {
     verifyActiveAds();
 
-    const allAttractions = await prisma.attraction.findMany({
+    const totalAttractions = await prisma.attraction.count({
+      where: {
+        title: title
+          ? { contains: title as string, mode: "insensitive" }
+          : undefined,
+        description: description
+          ? { contains: description as string, mode: "insensitive" }
+          : undefined,
+        creatorId: creatorId ? { equals: creatorId as string } : undefined,
+        category: category ? { equals: category as string } : undefined,
+        location: location
+          ? { contains: location as string, mode: "insensitive" }
+          : undefined,
+        price: {
+          gte: priceMin ? parseFloat(priceMin as string) : undefined,
+          lte: priceMax ? parseFloat(priceMax as string) : undefined,
+        },
+      },
+    });
+
+    const attractions = await prisma.attraction.findMany({
       where: {
         title: title
           ? { contains: title as string, mode: "insensitive" }
@@ -220,14 +246,16 @@ export const listAttractions = async (req: Request, res: Response) => {
           },
         },
       },
+      skip,
+      take: pageSizeNumber,
     });
 
     if (creatorId) {
-      return res.json(allAttractions);
+      return res.json(attractions);
     }
 
     const sponsoredAttractions = shuffleArray(
-      allAttractions.filter((attraction) => {
+      attractions.filter((attraction) => {
         return attraction.advertisements.some(
           (ad) => ad.isActive && ad.endDate >= new Date()
         );
@@ -238,7 +266,7 @@ export const listAttractions = async (req: Request, res: Response) => {
       return res.json(sponsoredAttractions);
     }
 
-    const regularAttractions = allAttractions?.map((attraction) => {
+    const regularAttractions = attractions?.map((attraction) => {
       const { advertisements, ...attractionWithoutAds } = attraction;
       return attractionWithoutAds;
     });
@@ -256,7 +284,13 @@ export const listAttractions = async (req: Request, res: Response) => {
       }
     }
 
-    res.json(finalAttractions);
+    res.json({
+      total: totalAttractions,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(totalAttractions / pageSizeNumber),
+      data: finalAttractions,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error listing attractions" });
@@ -309,10 +343,60 @@ export const listAttraction = async (req: Request, res: Response) => {
 };
 
 export const listAttractionsByUser = async (req: Request, res: Response) => {
+  const {
+    title,
+    description,
+    category,
+    location,
+    priceMin,
+    priceMax,
+    page = 1,
+    pageSize = 10,
+  } = req.query;
+
+  const pageNumber = parseInt(page as string, 10);
+  const pageSizeNumber = parseInt(pageSize as string, 10);
+  const skip = (pageNumber - 1) * pageSizeNumber;
+
   const userId = req.user!.userId;
+
   try {
+    const totalAttractions = await prisma.attraction.count({
+      where: {
+        title: title
+          ? { contains: title as string, mode: "insensitive" }
+          : undefined,
+        description: description
+          ? { contains: description as string, mode: "insensitive" }
+          : undefined,
+        category: category ? { equals: category as string } : undefined,
+        location: location
+          ? { contains: location as string, mode: "insensitive" }
+          : undefined,
+        price: {
+          gte: priceMin ? parseFloat(priceMin as string) : undefined,
+          lte: priceMax ? parseFloat(priceMax as string) : undefined,
+        },
+        creatorId: userId,
+      },
+    });
+
     const attractions = await prisma.attraction.findMany({
       where: {
+        title: title
+          ? { contains: title as string, mode: "insensitive" }
+          : undefined,
+        description: description
+          ? { contains: description as string, mode: "insensitive" }
+          : undefined,
+        category: category ? { equals: category as string } : undefined,
+        location: location
+          ? { contains: location as string, mode: "insensitive" }
+          : undefined,
+        price: {
+          gte: priceMin ? parseFloat(priceMin as string) : undefined,
+          lte: priceMax ? parseFloat(priceMax as string) : undefined,
+        },
         creatorId: userId,
       },
       include: {
@@ -323,8 +407,17 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
           },
         },
       },
+      skip,
+      take: pageSizeNumber,
     });
-    res.json(attractions);
+
+    res.json({
+      total: totalAttractions,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(totalAttractions / pageSizeNumber),
+      data: attractions,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error listing attractions" });

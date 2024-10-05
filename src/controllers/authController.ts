@@ -259,8 +259,19 @@ export const updateUser = [
   },
 ];
 
-export const listUsers = async (_: Request, res: Response) => {
+export const listUsers = async (req: Request, res: Response) => {
+  const {
+    page = 1,
+    pageSize = 10,
+  } = req.query;
+
+  const pageNumber = parseInt(page as string, 10);
+  const pageSizeNumber = parseInt(pageSize as string, 10);
+  const skip = (pageNumber - 1) * pageSizeNumber;
+
   try {
+    const totalUsers = await prisma.user.count();
+
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -274,9 +285,17 @@ export const listUsers = async (_: Request, res: Response) => {
         two_factor_expires: false,
         profilePicture: true,
       },
+      skip,
+      take: pageSizeNumber,
     });
 
-    res.json(users);
+    res.json({
+      total: totalUsers,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(totalUsers / pageSizeNumber),
+      data: users,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error listing users" });

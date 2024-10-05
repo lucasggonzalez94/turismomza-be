@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Advertisement, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { validationResult } from "express-validator";
 import { createAdvertisementValidator } from "../validators";
 import { updateAdvertisementValidator } from "../validators/advertisements/updateAdvertisementValidator";
@@ -90,12 +90,23 @@ export const updateAdvertisement = [
 ];
 
 export const listAdvertisements = async (req: Request, res: Response) => {
-  const { isActive, startDate, endDate, userId } = req.query;
+  const {
+    isActive,
+    startDate,
+    endDate,
+    userId,
+    page = 1,
+    pageSize = 10,
+  } = req.query;
+
+  const pageNumber = parseInt(page as string, 10);
+  const pageSizeNumber = parseInt(pageSize as string, 10);
+  const skip = (pageNumber - 1) * pageSizeNumber;
 
   try {
     verifyActiveAds();
 
-    const advertisements = await prisma.advertisement.findMany({
+    const totalAdvertisements = await prisma.advertisement.count({
       where: {
         isActive: isActive !== undefined ? Boolean(isActive) : undefined,
         startDate: startDate
@@ -106,7 +117,26 @@ export const listAdvertisements = async (req: Request, res: Response) => {
       },
     });
 
-    res.json(advertisements);
+    const advertisements = await prisma.advertisement.findMany({
+      where: {
+        isActive: isActive !== undefined ? Boolean(isActive) : undefined,
+        startDate: startDate
+          ? { gte: new Date(startDate as string) }
+          : undefined,
+        endDate: endDate ? { lte: new Date(endDate as string) } : undefined,
+        userId: userId ? (userId as string) : undefined,
+      },
+      skip,
+      take: pageSizeNumber,
+    });
+
+    res.json({
+      total: totalAdvertisements,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(totalAdvertisements / pageSizeNumber),
+      data: advertisements,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error listing advertisements" });
@@ -114,11 +144,26 @@ export const listAdvertisements = async (req: Request, res: Response) => {
 };
 
 export const listAdvertisementsByUser = async (req: Request, res: Response) => {
-  const { isActive, startDate, endDate } = req.query;
+  const { isActive, startDate, endDate, page = 1, pageSize = 10 } = req.query;
   const { userId } = req.params;
+
+  const pageNumber = parseInt(page as string, 10);
+  const pageSizeNumber = parseInt(pageSize as string, 10);
+  const skip = (pageNumber - 1) * pageSizeNumber;
 
   try {
     verifyActiveAds();
+
+    const totalAdvertisements = await prisma.advertisement.count({
+      where: {
+        isActive: isActive !== undefined ? Boolean(isActive) : undefined,
+        startDate: startDate
+          ? { gte: new Date(startDate as string) }
+          : undefined,
+        endDate: endDate ? { lte: new Date(endDate as string) } : undefined,
+        userId,
+      },
+    });
 
     const advertisements = await prisma.advertisement.findMany({
       where: {
@@ -140,6 +185,8 @@ export const listAdvertisementsByUser = async (req: Request, res: Response) => {
         impressions: true,
         clicks: true,
       },
+      skip,
+      take: pageSizeNumber,
     });
 
     const advertisementsWithCTR = advertisements?.map((advertisement) => ({
@@ -147,7 +194,13 @@ export const listAdvertisementsByUser = async (req: Request, res: Response) => {
       ctr: (advertisement?.clicks / advertisement?.impressions) * 100,
     }));
 
-    res.json(advertisementsWithCTR);
+    res.json({
+      total: totalAdvertisements,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(totalAdvertisements / pageSizeNumber),
+      data: advertisementsWithCTR,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error listing advertisements" });

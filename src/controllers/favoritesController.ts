@@ -47,9 +47,24 @@ export const addOrRemoveFavorite = [
 ];
 
 export const listFavoritesByUser = async (req: Request, res: Response) => {
+  const {
+    page = 1,
+    pageSize = 10,
+  } = req.query;
+
+  const pageNumber = parseInt(page as string, 10);
+  const pageSizeNumber = parseInt(pageSize as string, 10);
+  const skip = (pageNumber - 1) * pageSizeNumber;
+
   const userId = req.user?.userId;
 
   try {
+    const totalAttractions = (await prisma.favorite.count({
+      where: {
+        userId,
+      },
+    }));
+
     const favoriteAttractions = (await prisma.favorite.findMany({
       where: {
         userId,
@@ -87,13 +102,21 @@ export const listFavoritesByUser = async (req: Request, res: Response) => {
           },
         },
       },
+      skip,
+      take: pageSizeNumber,
     })) as { attraction: { images: any[]; comments: any[] } }[];
 
     const attractions = favoriteAttractions.map(
       (favorite) => favorite.attraction
     );
 
-    res.json(attractions);
+    res.json({
+      total: totalAttractions,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(totalAttractions / pageSizeNumber),
+      data: attractions,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error fetching favorites" });
