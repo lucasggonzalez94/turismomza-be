@@ -42,6 +42,17 @@ CLOUDINARY_API_SECRET=<your_api_secret>
 
 # API Key Clarifai
 CLARIFAI_API_KEY=<your_api_key>
+
+# Paypal
+PAYPAL_CLIENT_ID=<your_client_id>
+PAYPAL_CLIENT_SECRET=<your_client_secret>
+
+# Mercado Pago
+MERCADOPAGO_ACCESS_TOKEN=<your-access-token>
+
+# Email
+EMAIL_USER=turismomzacontact@gmail.com
+EMAIL_PASSWORD=<your_password>
 ```
 
 ### 4. Levantar la Base de Datos con Docker
