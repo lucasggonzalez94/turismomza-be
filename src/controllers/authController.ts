@@ -5,6 +5,7 @@ import nodemailer from "nodemailer";
 import { validationResult } from "express-validator";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
+import { v4 as uuidv4 } from 'uuid';
 
 import prisma from "../prismaClient";
 import { registerValidator } from "../validators";
@@ -67,12 +68,21 @@ export const register = [
           role: true,
         },
       });
+
       const token = jwt.sign(
         { userId: user.id, role: user.role },
         process.env.ACCESS_TOKEN_SECRET as string,
         { expiresIn: "1h" }
       );
-      res.status(201).json({ user, token });
+
+      res.cookie("authToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 3600000,
+        sameSite: "strict",
+      });
+
+      res.status(201).json(user);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error registering user" });
@@ -125,11 +135,36 @@ export const login = [
           .json({ message: "2FA code sent, please verify", userId: user.id });
       }
 
-      const token = jwt.sign(
+      const accessToken = jwt.sign(
         { userId: user.id, role: user.role },
         process.env.ACCESS_TOKEN_SECRET as string,
         { expiresIn: "1h" }
       );
+
+      const refreshToken = uuidv4();
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      await prisma.refreshToken.create({
+        data: {
+          token: refreshToken,
+          userId: user.id,
+          expiresAt
+        },
+      });
+
+      res.cookie("authToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 3600000,
+        sameSite: "strict",
+      });
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 604800000, // 7 días
+        sameSite: "strict",
+      });
+
       const {
         id,
         password,
@@ -138,7 +173,8 @@ export const login = [
         registration_date,
         ...restUser
       } = user;
-      res.status(200).json({ ...restUser, token });
+
+      res.status(200).json({ ...restUser });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error logging in" });
@@ -208,7 +244,7 @@ export const updateUser = [
                   },
                 });
               } else {
-                return res.status(500).json({ message: 'Inapropiated image' });
+                return res.status(500).json({ message: "Inapropiated image" });
               }
             }
           }
@@ -260,10 +296,7 @@ export const updateUser = [
 ];
 
 export const listUsers = async (req: Request, res: Response) => {
-  const {
-    page = 1,
-    pageSize = 10,
-  } = req.query;
+  const { page = 1, pageSize = 10 } = req.query;
 
   const pageNumber = parseInt(page as string, 10);
   const pageSizeNumber = parseInt(pageSize as string, 10);
@@ -299,6 +332,83 @@ export const listUsers = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error listing users" });
+  }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ error: "No refresh token provided" });
+  }
+
+  try {
+    const tokenEntry = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+    });
+
+    if (!tokenEntry) {
+      return res.status(403).json({ error: "Invalid refresh token" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: tokenEntry.userId },
+      include: {
+        profilePicture: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(403).json({ error: "User not found" });
+    }
+
+    const accessToken = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.ACCESS_TOKEN_SECRET as string,
+      { expiresIn: "1h" }
+    );
+
+    res.cookie("authToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 3600000,
+      sameSite: "strict",
+    });
+
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error refreshing token" });
+  }
+};
+
+export const verifyToken = async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profilePicture: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const {
+      id,
+      password,
+      two_factor_code,
+      two_factor_expires,
+      registration_date,
+      ...restUser
+    } = user;
+    res.status(200).json({ ...restUser });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error logging in" });
   }
 };
 

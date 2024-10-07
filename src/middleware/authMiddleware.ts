@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 export const authenticateToken = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const token = req.cookies.authToken;
 
   if (token == null)
     return res.status(401).json({ error: "No token provided" });
@@ -15,10 +14,11 @@ export const authenticateToken = (
   jwt.verify(
     token,
     process.env.ACCESS_TOKEN_SECRET as string,
-    (err, decoded) => {
+    (err: Error | null, decoded: JwtPayload | string | undefined) => {
       if (err) return res.status(403).json({ error: "Invalid token" });
 
       if (decoded && typeof decoded !== "string") {
+        // Guardar los datos del token en `req.user` para que estén disponibles en la ruta
         req.user = {
           userId: decoded.userId,
           role: decoded.role,

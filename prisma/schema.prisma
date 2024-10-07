@@ -25,6 +25,7 @@ model User {
   likes_dislikes     Like[]
   reports            Report[]
   advertisements     Advertisement[]
+  refreshToken       RefreshToken?   @relation("UserRefreshToken")
 }
 
 model Attraction {
@@ -46,7 +47,7 @@ model Attraction {
   timeOpen       String?
   timeClose      String?
   price          Float?
-  currencyPrice  CurrencyType? @default(ars)
+  currencyPrice  CurrencyType?   @default(ars)
   images         Image[]
   comments       Comment[]
   favorites      Favorite[]
@@ -130,6 +131,17 @@ model Report {
   commentId   String
   reason      String
   report_date DateTime @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation("UserRefreshToken", fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model Image {
