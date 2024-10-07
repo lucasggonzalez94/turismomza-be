@@ -22,7 +22,7 @@ router.post("/register", register);
 router.put("/update", authenticateToken, updateUser);
 router.post("/login", login);
 router.post("/refresh-token", refreshToken);
-router.get("/verify-token", verifyToken);
+router.get("/verify-token", authenticateToken, verifyToken);
 router.post("/verify-2fa", verifyTwoFactorCode);
 router.post("/enable-2fa", authenticateToken, enableTwoFactorAuth);
 router.post("/disable-2fa", authenticateToken, disableTwoFactorAuth);
