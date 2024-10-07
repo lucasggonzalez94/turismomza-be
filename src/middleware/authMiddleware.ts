@@ -18,7 +18,6 @@ export const authenticateToken = (
       if (err) return res.status(403).json({ error: "Invalid token" });
 
       if (decoded && typeof decoded !== "string") {
-        // Guardar los datos del token en `req.user` para que estén disponibles en la ruta
         req.user = {
           userId: decoded.userId,
           role: decoded.role,

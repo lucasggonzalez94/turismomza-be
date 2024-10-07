@@ -375,7 +375,7 @@ export const refreshToken = async (req: Request, res: Response) => {
       sameSite: "strict",
     });
 
-    res.status(200).json({ ok: true });
+    res.status(200).json({ accessToken });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error refreshing token" });
