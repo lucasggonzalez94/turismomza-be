@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 import { validationResult } from "express-validator";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 import prisma from "../prismaClient";
 import { registerValidator } from "../validators";
@@ -142,27 +142,45 @@ export const login = [
       );
 
       const refreshToken = uuidv4();
+      // TODO: Revisar
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      await prisma.refreshToken.create({
-        data: {
-          token: refreshToken,
-          userId: user.id,
-          expiresAt
-        },
+      
+      const refreshTokenExist = await prisma.refreshToken.findUnique({
+        where: { userId: user.id },
       });
+
+      if (refreshTokenExist) {
+        await prisma.refreshToken.update({
+          where: {
+            userId: user.id,
+          },
+          data: {
+            token: refreshToken,
+            expiresAt,
+          },
+        });
+      } else {
+        await prisma.refreshToken.create({
+          data: {
+            token: refreshToken,
+            userId: user.id,
+            expiresAt,
+          },
+        });
+      }
 
       res.cookie("authToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         maxAge: 3600000,
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         maxAge: 604800000, // 7 días
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       });
 
       const {
