@@ -9,6 +9,7 @@ import {
   updateUser,
   verifyToken,
   refreshToken,
+  logout,
 } from "../controllers/authController";
 import {
   authenticateToken,
@@ -21,7 +22,8 @@ router.get("/users", authenticateToken, authorizeAdmin, listUsers);
 router.post("/register", register);
 router.put("/update", authenticateToken, updateUser);
 router.post("/login", login);
-router.post("/refresh-token", authenticateToken, refreshToken);
+router.post("/logout", authenticateToken, logout);
+router.post("/refresh-token", refreshToken);
 router.get("/verify-token", authenticateToken, verifyToken);
 router.post("/verify-2fa", verifyTwoFactorCode);
 router.post("/enable-2fa", authenticateToken, enableTwoFactorAuth);
