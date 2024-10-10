@@ -58,7 +58,11 @@ export const addComment = [
         select: { creatorId: true },
       });
 
-      if (attraction?.creatorId) {
+      if (!attraction) {
+        return res.status(404).json({ error: "Attraction not found" });
+      }
+
+      if (attraction?.creatorId !== userId) {
         await prisma.notification.create({
           data: {
             userId: attraction.creatorId,

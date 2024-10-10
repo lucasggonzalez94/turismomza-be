@@ -82,6 +82,14 @@ export const register = [
         sameSite: "strict",
       });
 
+      await transporter.sendMail({
+        from: `"Equipo de Turismomza" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "¡Bienvenido a la plataforma de Turismomza!",
+        html: `<h1>Bienvenido, ${user.name}!</h1>
+               <p>Gracias por registrarte en nuestra plataforma. ¡Esperamos que disfrutes de la experiencia!</p>`,
+      });
+
       res.status(201).json(user);
     } catch (error) {
       console.error(error);
