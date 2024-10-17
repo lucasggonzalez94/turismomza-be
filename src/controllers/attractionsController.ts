@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import streamifier from "streamifier";
@@ -11,6 +11,7 @@ import { createAttractionValidator } from "../validators";
 import { analyzeImage } from "../helpers";
 import { verifyActiveAds } from "./advertisementsController";
 import { updateAttractionValidator } from "../validators/attractions/updateAttractionValidator";
+import { Attraction } from "@prisma/client";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -61,6 +62,17 @@ const generateUniqueSlug = async (title: string) => {
   }
 
   return slug;
+};
+
+const getMaxMinPrices = (attractions: Attraction[]) => {
+  const prices = attractions
+    .map((attranction) => attranction.price)
+    .filter((price) => price !== null && price !== undefined);
+
+  const maxPrice = Math.max(...prices);
+  const minPrice = Math.min(...prices);
+
+  return { maxPrice, minPrice };
 };
 
 export const createAttraction = [
@@ -183,13 +195,13 @@ export const createAttraction = [
 export const listAttractions = async (req: Request, res: Response) => {
   const {
     title,
-    description,
     creatorId,
-    category,
+    categories,
     location,
     priceMin,
     priceMax,
     sponsored,
+    rating,
     page = 1,
     pageSize = 10,
   } = req.query;
@@ -197,6 +209,18 @@ export const listAttractions = async (req: Request, res: Response) => {
   const pageNumber = parseInt(page as string, 10);
   const pageSizeNumber = parseInt(pageSize as string, 10);
   const skip = (pageNumber - 1) * pageSizeNumber;
+
+  const ratingFilter = {
+    5: { gte: 4.5, lt: 5.1 },
+    4: { gte: 3.5, lt: 4.5 },
+    3: { gte: 2.5, lt: 3.5 },
+    2: { gte: 1.5, lt: 2.5 },
+    1: { gte: 0, lt: 1.5 },
+  };
+
+  const ratingRange = rating
+    ? ratingFilter[parseInt(rating as string, 10) as keyof typeof ratingFilter]
+    : undefined;
 
   try {
     verifyActiveAds();
@@ -206,11 +230,14 @@ export const listAttractions = async (req: Request, res: Response) => {
         title: title
           ? { contains: title as string, mode: "insensitive" }
           : undefined,
-        description: description
-          ? { contains: description as string, mode: "insensitive" }
-          : undefined,
         creatorId: creatorId ? { equals: creatorId as string } : undefined,
-        category: category ? { equals: category as string } : undefined,
+        category: categories
+          ? {
+              in: Array.isArray(categories)
+                ? categories.map((cat) => cat as string)
+                : [categories as string],
+            }
+          : undefined,
         location: location
           ? { contains: location as string, mode: "insensitive" }
           : undefined,
@@ -218,6 +245,16 @@ export const listAttractions = async (req: Request, res: Response) => {
           gte: priceMin ? parseFloat(priceMin as string) : undefined,
           lte: priceMax ? parseFloat(priceMax as string) : undefined,
         },
+        comments: ratingRange
+          ? {
+              some: {
+                rating: {
+                  gte: ratingRange.gte,
+                  lt: ratingRange.lt,
+                },
+              },
+            }
+          : undefined,
       },
     });
 
@@ -226,11 +263,14 @@ export const listAttractions = async (req: Request, res: Response) => {
         title: title
           ? { contains: title as string, mode: "insensitive" }
           : undefined,
-        description: description
-          ? { contains: description as string, mode: "insensitive" }
-          : undefined,
         creatorId: creatorId ? { equals: creatorId as string } : undefined,
-        category: category ? { equals: category as string } : undefined,
+        category: categories
+          ? {
+              in: Array.isArray(categories)
+                ? categories.map((cat) => cat as string)
+                : [categories as string],
+            }
+          : undefined,
         location: location
           ? { contains: location as string, mode: "insensitive" }
           : undefined,
@@ -238,6 +278,16 @@ export const listAttractions = async (req: Request, res: Response) => {
           gte: priceMin ? parseFloat(priceMin as string) : undefined,
           lte: priceMax ? parseFloat(priceMax as string) : undefined,
         },
+        comments: ratingRange
+          ? {
+              some: {
+                rating: {
+                  gte: ratingRange.gte,
+                  lt: ratingRange.lt,
+                },
+              },
+            }
+          : undefined,
       },
       include: {
         advertisements: true,
@@ -280,8 +330,21 @@ export const listAttractions = async (req: Request, res: Response) => {
       take: pageSizeNumber,
     });
 
+    const attractionsWithRating = attractions.map((attraction) => {
+      const totalRatings = attraction.comments.length;
+      const sumRatings = attraction.comments.reduce(
+        (sum, comment) => sum + (comment.rating || 0),
+        0
+      );
+      const avgRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
+      return {
+        ...attraction,
+        avgRating,
+      };
+    });
+
     const sponsoredAttractions = shuffleArray(
-      attractions.filter((attraction) => {
+      attractionsWithRating.filter((attraction) => {
         return attraction.advertisements.some(
           (ad) => ad.isActive && ad.endDate >= new Date()
         );
@@ -297,7 +360,7 @@ export const listAttractions = async (req: Request, res: Response) => {
       finalAttractions.push(sponsoredAttractions[0]);
     }
 
-    const regularAttractions = attractions
+    const regularAttractions = attractionsWithRating
       ?.filter(
         (attraction) =>
           !sponsoredAttractions.some(
@@ -336,11 +399,15 @@ export const listAttractions = async (req: Request, res: Response) => {
       };
     });
 
+    const { minPrice, maxPrice } = getMaxMinPrices(favoriteAttractions);
+
     res.json({
       total: totalAttractions,
       page: pageNumber,
       pageSize,
       totalPages: Math.ceil(totalAttractions / pageSizeNumber),
+      minPrice,
+      maxPrice,
       data: favoriteAttractions,
     });
   } catch (error) {
