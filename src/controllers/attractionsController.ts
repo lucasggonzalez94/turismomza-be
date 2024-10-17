@@ -230,7 +230,6 @@ export const listAttractions = async (req: Request, res: Response) => {
         title: title
           ? { contains: title as string, mode: "insensitive" }
           : undefined,
-        creatorId: creatorId ? { equals: creatorId as string } : undefined,
         category: categories
           ? {
               in: Array.isArray(categories)
@@ -263,7 +262,6 @@ export const listAttractions = async (req: Request, res: Response) => {
         title: title
           ? { contains: title as string, mode: "insensitive" }
           : undefined,
-        creatorId: creatorId ? { equals: creatorId as string } : undefined,
         category: categories
           ? {
               in: Array.isArray(categories)

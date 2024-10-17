@@ -446,7 +446,6 @@ export const verifyToken = async (req: Request, res: Response) => {
     }
 
     const {
-      id,
       password,
       two_factor_code,
       two_factor_expires,

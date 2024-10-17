@@ -30,6 +30,7 @@ export const addOrRemoveFavorite = [
             userId,
           },
         });
+        res.status(200).json({ ok: true });
       } else {
         const favorite = await prisma.favorite.create({
           data: {
@@ -47,10 +48,7 @@ export const addOrRemoveFavorite = [
 ];
 
 export const listFavoritesByUser = async (req: Request, res: Response) => {
-  const {
-    page = 1,
-    pageSize = 10,
-  } = req.query;
+  const { page = 1, pageSize = 10 } = req.query;
 
   const pageNumber = parseInt(page as string, 10);
   const pageSizeNumber = parseInt(pageSize as string, 10);
@@ -59,11 +57,11 @@ export const listFavoritesByUser = async (req: Request, res: Response) => {
   const userId = req.user?.userId;
 
   try {
-    const totalAttractions = (await prisma.favorite.count({
+    const totalAttractions = await prisma.favorite.count({
       where: {
         userId,
       },
-    }));
+    });
 
     const favoriteAttractions = (await prisma.favorite.findMany({
       where: {
