@@ -51,11 +51,14 @@ export const addReview = [
           userId,
           attractionId,
         },
+        include: {
+          user: true,
+          likes: true,
+        }
       });
 
       const attraction = await prisma.attraction.findUnique({
-        where: { id: attractionId },
-        select: { creatorId: true },
+        where: { id: attractionId }
       });
 
       if (!attraction) {
