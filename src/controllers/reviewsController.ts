@@ -4,37 +4,37 @@ import { validationResult } from "express-validator";
 
 import prisma from "../prismaClient";
 import {
-  addCommentValidator,
-  editCommentValidator,
-  likeDislikeCommentValidator,
-  reportCommentValidator,
+  addReviewValidator,
+  editReviewValidator,
+  likeDislikeReviewValidator,
+  reportReviewValidator,
 } from "../validators";
 
 const io = new Server();
 
-const sendNotitificationLike = async (commentId: string) => {
-  const comment = await prisma.comment.findUnique({
-    where: { id: commentId },
+const sendNotitificationLike = async (reviewId: string) => {
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
     select: { userId: true },
   });
 
-  if (comment?.userId) {
+  if (review?.userId) {
     await prisma.notification.create({
       data: {
-        userId: comment.userId,
-        message: "Liked your comment.",
+        userId: review.userId,
+        message: "Liked your review.",
         type: "like",
       },
     });
 
-    io.to(comment.userId).emit("notification", {
-      message: "Liked your comment.",
+    io.to(review.userId).emit("notification", {
+      message: "Liked your review.",
     });
   }
 };
 
-export const addComment = [
-  ...addCommentValidator,
+export const addReview = [
+  ...addReviewValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -44,7 +44,7 @@ export const addComment = [
     const userId = req.user?.userId;
 
     try {
-      const comment = await prisma.comment.create({
+      const review = await prisma.review.create({
         data: {
           content,
           rating,
@@ -66,70 +66,70 @@ export const addComment = [
         await prisma.notification.create({
           data: {
             userId: attraction.creatorId,
-            message: `New comment on your attraction: ${comment.content}`,
-            type: "comment",
+            message: `New review on your attraction: ${review.content}`,
+            type: "review",
           },
         });
 
         io.to(attraction.creatorId).emit("notification", {
-          message: `New comment on your attraction: ${comment.content}`,
+          message: `New review on your attraction: ${review.content}`,
         });
       }
 
-      res.status(201).json(comment);
+      res.status(201).json(review);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Error adding comment" });
+      res.status(500).json({ error: "Error adding review" });
     }
   },
 ];
 
-export const editComment = [
-  ...editCommentValidator,
+export const editReview = [
+  ...editReviewValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    const { commentId } = req.params;
+    const { reviewId } = req.params;
     const { content, rating } = req.body;
     const userId = req.user?.userId;
 
     try {
-      const existingComment = await prisma.comment.findUnique({
-        where: { id: commentId },
+      const existingReview = await prisma.review.findUnique({
+        where: { id: reviewId },
       });
 
-      if (!existingComment) {
+      if (!existingReview) {
         return res.status(404).json({ error: "Comment not found" });
       }
 
-      if (existingComment.userId !== userId) {
+      if (existingReview.userId !== userId) {
         return res
           .status(403)
           .json({ error: "You can only edit your own comments" });
       }
 
-      const updatedComment = await prisma.comment.update({
-        where: { id: commentId },
+      const updatedComment = await prisma.review.update({
+        where: { id: reviewId },
         data: { content, rating },
       });
 
       res.json(updatedComment);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Error updating comment" });
+      res.status(500).json({ error: "Error updating review" });
     }
   },
 ];
 
-export const deleteComment = async (req: Request, res: Response) => {
-  const { commentId } = req.params;
+export const deleteReview = async (req: Request, res: Response) => {
+  const { reviewId } = req.params;
   const userId = req.user?.userId;
 
   try {
-    const existingComment = await prisma.comment.findUnique({
-      where: { id: commentId },
+    const existingComment = await prisma.review.findUnique({
+      where: { id: reviewId },
     });
 
     if (!existingComment) {
@@ -142,31 +142,31 @@ export const deleteComment = async (req: Request, res: Response) => {
         .json({ error: "You can only delete your own comments" });
     }
 
-    await prisma.comment.delete({
-      where: { id: commentId },
+    await prisma.review.delete({
+      where: { id: reviewId },
     });
 
     res.status(204).json({ ok: true });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error deleting comment" });
+    res.status(500).json({ error: "Error deleting review" });
   }
 };
 
-export const reportComment = [
-  ...reportCommentValidator,
+export const reportReview = [
+  ...reportReviewValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    const { commentId, reason } = req.body;
+    const { reviewId, reason } = req.body;
     const userId = req.user?.userId;
 
     try {
       await prisma.report.create({
         data: {
-          commentId,
+          reviewId,
           userId,
           reason,
         },
@@ -174,27 +174,27 @@ export const reportComment = [
       res.status(201).json({ message: "Report submitted" });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Error reporting comment" });
+      res.status(500).json({ error: "Error reporting review" });
     }
   },
 ];
 
-export const likeDislikeComment = [
-  ...likeDislikeCommentValidator,
+export const likeDislikeReview = [
+  ...likeDislikeReviewValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    const { commentId } = req.body;
+    const { reviewId } = req.body;
     const userId = req.user?.userId;
 
     try {
       const existingLike = await prisma.like.findUnique({
         where: {
-          userId_commentId: {
+          userId_reviewId: {
             userId,
-            commentId,
+            reviewId,
           },
         },
       });
@@ -202,9 +202,9 @@ export const likeDislikeComment = [
       if (existingLike) {
         await prisma.like.delete({
           where: {
-            userId_commentId: {
+            userId_reviewId: {
               userId,
-              commentId,
+              reviewId,
             },
           },
         });
@@ -213,16 +213,16 @@ export const likeDislikeComment = [
         await prisma.like.create({
           data: {
             userId,
-            commentId,
+            reviewId,
             like: true,
           },
         });
-        await sendNotitificationLike(commentId);
+        await sendNotitificationLike(reviewId);
         return res.status(201).json({ message: "Comment liked" });
       }
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Error liking comment" });
+      res.status(500).json({ error: "Error liking review" });
     }
   },
 ];

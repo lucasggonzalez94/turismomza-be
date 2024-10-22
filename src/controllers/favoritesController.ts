@@ -75,7 +75,7 @@ export const listFavoritesByUser = async (req: Request, res: Response) => {
                 url: true,
               },
             },
-            comments: {
+            reviews: {
               select: {
                 content: true,
                 rating: true,
@@ -102,7 +102,7 @@ export const listFavoritesByUser = async (req: Request, res: Response) => {
       },
       skip,
       take: pageSizeNumber,
-    })) as { attraction: { images: any[]; comments: any[] } }[];
+    })) as { attraction: { images: any[]; reviews: any[] } }[];
 
     const attractions = favoriteAttractions.map(
       (favorite) => favorite.attraction

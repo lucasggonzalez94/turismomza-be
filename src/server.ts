@@ -8,7 +8,7 @@ import cors from "cors";
 import advertisementsRoutes from "./routes/advertisementsRoutes";
 import authRoutes from "./routes/authRoutes";
 import attractionsRoutes from "./routes/attractionsRoutes";
-import commentsRoutes from "./routes/commentsRoutes";
+import reviewsRoutes from "./routes/ReviewsRoutes";
 import contactRoutes from "./routes/contactRoutes";
 import favoritesRoutes from "./routes/favoritesRoutes";
 import notificationsRoutes from "./routes/notificationsRoutes";
@@ -52,7 +52,7 @@ io.on("connection", (socket) => {
 app.use("/api/advertisements", advertisementsRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/attractions", attractionsRoutes);
-app.use("/api/comments", commentsRoutes);
+app.use("/api/reviews", reviewsRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/favorites", favoritesRoutes);
 app.use("/api/notifications", notificationsRoutes);

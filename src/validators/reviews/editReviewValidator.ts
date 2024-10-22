@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 
-export const editCommentValidator = [
+export const editReviewValidator = [
   body("content").notEmpty().withMessage("Content is required"),
   body("rating")
     .optional()

@@ -244,7 +244,7 @@ export const listAttractions = async (req: Request, res: Response) => {
           gte: priceMin ? parseFloat(priceMin as string) : undefined,
           lte: priceMax ? parseFloat(priceMax as string) : undefined,
         },
-        comments: ratingRange
+        reviews: ratingRange
           ? {
               some: {
                 rating: {
@@ -276,7 +276,7 @@ export const listAttractions = async (req: Request, res: Response) => {
           gte: priceMin ? parseFloat(priceMin as string) : undefined,
           lte: priceMax ? parseFloat(priceMax as string) : undefined,
         },
-        comments: ratingRange
+        reviews: ratingRange
           ? {
               some: {
                 rating: {
@@ -295,8 +295,9 @@ export const listAttractions = async (req: Request, res: Response) => {
             public_id: true,
           },
         },
-        comments: {
+        reviews: {
           select: {
+            id: true,
             content: true,
             rating: true,
             user: {
@@ -307,11 +308,7 @@ export const listAttractions = async (req: Request, res: Response) => {
             creation_date: true,
             likes: {
               select: {
-                user: {
-                  select: {
-                    name: true,
-                  },
-                },
+                userId: true,
               },
             },
             reports: true,
@@ -329,12 +326,14 @@ export const listAttractions = async (req: Request, res: Response) => {
     });
 
     const attractionsWithRating = attractions.map((attraction) => {
-      const totalRatings = attraction.comments.length;
-      const sumRatings = attraction.comments.reduce(
-        (sum, comment) => sum + (comment.rating || 0),
+      const totalRatings = attraction.reviews.length;
+      const sumRatings = attraction.reviews.reduce(
+        (sum, review) => sum + (review.rating || 0),
         0
       );
+
       const avgRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
+
       return {
         ...attraction,
         avgRating,
@@ -416,6 +415,7 @@ export const listAttractions = async (req: Request, res: Response) => {
 
 export const listAttractionBySlug = async (req: Request, res: Response) => {
   const { slug } = req.params;
+
   try {
     const attractions = await prisma.attraction.findUnique({
       where: {
@@ -428,7 +428,7 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
             public_id: true,
           },
         },
-        comments: {
+        reviews: {
           select: {
             content: true,
             rating: true,
@@ -440,8 +440,10 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
             creation_date: true,
             likes: {
               select: {
+                id: true,
                 user: {
                   select: {
+                    id: true,
                     name: true,
                   },
                 },
@@ -668,7 +670,7 @@ export const editAttraction = [
         },
         include: {
           images: true,
-          comments: {
+          reviews: {
             include: {
               likes: userId
                 ? {
