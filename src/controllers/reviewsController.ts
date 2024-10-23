@@ -116,6 +116,10 @@ export const editReview = [
       const updatedComment = await prisma.review.update({
         where: { id: reviewId },
         data: { content, rating },
+        include: {
+          user: true,
+          likes: true,
+        }
       });
 
       res.json(updatedComment);
