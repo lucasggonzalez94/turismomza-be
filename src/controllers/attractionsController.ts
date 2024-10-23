@@ -431,6 +431,7 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
         },
         reviews: {
           select: {
+            id: true,
             content: true,
             rating: true,
             user: {
