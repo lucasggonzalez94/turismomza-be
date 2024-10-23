@@ -415,9 +415,10 @@ export const listAttractions = async (req: Request, res: Response) => {
 
 export const listAttractionBySlug = async (req: Request, res: Response) => {
   const { slug } = req.params;
+  const { userId } = req.query;
 
   try {
-    const attractions = await prisma.attraction.findUnique({
+    const attraction = await prisma.attraction.findUnique({
       where: {
         slug,
       },
@@ -452,12 +453,31 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
             reports: true,
           },
         },
+        favorites: {
+          select: {
+            id: true,
+            userId: true,
+          },
+        },
       },
     });
-    res.json(attractions);
+
+    if (attraction) {
+      const favoriteByCreator = attraction?.favorites?.some(
+        (fav: any) => fav.userId === userId
+      );
+      const isFavorite = attraction.favorites.length > 0 && favoriteByCreator;
+      const { favorites, ...attractionWithoutFavorites } = attraction;
+      return res.json({
+        ...attractionWithoutFavorites,
+        isFavorite,
+      });
+    }
+
+    res.status(404).json({ error: "Error finding attraction" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error listing attractions" });
+    res.status(500).json({ error: "Error service" });
   }
 };
 
