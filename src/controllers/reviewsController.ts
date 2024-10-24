@@ -10,16 +10,14 @@ import {
   reportReviewValidator,
 } from "../validators";
 
-const io = new Server();
-
-const sendNotitificationLike = async (reviewId: string) => {
+const sendNotitificationLike = async (reviewId: string, io: any, userSockets: any) => {
   const review = await prisma.review.findUnique({
     where: { id: reviewId },
     select: { userId: true },
   });
 
   if (review?.userId) {
-    await prisma.notification.create({
+    const notification = await prisma.notification.create({
       data: {
         userId: review.userId,
         message: "Liked your review.",
@@ -27,9 +25,12 @@ const sendNotitificationLike = async (reviewId: string) => {
       },
     });
 
-    io.to(review.userId).emit("notification", {
-      message: "Liked your review.",
-    });
+    const socketId = userSockets[review.userId];
+    if (socketId) {
+      io.to(socketId).emit("notification", {
+        ...notification,
+      });
+    }
   }
 };
 
@@ -42,6 +43,9 @@ export const addReview = [
     }
     const { content, rating, attractionId } = req.body;
     const userId = req.user?.userId;
+
+    const io = req.app.get("io");
+    const userSockets = req.app.get("userSockets");
 
     try {
       const review = await prisma.review.create({
@@ -66,7 +70,7 @@ export const addReview = [
       }
 
       if (attraction?.creatorId !== userId) {
-        await prisma.notification.create({
+        const notification = await prisma.notification.create({
           data: {
             userId: attraction.creatorId,
             message: `New review on your attraction: ${review.content}`,
@@ -74,9 +78,12 @@ export const addReview = [
           },
         });
 
-        io.to(attraction.creatorId).emit("notification", {
-          message: `New review on your attraction: ${review.content}`,
-        });
+        const socketId = userSockets[attraction?.creatorId];
+        if (socketId) {
+          io.to(socketId).emit("notification", {
+            ...notification,
+          });
+        }
       }
 
       res.status(201).json(review);
@@ -196,6 +203,9 @@ export const likeDislikeReview = [
     const { reviewId } = req.body;
     const userId = req.user?.userId;
 
+    const io = req.app.get("io");
+    const userSockets = req.app.get("userSockets");
+
     try {
       const existingLike = await prisma.like.findUnique({
         where: {
@@ -224,7 +234,7 @@ export const likeDislikeReview = [
             like: true,
           },
         });
-        await sendNotitificationLike(reviewId);
+        await sendNotitificationLike(reviewId, io, userSockets);
         return res.status(201).json({ message: "Comment liked" });
       }
     } catch (error) {

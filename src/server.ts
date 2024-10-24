@@ -14,13 +14,21 @@ import favoritesRoutes from "./routes/favoritesRoutes";
 import notificationsRoutes from "./routes/notificationsRoutes";
 import paymentsRoutes from "./routes/paymentsRoutes";
 
+const allowedOrigins = ["http://localhost:3000"];
+
 dotenv.config();
 
 const app: Application = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
-const allowedOrigins = ["http://localhost:3000"];
+app.set("io", io);
 
 app.use(
   cors({
@@ -40,9 +48,18 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+const userSockets: {
+  [userId: string]: string;
+} = {};
+
+app.set("userSockets", userSockets);
+
 // Configuración de Web Socket
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
+
+  const userId: string = socket.handshake.query.userId as string;
+  userSockets[userId] = socket.id;
 
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);

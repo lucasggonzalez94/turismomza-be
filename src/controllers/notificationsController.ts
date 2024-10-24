@@ -7,24 +7,44 @@ export const getNotifications = async (req: Request, res: Response) => {
   const userId = req.user?.userId;
 
   try {
-    const notifications = await prisma.notification.findMany({
-      where: { userId },
+    const unreadNotifications = await prisma.notification.findMany({
+      where: { userId, read: false },
       include: {
         user: {
           select: {
             id: true,
             name: true,
-            profilePicture: true,
           },
         },
       },
+      orderBy: {
+        creation_date: "desc",
+      },
     });
 
-    const notificationsWithoutReaded = notifications?.filter(
-      (notification) => !notification?.read
-    );
-    
-    res.json(notificationsWithoutReaded);
+    let notifications = unreadNotifications;
+
+    if (unreadNotifications.length < 10) {
+      const additionalNotifications = await prisma.notification.findMany({
+        where: { userId, read: true },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          creation_date: "desc",
+        },
+        take: 10 - unreadNotifications.length,
+      });
+
+      notifications = [...unreadNotifications, ...additionalNotifications];
+    }
+
+    res.json(notifications);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error fetching notifications" });
