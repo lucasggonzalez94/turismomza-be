@@ -149,7 +149,7 @@ export const createAttraction = [
 
       if (Array.isArray(req.files) && req.files.length > 0) {
         await Promise.all(
-          req.files!.map((file: Express.Multer.File) => {
+          req.files!.map((file: Express.Multer.File, index: number) => {
             return new Promise((resolve, reject) => {
               const uploadStream = cloudinary.uploader.upload_stream(
                 { resource_type: "image" },
@@ -171,6 +171,7 @@ export const createAttraction = [
                         url: result.secure_url,
                         public_id: result.public_id,
                         attractionId: attraction.id,
+                        order: index,
                       },
                     });
                     resolve(savedImage);
@@ -291,6 +292,9 @@ export const listAttractions = async (req: Request, res: Response) => {
           select: {
             url: true,
             public_id: true,
+          },
+          orderBy: {
+            order: "asc",
           },
         },
         reviews: {
@@ -426,6 +430,9 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
             url: true,
             public_id: true,
           },
+          orderBy: {
+            order: 'asc',
+          },
         },
         reviews: {
           select: {
@@ -544,6 +551,9 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
             url: true,
             public_id: true,
           },
+          orderBy: {
+            order: 'asc',
+          },
         },
       },
       skip,
@@ -624,7 +634,7 @@ export const editAttraction = [
 
       if (Array.isArray(req.files) && req.files.length > 0) {
         await Promise.all(
-          req.files!.map((file: Express.Multer.File) => {
+          req.files!.map((file: Express.Multer.File, index: number) => {
             return new Promise((resolve, reject) => {
               const uploadStream = cloudinary.uploader.upload_stream(
                 { resource_type: "image" },
@@ -646,6 +656,7 @@ export const editAttraction = [
                         url: result.secure_url,
                         public_id: result.public_id,
                         attractionId: id,
+                        order: index,
                       },
                     });
                     resolve(savedImage);

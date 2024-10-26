@@ -8,25 +8,25 @@ datasource db {
 }
 
 model User {
-  id                 String          @id @default(uuid())
-  name               String
-  email              String          @unique
-  password           String
-  profilePicture     ProfilePicture?
-  role               Role
-  two_factor_enabled Boolean         @default(false)
-  two_factor_code    String?
-  two_factor_expires DateTime?
-  registration_date  DateTime        @default(now())
-  attractions        Attraction[]    @relation("CreatorAttractions")
-  reviews            Review[]
-  favorites          Favorite[]
-  notifications      Notification[]
-  triggeredNotifications  Notification[]   @relation("TriggeredNotifications")
-  likes_dislikes     Like[]
-  reports            Report[]
-  advertisements     Advertisement[]
-  refreshToken       RefreshToken?   @relation("UserRefreshToken")
+  id                     String          @id @default(uuid())
+  name                   String
+  email                  String          @unique
+  password               String
+  profilePicture         ProfilePicture?
+  role                   Role
+  two_factor_enabled     Boolean         @default(false)
+  two_factor_code        String?
+  two_factor_expires     DateTime?
+  registration_date      DateTime        @default(now())
+  attractions            Attraction[]    @relation("CreatorAttractions")
+  reviews                Review[]
+  favorites              Favorite[]
+  notifications          Notification[]
+  triggeredNotifications Notification[]  @relation("TriggeredNotifications")
+  likes_dislikes         Like[]
+  reports                Report[]
+  advertisements         Advertisement[]
+  refreshToken           RefreshToken?   @relation("UserRefreshToken")
 }
 
 model Attraction {
@@ -152,6 +152,7 @@ model Image {
   url          String
   attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   attractionId String
+  order        Int
 }
 
 enum Role {
