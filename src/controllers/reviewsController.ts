@@ -10,7 +10,12 @@ import {
   reportReviewValidator,
 } from "../validators";
 
-const sendNotitificationLike = async (reviewId: string, io: any, userSockets: any) => {
+const sendNotitificationLike = async (
+  reviewId: string,
+  userId: string,
+  io: any,
+  userSockets: any
+) => {
   const review = await prisma.review.findUnique({
     where: { id: reviewId },
     select: { userId: true },
@@ -20,8 +25,24 @@ const sendNotitificationLike = async (reviewId: string, io: any, userSockets: an
     const notification = await prisma.notification.create({
       data: {
         userId: review.userId,
+        triggeredById: userId,
         message: "Liked your review.",
         type: "like",
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        triggeredBy: {
+          select: {
+            id: true,
+            name: true,
+            profilePicture: true,
+          },
+        },
       },
     });
 
@@ -58,11 +79,11 @@ export const addReview = [
         include: {
           user: true,
           likes: true,
-        }
+        },
       });
 
       const attraction = await prisma.attraction.findUnique({
-        where: { id: attractionId }
+        where: { id: attractionId },
       });
 
       if (!attraction) {
@@ -73,8 +94,24 @@ export const addReview = [
         const notification = await prisma.notification.create({
           data: {
             userId: attraction.creatorId,
+            triggeredById: userId,
             message: `New review on your attraction: ${review.content}`,
             type: "review",
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            triggeredBy: {
+              select: {
+                id: true,
+                name: true,
+                profilePicture: true,
+              },
+            },
           },
         });
 
@@ -126,7 +163,7 @@ export const editReview = [
         include: {
           user: true,
           likes: true,
-        }
+        },
       });
 
       res.json(updatedComment);
@@ -234,7 +271,7 @@ export const likeDislikeReview = [
             like: true,
           },
         });
-        await sendNotitificationLike(reviewId, io, userSockets);
+        await sendNotitificationLike(reviewId, userId, io, userSockets);
         return res.status(201).json({ message: "Comment liked" });
       }
     } catch (error) {

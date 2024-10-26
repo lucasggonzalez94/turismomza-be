@@ -36,14 +36,10 @@ export const createAttractionValidator = [
     .optional()
     .isString()
     .withMessage("Facebook must be a string"),
-  body("timeOpen")
+  body("schedule")
     .optional()
     .isString()
-    .withMessage("Time Open must be a string"),
-  body("timeClose")
-    .optional()
-    .isString()
-    .withMessage("Time Close must be a string"),
+    .withMessage("Schedule must be a string"),
   body("price")
     .toFloat()
     .optional()

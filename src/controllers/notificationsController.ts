@@ -16,6 +16,13 @@ export const getNotifications = async (req: Request, res: Response) => {
             name: true,
           },
         },
+        triggeredBy: {
+          select: {
+            id: true,
+            name: true,
+            profilePicture: true,
+          },
+        },
       },
       orderBy: {
         creation_date: "desc",
@@ -32,6 +39,13 @@ export const getNotifications = async (req: Request, res: Response) => {
             select: {
               id: true,
               name: true,
+            },
+          },
+          triggeredBy: {
+            select: {
+              id: true,
+              name: true,
+              profilePicture: true,
             },
           },
         },

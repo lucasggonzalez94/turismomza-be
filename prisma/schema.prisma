@@ -19,9 +19,10 @@ model User {
   two_factor_expires DateTime?
   registration_date  DateTime        @default(now())
   attractions        Attraction[]    @relation("CreatorAttractions")
-  reviews           Review[]
+  reviews            Review[]
   favorites          Favorite[]
   notifications      Notification[]
+  triggeredNotifications  Notification[]   @relation("TriggeredNotifications")
   likes_dislikes     Like[]
   reports            Report[]
   advertisements     Advertisement[]
@@ -44,12 +45,11 @@ model Attraction {
   webSite        String?
   instagram      String?
   facebook       String?
-  timeOpen       String?
-  timeClose      String?
+  schedule       String
   price          Float?
   currencyPrice  CurrencyType?   @default(ars)
   images         Image[]
-  reviews       Review[]
+  reviews        Review[]
   favorites      Favorite[]
   advertisements Advertisement[]
 }
@@ -97,6 +97,8 @@ model Notification {
   id            String           @id @default(uuid())
   user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
+  triggeredBy   User             @relation("TriggeredNotifications", fields: [triggeredById], references: [id])
+  triggeredById String
   type          NotificationType
   message       String
   read          Boolean          @default(false)
@@ -107,8 +109,8 @@ model Like {
   id            String   @id @default(uuid())
   user          User     @relation(fields: [userId], references: [id])
   userId        String
-  review       Review  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  reviewId     String
+  review        Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reviewId      String
   like          Boolean
   creation_date DateTime @default(now())
 
@@ -127,8 +129,8 @@ model Report {
   id          String   @id @default(uuid())
   user        User     @relation(fields: [userId], references: [id])
   userId      String
-  review     Review  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  reviewId   String
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reviewId    String
   reason      String
   report_date DateTime @default(now())
 }

@@ -2,7 +2,10 @@ import { body } from "express-validator";
 
 export const updateAttractionValidator = [
   body("title").optional().trim().notEmpty().withMessage("Title is required"),
-  body("description").optional().notEmpty().withMessage("Description is required"),
+  body("description")
+    .optional()
+    .notEmpty()
+    .withMessage("Description is required"),
   body("location").optional().notEmpty().withMessage("Location is required"),
   body("category").optional().notEmpty().withMessage("Category is required"),
   body("services")
@@ -36,14 +39,10 @@ export const updateAttractionValidator = [
     .optional()
     .isString()
     .withMessage("Facebook must be a string"),
-  body("timeOpen")
+  body("schedule")
     .optional()
     .isString()
-    .withMessage("Time Open must be a string"),
-  body("timeClose")
-    .optional()
-    .isString()
-    .withMessage("Time Close must be a string"),
+    .withMessage("Schedule must be a string"),
   body("price")
     .toFloat()
     .optional()
