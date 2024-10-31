@@ -26,8 +26,8 @@ export const createAttractionValidator = [
     .optional()
     .isString()
     .withMessage("Contact number must be a string"),
-  body("email").optional().isEmail().withMessage("Please enter a valid email"),
-  body("webSite").optional().isURL().withMessage("Please enter a valid URL"),
+  body("email").optional({ nullable: true, checkFalsy: true }).isEmail().withMessage("Please enter a valid email"),
+  body("webSite").optional({ nullable: true, checkFalsy: true }).isURL().withMessage("Please enter a valid URL"),
   body("instagram")
     .optional()
     .isString()

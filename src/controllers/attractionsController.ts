@@ -83,6 +83,7 @@ export const createAttraction = [
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
+
     const {
       title,
       description,
@@ -106,86 +107,115 @@ export const createAttraction = [
     const userId = req.user!.userId;
     const userRole = req.user!.role;
 
+    const cloudinaryPublicIds: string[] = [];
+
     try {
       const isTextAppropriate = await moderateText(
         `Título: ${title} Descripción: ${description}`
       );
       if (!isTextAppropriate) {
-        return res.status(400).json({ error: "Inappropriate text detected" });
+        return res.status(406).json({ error: "Inappropriate text detected" });
       }
 
       const slug = await generateUniqueSlug(title);
 
       if (userRole === "viewer") {
         await prisma.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            role: "publisher",
-          },
+          where: { id: userId },
+          data: { role: "publisher" },
         });
       }
 
-      const attraction = await prisma.attraction.create({
-        data: {
-          title,
-          slug,
-          description,
-          location,
-          category,
-          creatorId: userId,
-          services,
-          contactNumber,
-          email,
-          webSite,
-          instagram,
-          facebook,
-          schedule,
-          price,
-          currencyPrice,
-        },
-      });
+      type UploadedImage = { url: string; public_id: string; order: number };
+      const uploadedImages: UploadedImage[] = [];
 
       if (Array.isArray(req.files) && req.files.length > 0) {
-        await Promise.all(
-          req.files!.map((file: Express.Multer.File, index: number) => {
-            return new Promise((resolve, reject) => {
-              const uploadStream = cloudinary.uploader.upload_stream(
-                { resource_type: "image" },
-                async (error, result) => {
-                  if (error) {
-                    reject(new Error("Error uploading image to Cloudinary"));
-                  } else if (result) {
-                    const isImageAppropriate = await analyzeImage(
-                      result.secure_url
-                    );
-                    if (isImageAppropriate) {
-                      return res
-                        .status(400)
-                        .json({ error: "Inappropriate image detected" });
-                    }
-
-                    const savedImage = await prisma.image.create({
-                      data: {
-                        url: result.secure_url,
-                        public_id: result.public_id,
-                        attractionId: attraction.id,
-                        order: index,
-                      },
-                    });
-                    resolve(savedImage);
-                  }
+        for (const [index, file] of req.files.entries()) {
+          const uploadStream = await new Promise<any>((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              { resource_type: "image" },
+              (error, result) => {
+                if (error) {
+                  reject(new Error("Error uploading image to Cloudinary"));
+                } else {
+                  resolve(result);
                 }
+              }
+            );
+            streamifier.createReadStream(file.buffer).pipe(stream);
+          });
+
+          if (uploadStream && uploadStream.secure_url) {
+            cloudinaryPublicIds.push(uploadStream.public_id);
+            const isImageAppropriate = await analyzeImage(
+              uploadStream.secure_url
+            );
+            if (!isImageAppropriate) {
+              await Promise.all(
+                cloudinaryPublicIds.map((publicId) =>
+                  cloudinary.uploader.destroy(publicId)
+                )
               );
-              streamifier.createReadStream(file.buffer).pipe(uploadStream);
+              return res
+                .status(406)
+                .json({ error: "Inappropriate image detected" });
+            }
+            uploadedImages.push({
+              url: uploadStream.secure_url,
+              public_id: uploadStream.public_id,
+              order: index,
             });
-          })
-        );
+          }
+        }
       }
+
+      const attraction = await prisma.$transaction(async (prisma) => {
+        const newAttraction = await prisma.attraction.create({
+          data: {
+            title,
+            slug,
+            description,
+            location,
+            category,
+            creatorId: userId,
+            services,
+            contactNumber,
+            email,
+            webSite,
+            instagram,
+            facebook,
+            schedule,
+            price,
+            currencyPrice,
+          },
+        });
+
+        for (const image of uploadedImages) {
+          await prisma.image.create({
+            data: {
+              url: image.url,
+              public_id: image.public_id,
+              attractionId: newAttraction.id,
+              order: image.order,
+            },
+          });
+        }
+
+        return newAttraction;
+      });
+
       res.status(201).json(attraction);
     } catch (error) {
       console.error(error);
+
+      if (cloudinaryPublicIds.length > 0) {
+        await Promise.all(
+          cloudinaryPublicIds.map((publicId) =>
+            cloudinary.uploader.destroy(publicId)
+          )
+        );
+      }
+
       res.status(500).json({ error: "Error creating attraction" });
     }
   },
@@ -431,7 +461,7 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
             public_id: true,
           },
           orderBy: {
-            order: 'asc',
+            order: "asc",
           },
         },
         reviews: {
@@ -552,7 +582,7 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
             public_id: true,
           },
           orderBy: {
-            order: 'asc',
+            order: "asc",
           },
         },
       },
