@@ -13,6 +13,7 @@ import contactRoutes from "./routes/contactRoutes";
 import favoritesRoutes from "./routes/favoritesRoutes";
 import notificationsRoutes from "./routes/notificationsRoutes";
 import paymentsRoutes from "./routes/paymentsRoutes";
+import eventsRoutes from "./routes/eventsRoutes";
 
 const allowedOrigins = ["http://localhost:3000"];
 
@@ -69,6 +70,7 @@ io.on("connection", (socket) => {
 app.use("/api/advertisements", advertisementsRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/attractions", attractionsRoutes);
+app.use("/api/events", eventsRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/favorites", favoritesRoutes);

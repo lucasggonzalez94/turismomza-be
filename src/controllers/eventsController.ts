@@ -5,16 +5,15 @@ import streamifier from "streamifier";
 import { validationResult } from "express-validator";
 
 import prisma from "../prismaClient";
-import { createAttractionValidator } from "../validators";
 import { verifyActiveAds } from "./advertisementsController";
-import { updateAttractionValidator } from "../validators/attractions/updateAttractionValidator";
 import {
   analyzeImage,
   generateUniqueSlug,
-  getMaxPrice,
   moderateText,
   shuffleArray,
 } from "../utils/helpers";
+import { createEventValidator } from "../validators/events/createEventValidator";
+import { updateEventValidator } from "../validators/events/updateEventValidator";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -25,9 +24,9 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-export const createAttraction = [
+export const createEvent = [
   upload.array("images"),
-  ...createAttractionValidator,
+  ...createEventValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -38,21 +37,13 @@ export const createAttraction = [
       title,
       description,
       location,
+      place,
       category,
-      contactNumber,
-      email,
+      minAge,
       webSite,
-      instagram,
-      facebook,
-      schedule,
-      price,
-      currencyPrice,
+      startTime,
+      eventDate,
     } = req.body;
-
-    let services = [];
-    if (req.body.services) {
-      services = JSON.parse(req.body.services);
-    }
 
     const userId = req.user!.userId;
     const userRole = req.user!.role;
@@ -119,42 +110,37 @@ export const createAttraction = [
         }
       }
 
-      const attraction = await prisma.$transaction(async (prisma) => {
-        const newAttraction = await prisma.attraction.create({
+      const event = await prisma.$transaction(async (prisma) => {
+        const newEvent = await prisma.event.create({
           data: {
             title,
             slug,
             description,
             location,
+            place,
             category,
             creatorId: userId,
-            services,
-            contactNumber,
-            email,
             webSite,
-            instagram,
-            facebook,
-            schedule,
-            price,
-            currencyPrice,
+            minAge,
+            start_time: startTime,
+            event_date: eventDate,
+            imageEventId: uploadedImages[0].public_id,
           },
         });
 
         for (const image of uploadedImages) {
-          await prisma.image.create({
+          await prisma.imageEvent.create({
             data: {
               url: image.url,
               public_id: image.public_id,
-              attractionId: newAttraction.id,
-              order: image.order,
             },
           });
         }
 
-        return newAttraction;
+        return newEvent;
       });
 
-      res.status(201).json(attraction);
+      res.status(201).json(event);
     } catch (error) {
       console.error(error);
 
@@ -171,16 +157,14 @@ export const createAttraction = [
   },
 ];
 
-export const listAttractions = async (req: Request, res: Response) => {
+export const listEvents = async (req: Request, res: Response) => {
   const {
     title,
     creatorId,
     categories,
-    location,
-    priceMin,
-    priceMax,
     sponsored,
-    rating,
+    date,
+    minAge,
     page = 1,
     pageSize = 10,
   } = req.query;
@@ -189,113 +173,49 @@ export const listAttractions = async (req: Request, res: Response) => {
   const pageSizeNumber = parseInt(pageSize as string, 10);
   const skip = (pageNumber - 1) * pageSizeNumber;
 
-  const ratingFilter = {
-    5: { gte: 4.5, lt: 5.1 },
-    4: { gte: 3.5, lt: 4.5 },
-    3: { gte: 2.5, lt: 3.5 },
-    2: { gte: 1.5, lt: 2.5 },
-    1: { gte: 0, lt: 1.5 },
-  };
-
-  const ratingRange = rating
-    ? ratingFilter[parseInt(rating as string, 10) as keyof typeof ratingFilter]
-    : undefined;
-
   try {
     verifyActiveAds();
 
-    const totalAttractions = await prisma.attraction.count({
-      where: {
-        title: title
-          ? { contains: title as string, mode: "insensitive" }
-          : undefined,
-        category: categories
-          ? {
-              in: Array.isArray(categories)
-                ? categories.map((cat) => cat as string)
-                : [categories as string],
-            }
-          : undefined,
-        location: location
-          ? { contains: location as string, mode: "insensitive" }
-          : undefined,
-        price: {
-          gte: priceMin ? parseFloat(priceMin as string) : undefined,
-          lte: priceMax ? parseFloat(priceMax as string) : undefined,
-        },
-        reviews: ratingRange
-          ? {
-              some: {
-                rating: {
-                  gte: ratingRange.gte,
-                  lt: ratingRange.lt,
-                },
-              },
-            }
-          : undefined,
-      },
+    const eventFilters: any = {
+      title: title
+        ? { contains: title as string, mode: "insensitive" }
+        : undefined,
+      creatorId: creatorId ? (creatorId as string) : undefined,
+      category: categories
+        ? {
+            in: Array.isArray(categories)
+              ? categories.map((cat) => cat as string)
+              : [categories as string],
+          }
+        : undefined,
+      minAge: minAge ? { gte: parseInt(minAge as string, 10) } : undefined,
+      event_date: date ? { gte: new Date(date as string) } : undefined,
+      advertisements: sponsored
+        ? {
+            some: {
+              isActive: true,
+              endDate: { gte: new Date() },
+            },
+          }
+        : undefined,
+    };
+
+    const filteredEventFilters = Object.fromEntries(
+      Object.entries(eventFilters).filter(([_, v]) => v !== undefined)
+    );
+
+    const totalEvents = await prisma.event.count({
+      where: filteredEventFilters,
     });
 
-    const allAttractions = await prisma.attraction.findMany();
-
-    const attractions = await prisma.attraction.findMany({
-      where: {
-        title: title
-          ? { contains: title as string, mode: "insensitive" }
-          : undefined,
-        category: categories
-          ? {
-              in: Array.isArray(categories)
-                ? categories.map((cat) => cat as string)
-                : [categories as string],
-            }
-          : undefined,
-        location: location
-          ? { contains: location as string, mode: "insensitive" }
-          : undefined,
-        price: {
-          gte: priceMin ? parseFloat(priceMin as string) : undefined,
-          lte: priceMax ? parseFloat(priceMax as string) : undefined,
-        },
-        reviews: ratingRange
-          ? {
-              some: {
-                rating: {
-                  gte: ratingRange.gte,
-                  lt: ratingRange.lt,
-                },
-              },
-            }
-          : undefined,
-      },
+    const events = await prisma.event.findMany({
+      where: filteredEventFilters,
       include: {
         advertisements: true,
-        images: {
+        image: {
           select: {
             url: true,
             public_id: true,
-          },
-          orderBy: {
-            order: "asc",
-          },
-        },
-        reviews: {
-          select: {
-            id: true,
-            content: true,
-            rating: true,
-            user: {
-              select: {
-                name: true,
-              },
-            },
-            creation_date: true,
-            likes: {
-              select: {
-                userId: true,
-              },
-            },
-            reports: true,
           },
         },
         favorites: {
@@ -309,136 +229,84 @@ export const listAttractions = async (req: Request, res: Response) => {
       take: pageSizeNumber,
     });
 
-    const attractionsWithRating = attractions.map((attraction) => {
-      const totalRatings = attraction.reviews.length;
-      const sumRatings = attraction.reviews.reduce(
-        (sum, review) => sum + (review.rating || 0),
-        0
-      );
-
-      const avgRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
-
-      return {
-        ...attraction,
-        avgRating,
-      };
-    });
-
-    const sponsoredAttractions = shuffleArray(
-      attractionsWithRating.filter((attraction) => {
-        return attraction.advertisements.some(
+    const sponsoredEvents = shuffleArray(
+      events.filter((event) => {
+        return event.advertisements.some(
           (ad) => ad.isActive && ad.endDate >= new Date()
         );
       })
     );
 
     if (sponsored) {
-      return res.json(sponsoredAttractions);
+      return res.json(sponsoredEvents);
     }
 
-    let finalAttractions: any[] = [];
-    if (sponsoredAttractions.length > 0) {
-      finalAttractions.push(sponsoredAttractions[0]);
+    let finalEvents: any[] = [];
+    if (sponsoredEvents.length > 0) {
+      finalEvents.push(sponsoredEvents[0]);
     }
 
-    const regularAttractions = attractionsWithRating
+    const regularEvents = events
       ?.filter(
-        (attraction) =>
-          !sponsoredAttractions.some(
-            (sponsored) => sponsored.id === attraction.id
-          )
+        (event) =>
+          !sponsoredEvents.some((sponsored) => sponsored.id === event.id)
       )
-      ?.map((attraction) => {
-        const { advertisements, ...attractionWithoutAds } = attraction;
-        return attractionWithoutAds;
+      ?.map((event) => {
+        const { advertisements, ...eventWithoutAds } = event;
+        return eventWithoutAds;
       });
 
     const chunkSize = 6;
     let sponsoredIndex = 1;
 
-    for (let i = 0; i < regularAttractions.length; i += chunkSize) {
-      finalAttractions.push(...regularAttractions.slice(i, i + chunkSize));
+    for (let i = 0; i < regularEvents.length; i += chunkSize) {
+      finalEvents.push(...regularEvents.slice(i, i + chunkSize));
 
-      if (
-        sponsoredIndex === 0 ||
-        sponsoredIndex < sponsoredAttractions.length
-      ) {
-        finalAttractions.push(sponsoredAttractions[sponsoredIndex]);
+      if (sponsoredIndex === 0 || sponsoredIndex < sponsoredEvents.length) {
+        finalEvents.push(sponsoredEvents[sponsoredIndex]);
         sponsoredIndex++;
       }
     }
 
-    const favoriteAttractions = finalAttractions.map((attraction) => {
-      const favoriteByCreator = attraction?.favorites?.some(
+    const favoriteEvents = finalEvents.map((event) => {
+      const favoriteByCreator = event?.favorites?.some(
         (fav: any) => fav.userId === creatorId
       );
-      const isFavorite = attraction.favorites.length > 0 && favoriteByCreator;
-      const { favorites, ...attractionWithoutFavorites } = attraction;
+      const isFavorite = event.favorites.length > 0 && favoriteByCreator;
+      const { favorites, ...eventWithoutFavorites } = event;
       return {
-        ...attractionWithoutFavorites,
+        ...eventWithoutFavorites,
         isFavorite,
       };
     });
 
-    const maxPrice = getMaxPrice(allAttractions);
-
     res.json({
-      total: totalAttractions,
+      total: totalEvents,
       page: pageNumber,
       pageSize,
-      totalPages: Math.ceil(totalAttractions / pageSizeNumber),
-      maxPrice,
-      data: favoriteAttractions,
+      totalPages: Math.ceil(totalEvents / pageSizeNumber),
+      data: favoriteEvents,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error listing attractions" });
+    res.status(500).json({ error: "Error listing events" });
   }
 };
 
-export const listAttractionBySlug = async (req: Request, res: Response) => {
+export const listEventBySlug = async (req: Request, res: Response) => {
   const { slug } = req.params;
   const { userId } = req.query;
 
   try {
-    const attraction = await prisma.attraction.findUnique({
+    const event = await prisma.event.findUnique({
       where: {
         slug,
       },
       include: {
-        images: {
+        image: {
           select: {
             url: true,
             public_id: true,
-          },
-          orderBy: {
-            order: "asc",
-          },
-        },
-        reviews: {
-          select: {
-            id: true,
-            content: true,
-            rating: true,
-            user: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            creation_date: true,
-            likes: {
-              select: {
-                id: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-            reports: true,
           },
         },
         favorites: {
@@ -450,14 +318,14 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
       },
     });
 
-    if (attraction) {
-      const favoriteByCreator = attraction?.favorites?.some(
+    if (event) {
+      const favoriteByCreator = event?.favorites?.some(
         (fav: any) => fav.userId === userId
       );
-      const isFavorite = attraction.favorites.length > 0 && favoriteByCreator;
-      const { favorites, ...attractionWithoutFavorites } = attraction;
+      const isFavorite = event.favorites.length > 0 && favoriteByCreator;
+      const { favorites, ...eventWithoutFavorites } = event;
       return res.json({
-        ...attractionWithoutFavorites,
+        ...eventWithoutFavorites,
         isFavorite,
       });
     }
@@ -469,14 +337,14 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
   }
 };
 
-export const listAttractionsByUser = async (req: Request, res: Response) => {
+export const listEventsByUser = async (req: Request, res: Response) => {
   const {
     title,
     description,
     category,
     location,
-    priceMin,
-    priceMax,
+    event_date,
+    minAge,
     page = 1,
     pageSize = 10,
   } = req.query;
@@ -488,7 +356,7 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
 
   try {
-    const totalAttractions = await prisma.attraction.count({
+    const totalEvents = await prisma.event.count({
       where: {
         title: title
           ? { contains: title as string, mode: "insensitive" }
@@ -500,15 +368,15 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
         location: location
           ? { contains: location as string, mode: "insensitive" }
           : undefined,
-        price: {
-          gte: priceMin ? parseFloat(priceMin as string) : undefined,
-          lte: priceMax ? parseFloat(priceMax as string) : undefined,
-        },
+        event_date: event_date
+          ? { gte: new Date(event_date as string) }
+          : undefined,
+        minAge: minAge ? { gte: parseInt(minAge as string, 10) } : undefined,
         creatorId: userId,
       },
     });
 
-    const attractions = await prisma.attraction.findMany({
+    const events = await prisma.event.findMany({
       where: {
         title: title
           ? { contains: title as string, mode: "insensitive" }
@@ -520,20 +388,18 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
         location: location
           ? { contains: location as string, mode: "insensitive" }
           : undefined,
-        price: {
-          gte: priceMin ? parseFloat(priceMin as string) : undefined,
-          lte: priceMax ? parseFloat(priceMax as string) : undefined,
-        },
+        event_date: event_date
+          ? { gte: new Date(event_date as string) }
+          : undefined,
+        minAge: minAge ? { gte: parseInt(minAge as string, 10) } : undefined,
         creatorId: userId,
       },
       include: {
-        images: {
+        advertisements: true,
+        image: {
           select: {
             url: true,
             public_id: true,
-          },
-          orderBy: {
-            order: "asc",
           },
         },
       },
@@ -542,21 +408,21 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
     });
 
     res.json({
-      total: totalAttractions,
+      total: totalEvents,
       page: pageNumber,
       pageSize,
-      totalPages: Math.ceil(totalAttractions / pageSizeNumber),
-      data: attractions,
+      totalPages: Math.ceil(totalEvents / pageSizeNumber),
+      data: events,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error listing attractions" });
+    res.status(500).json({ error: "Error listing events" });
   }
 };
 
-export const editAttraction = [
+export const editEvent = [
   upload.array("images"),
-  ...updateAttractionValidator,
+  ...updateEventValidator,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -569,21 +435,13 @@ export const editAttraction = [
       title,
       description,
       location,
+      place,
       category,
-      contactNumber,
-      email,
+      minAge,
       webSite,
-      instagram,
-      facebook,
-      schedule,
-      price,
-      currencyPrice,
+      startTime,
+      eventDate,
     } = req.body;
-
-    let services = [];
-    if (req.body.services) {
-      services = JSON.parse(req.body.services);
-    }
 
     try {
       const isTextAppropriate = await moderateText(
@@ -593,21 +451,16 @@ export const editAttraction = [
         return res.status(400).json({ error: "Inappropriate text detected" });
       }
 
-      const existingAttraction = await prisma.attraction.findUnique({
+      const existingEvent = await prisma.event.findUnique({
         where: { id },
-        include: { images: true },
+        include: { image: true },
       });
 
-      if (!existingAttraction) {
+      if (!existingEvent) {
         return res.status(404).json({ error: "Attraction not found" });
       }
 
-      const deleteImagePromises = existingAttraction.images.map(
-        (image: { public_id: string }) => {
-          return cloudinary.uploader.destroy(image.public_id);
-        }
-      );
-      await Promise.all(deleteImagePromises);
+      await cloudinary.uploader.destroy(existingEvent.image.public_id);
 
       await prisma.image.deleteMany({
         where: { attractionId: id },
@@ -632,12 +485,10 @@ export const editAttraction = [
                         .json({ error: "Inappropriate image detected" });
                     }
 
-                    const savedImage = await prisma.image.create({
+                    const savedImage = await prisma.imageEvent.create({
                       data: {
                         url: result.secure_url,
                         public_id: result.public_id,
-                        attractionId: id,
-                        order: index,
                       },
                     });
                     resolve(savedImage);
@@ -653,7 +504,7 @@ export const editAttraction = [
       if (title) {
         const slug = await generateUniqueSlug(title);
 
-        await prisma.attraction.update({
+        await prisma.event.update({
           where: { id },
           data: {
             slug,
@@ -661,34 +512,24 @@ export const editAttraction = [
         });
       }
 
-      const updatedAttraction = await prisma.attraction.update({
+      const updatedAttraction = await prisma.event.update({
         where: { id },
         data: {
           title,
+          slug,
           description,
-          location: JSON.stringify(location),
+          location,
+          place,
           category,
-          services,
-          contactNumber,
-          email,
+          creatorId: userId,
           webSite,
-          instagram,
-          facebook,
-          schedule: JSON.stringify(schedule),
-          price,
-          currencyPrice,
+          minAge,
+          start_time: startTime,
+          event_date: eventDate,
+          imageEventId: uploadedImages[0].public_id,
         },
         include: {
-          images: true,
-          reviews: {
-            include: {
-              likes: userId
-                ? {
-                    where: { userId },
-                  }
-                : false,
-            },
-          },
+          image: true,
           favorites: userId
             ? {
                 where: { userId },
@@ -705,22 +546,22 @@ export const editAttraction = [
   },
 ];
 
-export const deleteAttraction = async (req: Request, res: Response) => {
+export const deleteEvent = async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = req.user?.userId;
 
   try {
-    const images = await prisma.image.findMany({
-      where: { attractionId: id },
+    const image = await prisma.imageEvent.findMany({
+      where: { eventId: id },
     });
 
     await Promise.all(
-      images.map(async (image: { public_id: string }) => {
+      image.map(async (image: { public_id: string }) => {
         await cloudinary.uploader.destroy(image.public_id);
       })
     );
 
-    await prisma.attraction.delete({
+    await prisma.event.delete({
       where: {
         id,
         creatorId: userId,

@@ -20,6 +20,7 @@ model User {
   registration_date      DateTime        @default(now())
   attractions            Attraction[]    @relation("CreatorAttractions")
   reviews                Review[]
+  events                 Event[]         @relation("CreatorEvents")
   favorites              Favorite[]
   notifications          Notification[]
   triggeredNotifications Notification[]  @relation("TriggeredNotifications")
@@ -54,6 +55,27 @@ model Attraction {
   advertisements Advertisement[]
 }
 
+model Event {
+  id             String          @id @default(uuid())
+  title          String
+  slug           String          @unique
+  description    String
+  location       String
+  place          String
+  category       String
+  minAge         Int             @default(0)
+  creator        User            @relation("CreatorEvents", fields: [creatorId], references: [id])
+  creatorId      String
+  creation_date  DateTime        @default(now())
+  event_date     DateTime
+  start_time     DateTime        @db.Time
+  webSite        String?
+  image          ImageEvent      @relation(fields: [imageEventId], references: [id], onDelete: Cascade)
+  favorites      Favorite[]
+  advertisements Advertisement[]
+  imageEventId   String          @unique
+}
+
 model Advertisement {
   id           String     @id @default(uuid())
   attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
@@ -67,6 +89,8 @@ model Advertisement {
   isActive     Boolean    @default(true)
   impressions  Int        @default(0)
   clicks       Int        @default(0)
+  Event        Event?     @relation(fields: [eventId], references: [id])
+  eventId      String?
 }
 
 model Review {
@@ -89,6 +113,8 @@ model Favorite {
   attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   attractionId String
   added_date   DateTime   @default(now())
+  Event        Event?     @relation(fields: [eventId], references: [id])
+  eventId      String?
 
   @@unique([userId, attractionId])
 }
@@ -153,6 +179,13 @@ model Image {
   attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   attractionId String
   order        Int
+}
+
+model ImageEvent {
+  id        String @id @default(uuid())
+  public_id String
+  url       String
+  event     Event? @relation
 }
 
 enum Role {

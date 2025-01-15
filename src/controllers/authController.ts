@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import prisma from "../prismaClient";
 import { registerValidator } from "../validators";
-import { analyzeImage } from "../helpers";
+import { analyzeImage } from "../utils";
 import { loginValidator } from "../validators/auth/loginValidator";
 import { updateValidator } from "../validators/auth/updateValidator";
 import { Readable } from "stream";
