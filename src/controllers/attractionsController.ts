@@ -675,7 +675,7 @@ export const editAttraction = [
                     const isImageAppropriate = await analyzeImage(
                       result.secure_url
                     );
-                    if (isImageAppropriate) {
+                    if (!isImageAppropriate) {
                       return res
                         .status(400)
                         .json({ error: "Inappropriate image detected" });
@@ -715,7 +715,7 @@ export const editAttraction = [
         data: {
           title,
           description,
-          location: JSON.stringify(location),
+          location,
           category,
           services,
           contactNumber,
@@ -723,7 +723,7 @@ export const editAttraction = [
           webSite,
           instagram,
           facebook,
-          schedule: JSON.stringify(schedule),
+          schedule,
           price,
           currencyPrice,
         },

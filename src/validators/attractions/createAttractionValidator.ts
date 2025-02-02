@@ -48,7 +48,7 @@ export const createAttractionValidator = [
   body("currencyPrice")
     .optional()
     .custom((value) => {
-      const validCurrencies = ["ars", "usd"]; // Los valores de tu enum en Prisma
+      const validCurrencies = ["ars", "usd"];
       if (!validCurrencies.includes(value)) {
         throw new Error("Currency must be either 'ars' or 'usd'");
       }

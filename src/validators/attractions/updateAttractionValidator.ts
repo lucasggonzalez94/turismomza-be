@@ -29,8 +29,8 @@ export const updateAttractionValidator = [
     .optional()
     .isString()
     .withMessage("Contact number must be a string"),
-  body("email").optional().isEmail().withMessage("Please enter a valid email"),
-  body("webSite").optional().isURL().withMessage("Please enter a valid URL"),
+  body("email").optional({ nullable: true, checkFalsy: true }).isEmail().withMessage("Please enter a valid email"),
+  body("webSite").optional({ nullable: true, checkFalsy: true }).isURL().withMessage("Please enter a valid URL"),
   body("instagram")
     .optional()
     .isString()
@@ -51,7 +51,7 @@ export const updateAttractionValidator = [
   body("currencyPrice")
     .optional()
     .custom((value) => {
-      const validCurrencies = ["ars", "usd"]; // Los valores de tu enum en Prisma
+      const validCurrencies = ["ars", "usd"];
       if (!validCurrencies.includes(value)) {
         throw new Error("Currency must be either 'ars' or 'usd'");
       }

@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "concurrently \"docker-compose up -d\" \"tsc --watch\" \"nodemon dist/server.js\"",
+    "dev": "concurrently \"docker-compose up -d\" \"tsc --watch\" \"node --watch dist/server.js\"",
     "start": "node dist/server.js",
     "build": "tsc"
   },
