@@ -8,6 +8,7 @@ import { GenerateRefreshToken } from "../../domain/use-cases/GenerateRefreshToke
 import { validationResult } from "express-validator";
 import { LogoutUser } from "../../domain/use-cases/LogoutUser";
 import { UpdateUser } from "../../domain/use-cases/UpdateUser";
+import { ListUsers } from "../../domain/use-cases/ListUsers";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
@@ -21,6 +22,7 @@ const loginUser = new LoginUser(
 );
 const logoutUser = new LogoutUser(refreshTokenRepository);
 const updateUser = new UpdateUser(userRepository, emailService);
+const listUsers = new ListUsers(userRepository);
 
 const generateRefreshToken = new GenerateRefreshToken(refreshTokenRepository);
 
@@ -124,6 +126,21 @@ export class UserController {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
       res.status(400).json({ error: errorMessage });
+    }
+  }
+
+  static async list(req: Request, res: Response) {
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const pageNumber = parseInt(page as string, 10);
+    const pageSizeNumber = parseInt(pageSize as string, 10);
+
+    try {
+      const result = await listUsers.execute(pageNumber, pageSizeNumber);
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error listing users" });
     }
   }
 

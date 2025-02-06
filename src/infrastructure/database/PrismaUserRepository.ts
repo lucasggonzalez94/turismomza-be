@@ -85,9 +85,15 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
-  async getAll(): Promise<User[]> {
+  async getAll(page: number, pageSize: number): Promise<User[]> {
+    const skip = (page - 1) * pageSize;
+
     const users = await prisma.user.findMany({
-      include: { profile_picture: true, places: true },
+      skip,
+      take: pageSize,
+      include: {
+        profile_picture: true,
+      }
     });
     return users.map(
       (user) =>
@@ -95,7 +101,7 @@ export class PrismaUserRepository implements UserRepository {
           user.id,
           user.name,
           user.email,
-          user.password,
+          user.password ?? undefined,
           user.role,
           user.two_factor_enabled,
           user.two_factor_code ?? undefined,
