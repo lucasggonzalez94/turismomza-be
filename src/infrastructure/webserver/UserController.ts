@@ -12,7 +12,7 @@ const emailService = new EmailService();
 const refreshTokenRepository = new PrismaRefreshTokenRepository();
 
 const registerUser = new RegisterUser(userRepository, emailService);
-const loginUser = new LoginUser(userRepository, refreshTokenRepository);
+const loginUser = new LoginUser(userRepository, refreshTokenRepository, emailService);
 
 const generateRefreshToken = new GenerateRefreshToken(refreshTokenRepository);
 

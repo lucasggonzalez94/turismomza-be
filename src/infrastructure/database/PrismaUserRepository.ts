@@ -85,7 +85,9 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async getAll(): Promise<User[]> {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      include: { profile_picture: true, places: true },
+    });
     return users.map(
       (user) =>
         new User(
@@ -94,7 +96,17 @@ export class PrismaUserRepository implements UserRepository {
           user.email,
           user.password,
           user.role,
-          user.two_factor_enabled
+          user.two_factor_enabled,
+          user.two_factor_code ?? undefined,
+          user.two_factor_expires ?? undefined,
+          user.created_at,
+          user.profile_picture
+            ? new ProfilePicture(
+                user.profile_picture.id,
+                user.profile_picture.public_id,
+                user.profile_picture.url
+              )
+            : undefined,
         )
     );
   }

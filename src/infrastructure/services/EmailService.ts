@@ -18,4 +18,13 @@ export class EmailService {
              <p>Gracias por registrarte en nuestra plataforma. ¡Esperamos que disfrutes de la experiencia!</p>`,
     });
   }
+
+  async send2FACode(email: string, code?: string) {
+    await this.transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Your two-factor authentication code",
+      text: `Your code is ${code}`,
+    });
+  }
 }

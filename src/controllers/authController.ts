@@ -96,115 +96,115 @@ const upload = multer({ storage });
 //   },
 // ];
 
-export const login = [
-  ...loginValidator,
-  async (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+// export const login = [
+//   ...loginValidator,
+//   async (req: Request, res: Response) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
 
-    const { email, password: passwordReq } = req.body;
+//     const { email, password: passwordReq } = req.body;
 
-    try {
-      const user = await prisma.user.findUnique({
-        where: { email },
-        include: {
-          profile_picture: true,
-        },
-      });
+//     try {
+//       const user = await prisma.user.findUnique({
+//         where: { email },
+//         include: {
+//           profile_picture: true,
+//         },
+//       });
 
-      if (!user || !(await bcrypt.compare(passwordReq, user.password))) {
-        return res.status(401).json({ error: "Invalid credentials" });
-      }
+//       if (!user || !(await bcrypt.compare(passwordReq, user.password))) {
+//         return res.status(401).json({ error: "Invalid credentials" });
+//       }
 
-      if (user.two_factor_enabled) {
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+//       if (user.two_factor_enabled) {
+//         const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            two_factor_code: code,
-            two_factor_expires: new Date(Date.now() + 10 * 60 * 1000),
-          },
-        });
+//         await prisma.user.update({
+//           where: { id: user.id },
+//           data: {
+//             two_factor_code: code,
+//             two_factor_expires: new Date(Date.now() + 10 * 60 * 1000),
+//           },
+//         });
 
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: user.email,
-          subject: "Your two-factor authentication code",
-          text: `Your code is ${code}`,
-        });
+//         await transporter.sendMail({
+//           from: process.env.EMAIL_USER,
+//           to: user.email,
+//           subject: "Your two-factor authentication code",
+//           text: `Your code is ${code}`,
+//         });
 
-        return res
-          .status(200)
-          .json({ message: "2FA code sent, please verify", userId: user.id });
-      }
+//         return res
+//           .status(200)
+//           .json({ message: "2FA code sent, please verify", userId: user.id });
+//       }
 
-      const accessToken = jwt.sign(
-        { userId: user.id, role: user.role },
-        process.env.ACCESS_TOKEN_SECRET as string,
-        { expiresIn: "1h" }
-      );
+//       const accessToken = jwt.sign(
+//         { userId: user.id, role: user.role },
+//         process.env.ACCESS_TOKEN_SECRET as string,
+//         { expiresIn: "1h" }
+//       );
 
-      const refreshToken = uuidv4();
-      // TODO: Revisar
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+//       const refreshToken = uuidv4();
+//       // TODO: Revisar
+//       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       
-      const refreshTokenExist = await prisma.refreshToken.findUnique({
-        where: { userId: user.id },
-      });
+//       const refreshTokenExist = await prisma.refreshToken.findUnique({
+//         where: { userId: user.id },
+//       });
 
-      if (refreshTokenExist) {
-        await prisma.refreshToken.update({
-          where: {
-            userId: user.id,
-          },
-          data: {
-            token: refreshToken,
-            expiresAt,
-          },
-        });
-      } else {
-        await prisma.refreshToken.create({
-          data: {
-            token: refreshToken,
-            userId: user.id,
-            expiresAt,
-          },
-        });
-      }
+//       if (refreshTokenExist) {
+//         await prisma.refreshToken.update({
+//           where: {
+//             userId: user.id,
+//           },
+//           data: {
+//             token: refreshToken,
+//             expiresAt,
+//           },
+//         });
+//       } else {
+//         await prisma.refreshToken.create({
+//           data: {
+//             token: refreshToken,
+//             userId: user.id,
+//             expiresAt,
+//           },
+//         });
+//       }
 
-      res.cookie("authToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 3600000,
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      });
+//       res.cookie("authToken", accessToken, {
+//         httpOnly: true,
+//         secure: process.env.NODE_ENV === "production",
+//         maxAge: 3600000,
+//         sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+//       });
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 604800000, // 7 días
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      });
+//       res.cookie("refreshToken", refreshToken, {
+//         httpOnly: true,
+//         secure: process.env.NODE_ENV === "production",
+//         maxAge: 604800000, // 7 días
+//         sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+//       });
 
-      const {
-        id,
-        password,
-        two_factor_code,
-        two_factor_expires,
-        created_at,
-        ...restUser
-      } = user;
+//       const {
+//         id,
+//         password,
+//         two_factor_code,
+//         two_factor_expires,
+//         created_at,
+//         ...restUser
+//       } = user;
 
-      res.status(200).json({ ...restUser });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Error logging in" });
-    }
-  },
-];
+//       res.status(200).json({ ...restUser });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ error: "Error logging in" });
+//     }
+//   },
+// ];
 
 export const logout = async (req: Request, res: Response) => {
   await prisma.refreshToken.deleteMany({

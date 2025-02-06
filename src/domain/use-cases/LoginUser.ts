@@ -2,11 +2,13 @@ import { UserRepository } from "../ports/UserRepository";
 import bcrypt from "bcryptjs";
 import { JwtService } from "../../infrastructure/services/JwtService";
 import { RefreshTokenRepository } from "../ports/RefreshTokenRepository";
+import { EmailService } from "../../infrastructure/services/EmailService";
 
 export class LoginUser {
   constructor(
     private userRepository: UserRepository,
-    private refreshTokenRepository: RefreshTokenRepository
+    private refreshTokenRepository: RefreshTokenRepository,
+    private emailService: EmailService
   ) {}
 
   async execute(data: { email: string; password: string }) {
@@ -17,12 +19,13 @@ export class LoginUser {
     if (!isPasswordValid) throw new Error("Incorrect password.");
 
     // TODO: Implementar 2FA
-    // if (user.twoFactorEnabled) {
-    //   const code = Math.floor(100000 + Math.random() * 900000).toString();
-    //   user.enableTwoFactorAuth(code);
-    //   await this.userRepository.update(user);
-    //   return { message: "Código de 2FA enviado." };
-    // }
+    if (user.twoFactorEnabled) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      user.enableTwoFactorAuth(code);
+      await this.userRepository.update(user);
+      await this.emailService.send2FACode(user.email, user.twoFactorCode);
+      return { user, message: "Código de 2FA enviado." };
+    }
 
     const accessToken = JwtService.generateAccessToken(user.id, user.role);
     const refreshToken = JwtService.generateRefreshToken(user.id);
