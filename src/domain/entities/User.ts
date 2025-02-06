@@ -1,12 +1,12 @@
-import { Advertisement } from "../../../Advertisement/domain/Advertisement";
-import { Favorite } from "../../../Favorite/domain/Favorite";
-import { Like } from "../../../Like/domain/Like";
-import { Notification } from "../../../Notification/domain/Notification";
-import { Place } from "../../../Place/domain/Place";
-import { RefreshToken } from "../../../RefreshToken/domain/entities/RefreshToken";
-import { Report } from "../../../Report/domain/Report";
-import { Review } from "../../../Review/domain/Review";
 import { ProfilePicture } from "../value-objects/ProfilePicture";
+import { Advertisement } from "./Advertisement";
+import { Favorite } from "./Favorite";
+import { Like } from "./Like";
+import { Place } from "./Place";
+import { RefreshToken } from "./RefreshToken";
+import { Review } from "./Review";
+import { Notification } from "./Notification";
+import { Report } from "./Report";
 
 export class User {
   constructor(
@@ -28,7 +28,9 @@ export class User {
     public reports?: Report[],
     public advertisements?: Advertisement[],
     public refreshToken?: RefreshToken
-  ) {}
+  ) {
+    this.validate();
+  }
 
   validate() {
     if (!this.email.includes("@")) throw new Error("Email inválido.");
