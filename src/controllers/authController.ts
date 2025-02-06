@@ -6,13 +6,11 @@ import { validationResult } from "express-validator";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
-
-import prisma from "../User/infrastructure/database/prismaClient";
-import { registerValidator } from "../validators";
-import { analyzeImage } from "../helpers";
 import { loginValidator } from "../validators/auth/loginValidator";
 import { updateValidator } from "../validators/auth/updateValidator";
 import { Readable } from "stream";
+import prisma from "../infrastructure/database/prismaClient";
+import { analyzeImage } from "../helpers/analyzeImage";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",

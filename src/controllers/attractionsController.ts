@@ -5,13 +5,12 @@ import streamifier from "streamifier";
 import { validationResult } from "express-validator";
 import axios from "axios";
 import slugify from "slugify";
-
-import prisma from "../User/infrastructure/database/prismaClient";
 import { createAttractionValidator } from "../validators";
-import { analyzeImage } from "../helpers";
 import { verifyActiveAds } from "./advertisementsController";
 import { updateAttractionValidator } from "../validators/attractions/updateAttractionValidator";
-import { Attraction } from "@prisma/client";
+import prisma from "../infrastructure/database/prismaClient";
+import { Place } from "../domain/entities/Place";
+import { analyzeImage } from "../helpers/analyzeImage";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -48,14 +47,14 @@ const shuffleArray = (array: any[]) => {
 const generateUniqueSlug = async (title: string) => {
   const baseSlug = slugify(title, { lower: true, remove: /[*+~.()'"!:@]/g });
   let slug = baseSlug;
-  let attractionExists = await prisma.attraction.findUnique({
+  let attractionExists = await prisma.place.findUnique({
     where: { slug },
   });
   let count = 1;
 
   while (attractionExists) {
     slug = `${baseSlug}-${count}`;
-    attractionExists = await prisma.attraction.findUnique({
+    attractionExists = await prisma.place.findUnique({
       where: { slug },
     });
     count++;
@@ -64,7 +63,7 @@ const generateUniqueSlug = async (title: string) => {
   return slug;
 };
 
-const getMaxMinPrices = (attractions: Attraction[]) => {
+const getMaxMinPrices = (attractions: Place[]) => {
   const prices = attractions
     .map((attranction) => attranction.price)
     .filter((price) => price !== null && price !== undefined);
@@ -169,8 +168,8 @@ export const createAttraction = [
         }
       }
 
-      const attraction = await prisma.$transaction(async (prisma) => {
-        const newAttraction = await prisma.attraction.create({
+      const place = await prisma.$transaction(async (prisma) => {
+        const newAttraction = await prisma.place.create({
           data: {
             title,
             slug,
@@ -195,7 +194,7 @@ export const createAttraction = [
             data: {
               url: image.url,
               public_id: image.public_id,
-              attractionId: newAttraction.id,
+              placeId: newAttraction.id,
               order: image.order,
             },
           });
@@ -204,7 +203,7 @@ export const createAttraction = [
         return newAttraction;
       });
 
-      res.status(201).json(attraction);
+      res.status(201).json(place);
     } catch (error) {
       console.error(error);
 
@@ -216,7 +215,7 @@ export const createAttraction = [
         );
       }
 
-      res.status(500).json({ error: "Error creating attraction" });
+      res.status(500).json({ error: "Error creating place" });
     }
   },
 ];
@@ -254,7 +253,7 @@ export const listAttractions = async (req: Request, res: Response) => {
   try {
     verifyActiveAds();
 
-    const totalAttractions = await prisma.attraction.count({
+    const totalAttractions = await prisma.place.count({
       where: {
         title: title
           ? { contains: title as string, mode: "insensitive" }
@@ -286,7 +285,7 @@ export const listAttractions = async (req: Request, res: Response) => {
       },
     });
 
-    const attractions = await prisma.attraction.findMany({
+    const attractions = await prisma.place.findMany({
       where: {
         title: title
           ? { contains: title as string, mode: "insensitive" }
@@ -357,9 +356,9 @@ export const listAttractions = async (req: Request, res: Response) => {
       take: pageSizeNumber,
     });
 
-    const attractionsWithRating = attractions.map((attraction) => {
-      const totalRatings = attraction.reviews.length;
-      const sumRatings = attraction.reviews.reduce(
+    const attractionsWithRating = attractions.map((place) => {
+      const totalRatings = place.reviews.length;
+      const sumRatings = place.reviews.reduce(
         (sum, review) => sum + (review.rating || 0),
         0
       );
@@ -367,14 +366,14 @@ export const listAttractions = async (req: Request, res: Response) => {
       const avgRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
 
       return {
-        ...attraction,
+        ...place,
         avgRating,
       };
     });
 
     const sponsoredAttractions = shuffleArray(
-      attractionsWithRating.filter((attraction) => {
-        return attraction.advertisements.some(
+      attractionsWithRating.filter((place) => {
+        return place.advertisements.some(
           (ad) => ad.isActive && ad.endDate >= new Date()
         );
       })
@@ -391,13 +390,13 @@ export const listAttractions = async (req: Request, res: Response) => {
 
     const regularAttractions = attractionsWithRating
       ?.filter(
-        (attraction) =>
+        (place) =>
           !sponsoredAttractions.some(
-            (sponsored) => sponsored.id === attraction.id
+            (sponsored) => sponsored.id === place.id
           )
       )
-      ?.map((attraction) => {
-        const { advertisements, ...attractionWithoutAds } = attraction;
+      ?.map((place) => {
+        const { advertisements, ...attractionWithoutAds } = place;
         return attractionWithoutAds;
       });
 
@@ -416,12 +415,12 @@ export const listAttractions = async (req: Request, res: Response) => {
       }
     }
 
-    const favoriteAttractions = finalAttractions.map((attraction) => {
-      const favoriteByCreator = attraction?.favorites?.some(
+    const favoriteAttractions = finalAttractions.map((place) => {
+      const favoriteByCreator = place?.favorites?.some(
         (fav: any) => fav.userId === creatorId
       );
-      const isFavorite = attraction.favorites.length > 0 && favoriteByCreator;
-      const { favorites, ...attractionWithoutFavorites } = attraction;
+      const isFavorite = place.favorites.length > 0 && favoriteByCreator;
+      const { favorites, ...attractionWithoutFavorites } = place;
       return {
         ...attractionWithoutFavorites,
         isFavorite,
@@ -450,7 +449,7 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
   const { userId } = req.query;
 
   try {
-    const attraction = await prisma.attraction.findUnique({
+    const place = await prisma.place.findUnique({
       where: {
         slug,
       },
@@ -499,19 +498,19 @@ export const listAttractionBySlug = async (req: Request, res: Response) => {
       },
     });
 
-    if (attraction) {
-      const favoriteByCreator = attraction?.favorites?.some(
+    if (place) {
+      const favoriteByCreator = place?.favorites?.some(
         (fav: any) => fav.userId === userId
       );
-      const isFavorite = attraction.favorites.length > 0 && favoriteByCreator;
-      const { favorites, ...attractionWithoutFavorites } = attraction;
+      const isFavorite = place.favorites.length > 0 && favoriteByCreator;
+      const { favorites, ...attractionWithoutFavorites } = place;
       return res.json({
         ...attractionWithoutFavorites,
         isFavorite,
       });
     }
 
-    res.status(404).json({ error: "Error finding attraction" });
+    res.status(404).json({ error: "Error finding place" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error service" });
@@ -537,7 +536,7 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
 
   try {
-    const totalAttractions = await prisma.attraction.count({
+    const totalAttractions = await prisma.place.count({
       where: {
         title: title
           ? { contains: title as string, mode: "insensitive" }
@@ -557,7 +556,7 @@ export const listAttractionsByUser = async (req: Request, res: Response) => {
       },
     });
 
-    const attractions = await prisma.attraction.findMany({
+    const attractions = await prisma.place.findMany({
       where: {
         title: title
           ? { contains: title as string, mode: "insensitive" }
@@ -642,7 +641,7 @@ export const editAttraction = [
         return res.status(400).json({ error: "Inappropriate text detected" });
       }
 
-      const existingAttraction = await prisma.attraction.findUnique({
+      const existingAttraction = await prisma.place.findUnique({
         where: { id },
         include: { images: true },
       });
@@ -659,7 +658,7 @@ export const editAttraction = [
       await Promise.all(deleteImagePromises);
 
       await prisma.image.deleteMany({
-        where: { attractionId: id },
+        where: { placeId: id },
       });
 
       if (Array.isArray(req.files) && req.files.length > 0) {
@@ -685,7 +684,7 @@ export const editAttraction = [
                       data: {
                         url: result.secure_url,
                         public_id: result.public_id,
-                        attractionId: id,
+                        placeId: id,
                         order: index,
                       },
                     });
@@ -702,7 +701,7 @@ export const editAttraction = [
       if (title) {
         const slug = await generateUniqueSlug(title);
 
-        await prisma.attraction.update({
+        await prisma.place.update({
           where: { id },
           data: {
             slug,
@@ -710,7 +709,7 @@ export const editAttraction = [
         });
       }
 
-      const updatedAttraction = await prisma.attraction.update({
+      const updatedAttraction = await prisma.place.update({
         where: { id },
         data: {
           title,
@@ -749,7 +748,7 @@ export const editAttraction = [
       res.json(updatedAttraction);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Error updating attraction" });
+      res.status(500).json({ error: "Error updating place" });
     }
   },
 ];
@@ -760,7 +759,7 @@ export const deleteAttraction = async (req: Request, res: Response) => {
 
   try {
     const images = await prisma.image.findMany({
-      where: { attractionId: id },
+      where: { placeId: id },
     });
 
     await Promise.all(
@@ -769,7 +768,7 @@ export const deleteAttraction = async (req: Request, res: Response) => {
       })
     );
 
-    await prisma.attraction.delete({
+    await prisma.place.delete({
       where: {
         id,
         creatorId: userId,
@@ -779,6 +778,6 @@ export const deleteAttraction = async (req: Request, res: Response) => {
     res.status(204).send();
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error deleting attraction" });
+    res.status(500).json({ error: "Error deleting place" });
   }
 };

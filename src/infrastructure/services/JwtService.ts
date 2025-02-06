@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { RefreshToken } from "../../../RefreshToken/domain/entities/RefreshToken";
+import { RefreshToken } from "../../domain/entities/RefreshToken";
 
 export class JwtService {
   static generateAccessToken(userId: string, role: string): string {

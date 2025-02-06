@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { RefreshTokenRepository } from "../../domain/ports/RefreshTokenRepository";
 import { RefreshToken } from "../../domain/entities/RefreshToken";
-import { refreshToken } from "../../../controllers/authController";
 
 const prisma = new PrismaClient();
 
@@ -10,8 +9,6 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
     const existingToken = await prisma.refreshToken.findUnique({
       where: { userId },
     });
-
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 días
 
     if (existingToken) {
       await prisma.refreshToken.update({
