@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import advertisementsRoutes from "./routes/advertisementsRoutes";
-import authRoutes from "./routes/authRoutes";
+import userRoutes from "./User/application/routes/UserRoutes";
 import attractionsRoutes from "./routes/attractionsRoutes";
 import reviewsRoutes from "./routes/ReviewsRoutes";
 import contactRoutes from "./routes/contactRoutes";
@@ -67,7 +67,7 @@ io.on("connection", (socket) => {
 });
 
 app.use("/api/advertisements", advertisementsRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", userRoutes);
 app.use("/api/attractions", attractionsRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/contact", contactRoutes);

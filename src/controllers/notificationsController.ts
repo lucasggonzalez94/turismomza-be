@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import prisma from "../prismaClient";
+import prisma from "../User/infrastructure/database/prismaClient";
 import { validationResult } from "express-validator";
 import { markAsReadValidator } from "../validators";
 

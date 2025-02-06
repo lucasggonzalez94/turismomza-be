@@ -6,7 +6,7 @@ import { validationResult } from "express-validator";
 import axios from "axios";
 import slugify from "slugify";
 
-import prisma from "../prismaClient";
+import prisma from "../User/infrastructure/database/prismaClient";
 import { createAttractionValidator } from "../validators";
 import { analyzeImage } from "../helpers";
 import { verifyActiveAds } from "./advertisementsController";

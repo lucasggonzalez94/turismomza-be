@@ -4,7 +4,7 @@ import checkoutNodeJssdk from '@paypal/checkout-server-sdk';
 
 import { paypalClient } from "../services/paypalClient";
 import { payment, preference } from "../services/mercadoPagoClient";
-import prisma from "../prismaClient";
+import prisma from "../User/infrastructure/database/prismaClient";
 
 const WEBHOOK_SECRET = process.env.MERCADOPAGO_ACCESS_TOKEN;
 

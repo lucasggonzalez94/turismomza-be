@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Server } from "socket.io";
 import { validationResult } from "express-validator";
 
-import prisma from "../prismaClient";
+import prisma from "../User/infrastructure/database/prismaClient";
 import {
   addReviewValidator,
   editReviewValidator,

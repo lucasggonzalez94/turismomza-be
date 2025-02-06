@@ -7,7 +7,7 @@ import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
 
-import prisma from "../prismaClient";
+import prisma from "../User/infrastructure/database/prismaClient";
 import { registerValidator } from "../validators";
 import { analyzeImage } from "../helpers";
 import { loginValidator } from "../validators/auth/loginValidator";
@@ -64,7 +64,7 @@ export const register = [
           id: true,
           name: true,
           email: true,
-          profilePicture: true,
+          profile_picture: true,
           role: true,
         },
       });
@@ -112,7 +112,7 @@ export const login = [
       const user = await prisma.user.findUnique({
         where: { email },
         include: {
-          profilePicture: true,
+          profile_picture: true,
         },
       });
 
@@ -196,7 +196,7 @@ export const login = [
         password,
         two_factor_code,
         two_factor_expires,
-        registration_date,
+        created_at,
         ...restUser
       } = user;
 
@@ -246,7 +246,7 @@ export const updateUser = [
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        include: { profilePicture: true },
+        include: { profile_picture: true },
       });
 
       if (!user) {
@@ -263,8 +263,8 @@ export const updateUser = [
       }
 
       if (file) {
-        if (user.profilePicture) {
-          const publicId = user.profilePicture.public_id;
+        if (user?.profile_picture) {
+          const publicId = user.profile_picture.public_id;
           await cloudinary.uploader.destroy(publicId);
 
           await prisma.profilePicture.delete({
@@ -359,12 +359,12 @@ export const listUsers = async (req: Request, res: Response) => {
         name: true,
         email: true,
         role: true,
-        registration_date: true,
+        created_at: true,
         password: false,
         two_factor_code: false,
         two_factor_enabled: false,
         two_factor_expires: false,
-        profilePicture: true,
+        profile_picture: true,
       },
       skip,
       take: pageSizeNumber,
@@ -402,7 +402,7 @@ export const refreshToken = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({
       where: { id: tokenEntry.userId },
       include: {
-        profilePicture: true,
+        profile_picture: true,
       },
     });
 
@@ -437,7 +437,7 @@ export const verifyToken = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        profilePicture: true,
+        profile_picture: true,
       },
     });
 
@@ -449,7 +449,7 @@ export const verifyToken = async (req: Request, res: Response) => {
       password,
       two_factor_code,
       two_factor_expires,
-      registration_date,
+      created_at,
       ...restUser
     } = user;
     res.status(200).json({ ...restUser });
