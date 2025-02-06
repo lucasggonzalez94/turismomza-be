@@ -206,27 +206,27 @@ const upload = multer({ storage });
 //   },
 // ];
 
-export const logout = async (req: Request, res: Response) => {
-  await prisma.refreshToken.deleteMany({
-    where: {
-      userId: req.user!.userId,
-    },
-  });
+// export const logout = async (req: Request, res: Response) => {
+//   await prisma.refreshToken.deleteMany({
+//     where: {
+//       userId: req.user!.userId,
+//     },
+//   });
 
-  res.clearCookie('authToken', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-  });
+//   res.clearCookie('authToken', {
+//     httpOnly: true,
+//     secure: process.env.NODE_ENV === 'production',
+//     sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+//   });
 
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-  });
+//   res.clearCookie('refreshToken', {
+//     httpOnly: true,
+//     secure: process.env.NODE_ENV === 'production',
+//     sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+//   });
 
-  return res.status(200).json({ message: 'Logged out successfully' });
-};
+//   return res.status(200).json({ message: 'Logged out successfully' });
+// };
 
 export const updateUser = [
   upload.single("profilePicture"),

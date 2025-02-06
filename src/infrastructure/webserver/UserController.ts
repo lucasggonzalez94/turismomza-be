@@ -6,13 +6,19 @@ import { EmailService } from "../services/EmailService";
 import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
 import { GenerateRefreshToken } from "../../domain/use-cases/GenerateRefreshToken";
 import { validationResult } from "express-validator";
+import { LogoutUser } from "../../domain/use-cases/LogoutUser";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
 const refreshTokenRepository = new PrismaRefreshTokenRepository();
 
 const registerUser = new RegisterUser(userRepository, emailService);
-const loginUser = new LoginUser(userRepository, refreshTokenRepository, emailService);
+const loginUser = new LoginUser(
+  userRepository,
+  refreshTokenRepository,
+  emailService
+);
+const logoutUser = new LogoutUser(refreshTokenRepository);
 
 const generateRefreshToken = new GenerateRefreshToken(refreshTokenRepository);
 
@@ -75,6 +81,28 @@ export class UserController {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
       res.status(400).json({ error: errorMessage });
+    }
+  }
+
+  static async logout(req: Request, res: Response) {
+    try {
+      await logoutUser.execute(req.user!.userId);
+
+      res.clearCookie("authToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      });
+
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      });
+
+      return res.status(200).json({ message: "Logged out successfully" });
+    } catch (error) {
+      return res.status(500).json({ error: "Error logging out" });
     }
   }
 
