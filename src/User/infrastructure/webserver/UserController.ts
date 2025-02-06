@@ -8,11 +8,10 @@ import { EmailService } from "../services/EmailService";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
+const refreshTokenRepository = new PrismaRefreshTokenRepository();
 
 const registerUser = new RegisterUser(userRepository, emailService);
-const loginUser = new LoginUser(userRepository);
-
-const refreshTokenRepository = new PrismaRefreshTokenRepository();
+const loginUser = new LoginUser(userRepository, refreshTokenRepository);
 
 const generateRefreshToken = new GenerateRefreshToken(refreshTokenRepository);
 
@@ -38,8 +37,25 @@ export class UserController {
 
   static async login(req: Request, res: Response) {
     try {
-      const result = await loginUser.execute(req.body);
-      res.status(200).json(result);
+      const { user, accessToken, refreshToken } = await loginUser.execute(
+        req.body
+      );
+
+      res.cookie("authToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 3600000,
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      });
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 604800000, // 7 días
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      });
+
+      res.status(200).json(user);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";

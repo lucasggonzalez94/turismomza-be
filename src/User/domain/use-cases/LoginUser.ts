@@ -1,17 +1,20 @@
 import { UserRepository } from "../ports/UserRepository";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { User } from "../entities/User";
+import { JwtService } from "../../infrastructure/services/JwtService";
+import { RefreshTokenRepository } from "../../../RefreshToken/domain/ports/RefreshTokenRepository";
 
 export class LoginUser {
-  constructor(private userRepository: UserRepository) {}
+  constructor(
+    private userRepository: UserRepository,
+    private refreshTokenRepository: RefreshTokenRepository
+  ) {}
 
   async execute(data: { email: string; password: string }) {
     const user = await this.userRepository.getByEmail(data.email);
-    if (!user) throw new Error("Usuario no encontrado.");
+    if (!user) throw new Error("User not found.");
 
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
-    if (!isPasswordValid) throw new Error("Contraseña incorrecta.");
+    if (!isPasswordValid) throw new Error("Incorrect password.");
 
     // TODO: Implementar 2FA
     // if (user.twoFactorEnabled) {
@@ -21,9 +24,11 @@ export class LoginUser {
     //   return { message: "Código de 2FA enviado." };
     // }
 
-    const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
-      expiresIn: "15m",
-    });
-    return { user, accessToken };
+    const accessToken = JwtService.generateAccessToken(user.id, user.role);
+    const refreshToken = JwtService.generateRefreshToken(user.id);
+
+    await this.refreshTokenRepository.save(user.id, refreshToken);
+
+    return { user, accessToken, refreshToken };
   }
 }

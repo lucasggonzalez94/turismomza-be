@@ -1,6 +1,5 @@
 import { RefreshToken } from "../entities/RefreshToken";
 import { RefreshTokenRepository } from "../ports/RefreshTokenRepository";
-import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
 export class GenerateRefreshToken {
@@ -16,7 +15,7 @@ export class GenerateRefreshToken {
       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     );
 
-    await this.refreshTokenRepository.save(refreshToken);
+    await this.refreshTokenRepository.save(userId, refreshToken);
     return { refreshToken: refreshToken.token };
   }
 }
