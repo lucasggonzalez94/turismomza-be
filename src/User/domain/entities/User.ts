@@ -3,7 +3,7 @@ import { Favorite } from "../../../Favorite/domain/Favorite";
 import { Like } from "../../../Like/domain/Like";
 import { Notification } from "../../../Notification/domain/Notification";
 import { Place } from "../../../Place/domain/Place";
-import { RefreshToken } from "../../../RefreshToken/domain/RefreshToken";
+import { RefreshToken } from "../../../RefreshToken/domain/entities/RefreshToken";
 import { Report } from "../../../Report/domain/Report";
 import { Review } from "../../../Review/domain/Review";
 import { ProfilePicture } from "../value-objects/ProfilePicture";
