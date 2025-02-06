@@ -19,7 +19,15 @@ const generateRefreshToken = new GenerateRefreshToken(refreshTokenRepository);
 export class UserController {
   static async register(req: Request, res: Response) {
     try {
-      const user = await registerUser.execute(req.body);
+      const { user, accessToken } = await registerUser.execute(req.body);
+
+      res.cookie("authToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 3600000,
+        sameSite: "strict",
+      });
+
       res.status(201).json(user);
     } catch (error) {
       const errorMessage =
