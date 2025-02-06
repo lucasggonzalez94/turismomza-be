@@ -7,6 +7,7 @@ import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepo
 import { GenerateRefreshToken } from "../../domain/use-cases/GenerateRefreshToken";
 import { validationResult } from "express-validator";
 import { LogoutUser } from "../../domain/use-cases/LogoutUser";
+import { UpdateUser } from "../../domain/use-cases/UpdateUser";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
@@ -19,6 +20,7 @@ const loginUser = new LoginUser(
   emailService
 );
 const logoutUser = new LogoutUser(refreshTokenRepository);
+const updateUser = new UpdateUser(userRepository, emailService);
 
 const generateRefreshToken = new GenerateRefreshToken(refreshTokenRepository);
 
@@ -103,6 +105,25 @@ export class UserController {
       return res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
       return res.status(500).json({ error: "Error logging out" });
+    }
+  }
+
+  static async update(req: Request, res: Response) {
+    try {
+      await updateUser.execute({
+        userId: req.user!.userId,
+        currentPassword: req.body.currentPassword,
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password,
+        file: req.file ? req.file.buffer : undefined,
+      });
+
+      res.status(200).json({ message: "User updated successfully" });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(400).json({ error: errorMessage });
     }
   }
 

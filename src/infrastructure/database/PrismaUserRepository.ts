@@ -24,23 +24,24 @@ export class PrismaUserRepository implements UserRepository {
       data: {
         name: user.name,
         email: user.email,
-        profile_picture: user.profilePicture
-          ? {
-              upsert: {
-                create: {
-                  id: user.profilePicture.id,
-                  public_id: user.profilePicture.public_id,
-                  url: user.profilePicture.url,
-                },
-                update: {
-                  public_id: user.profilePicture.public_id,
-                  url: user.profilePicture.url,
-                },
-              },
-            }
-          : undefined,
       },
     });
+
+    if (user.profilePicture) {
+      await prisma.profilePicture.upsert({
+        where: { userId: user.id },
+        update: {
+          public_id: user.profilePicture.public_id,
+          url: user.profilePicture.url,
+        },
+        create: {
+          id: user.profilePicture.id,
+          userId: user.id,
+          public_id: user.profilePicture.public_id,
+          url: user.profilePicture.url,
+        },
+      });
+    }
   }
 
   async getById(id: string): Promise<User | null> {
@@ -106,7 +107,7 @@ export class PrismaUserRepository implements UserRepository {
                 user.profile_picture.public_id,
                 user.profile_picture.url
               )
-            : undefined,
+            : undefined
         )
     );
   }

@@ -228,118 +228,118 @@ const upload = multer({ storage });
 //   return res.status(200).json({ message: 'Logged out successfully' });
 // };
 
-export const updateUser = [
-  upload.single("profilePicture"),
-  ...updateValidator,
-  async (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+// export const updateUser = [
+//   upload.single("profilePicture"),
+//   ...updateValidator,
+//   async (req: Request, res: Response) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
 
-    const { email, password: passwordReq, name, currentPassword } = req.body;
-    const userId = req.user!.userId;
-    const { file } = req;
+//     const { email, password: passwordReq, name, currentPassword } = req.body;
+//     const userId = req.user!.userId;
+//     const { file } = req;
 
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: { profile_picture: true },
-      });
+//     try {
+//       const user = await prisma.user.findUnique({
+//         where: { id: userId },
+//         include: { profile_picture: true },
+//       });
 
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
+//       if (!user) {
+//         return res.status(404).json({ error: "User not found" });
+//       }
 
-      const isPasswordValid = await bcrypt.compare(
-        currentPassword,
-        user.password
-      );
+//       const isPasswordValid = await bcrypt.compare(
+//         currentPassword,
+//         user.password
+//       );
 
-      if (!isPasswordValid) {
-        return res.status(403).json({ error: "Current password is incorrect" });
-      }
+//       if (!isPasswordValid) {
+//         return res.status(403).json({ error: "Current password is incorrect" });
+//       }
 
-      if (file) {
-        if (user?.profile_picture) {
-          const publicId = user.profile_picture.public_id;
-          await cloudinary.uploader.destroy(publicId);
+//       if (file) {
+//         if (user?.profile_picture) {
+//           const publicId = user.profile_picture.public_id;
+//           await cloudinary.uploader.destroy(publicId);
 
-          await prisma.profilePicture.delete({
-            where: { userId },
-          });
-        }
+//           await prisma.profilePicture.delete({
+//             where: { userId },
+//           });
+//         }
 
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { resource_type: "image" },
-          async (error, result) => {
-            if (error) {
-              console.error("Cloudinary upload error:", error);
-              return res
-                .status(500)
-                .json({ error: "Error uploading to Cloudinary" });
-            }
-            if (result?.secure_url) {
-              const isImageAppropriate = await analyzeImage(result.secure_url);
-              if (isImageAppropriate) {
-                await prisma.profilePicture.create({
-                  data: {
-                    public_id: result.public_id,
-                    url: result.secure_url,
-                    userId,
-                  },
-                });
-              } else {
-                return res.status(500).json({ message: "Inapropiated image" });
-              }
-            }
-          }
-        );
+//         const uploadStream = cloudinary.uploader.upload_stream(
+//           { resource_type: "image" },
+//           async (error, result) => {
+//             if (error) {
+//               console.error("Cloudinary upload error:", error);
+//               return res
+//                 .status(500)
+//                 .json({ error: "Error uploading to Cloudinary" });
+//             }
+//             if (result?.secure_url) {
+//               const isImageAppropriate = await analyzeImage(result.secure_url);
+//               if (isImageAppropriate) {
+//                 await prisma.profilePicture.create({
+//                   data: {
+//                     public_id: result.public_id,
+//                     url: result.secure_url,
+//                     userId,
+//                   },
+//                 });
+//               } else {
+//                 return res.status(500).json({ message: "Inapropiated image" });
+//               }
+//             }
+//           }
+//         );
 
-        const bufferStream = new Readable();
-        bufferStream.push(file.buffer);
-        bufferStream.push(null);
-        bufferStream.pipe(uploadStream);
-      }
+//         const bufferStream = new Readable();
+//         bufferStream.push(file.buffer);
+//         bufferStream.push(null);
+//         bufferStream.pipe(uploadStream);
+//       }
 
-      let updatedData: any = {};
+//       let updatedData: any = {};
 
-      if (name && name !== user.name) {
-        updatedData.name = name;
-      }
+//       if (name && name !== user.name) {
+//         updatedData.name = name;
+//       }
 
-      if (email && email !== user.email) {
-        updatedData.email = email;
-      }
+//       if (email && email !== user.email) {
+//         updatedData.email = email;
+//       }
 
-      if (passwordReq) {
-        const hashedPassword = await bcrypt.hash(passwordReq, 12);
-        updatedData.password = hashedPassword;
+//       if (passwordReq) {
+//         const hashedPassword = await bcrypt.hash(passwordReq, 12);
+//         updatedData.password = hashedPassword;
 
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: user.email,
-          subject: "Tu contraseña ha sido actualizada",
-          text: `Hola ${user.name},\n\nTu contraseña ha sido actualizada exitosamente. Si no fuiste tú quien realizó este cambio, por favor contacta a nuestro soporte.\n\nSaludos,\nEl equipo de Turismomza.`,
-        };
+//         const mailOptions = {
+//           from: process.env.EMAIL_USER,
+//           to: user.email,
+//           subject: "Tu contraseña ha sido actualizada",
+//           text: `Hola ${user.name},\n\nTu contraseña ha sido actualizada exitosamente. Si no fuiste tú quien realizó este cambio, por favor contacta a nuestro soporte.\n\nSaludos,\nEl equipo de Turismomza.`,
+//         };
 
-        await transporter.sendMail(mailOptions);
-      }
+//         await transporter.sendMail(mailOptions);
+//       }
 
-      await prisma.user.update({
-        where: {
-          id: userId,
-        },
-        data: updatedData,
-      });
+//       await prisma.user.update({
+//         where: {
+//           id: userId,
+//         },
+//         data: updatedData,
+//       });
 
-      res.status(200).json({ ok: true, message: "User updated successfully" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Error updating user" });
-    }
-  },
-];
+//       res.status(200).json({ ok: true, message: "User updated successfully" });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ error: "Error updating user" });
+//     }
+//   },
+// ];
 
 export const listUsers = async (req: Request, res: Response) => {
   const { page = 1, pageSize = 10 } = req.query;

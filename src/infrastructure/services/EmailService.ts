@@ -27,4 +27,13 @@ export class EmailService {
       text: `Your code is ${code}`,
     });
   }
+
+  async sendPasswordUpdateEmail(email: string, name: string) {
+    await this.transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Tu contraseña ha sido actualizada",
+      text: `Hola ${name},\n\nTu contraseña ha sido actualizada exitosamente. Si no fuiste tú quien realizó este cambio, por favor contacta a nuestro soporte.\n\nSaludos,\nEl equipo de Turismomza.`,
+    });
+  }
 }
