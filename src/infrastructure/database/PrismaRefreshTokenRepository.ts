@@ -29,15 +29,6 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
         },
       });
     }
-
-    await prisma.refreshToken.create({
-      data: {
-        id: token.id,
-        userId: token.userId,
-        token: token.token,
-        expiresAt: token.expiresAt,
-      },
-    });
   }
 
   async findByToken(token: string): Promise<RefreshToken | null> {

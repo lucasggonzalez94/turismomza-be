@@ -33,7 +33,9 @@ export class UserController {
         sameSite: "strict",
       });
 
-      res.status(201).json(user);
+      const { password, ...restUser } = user;
+
+      res.status(201).json(restUser);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
@@ -66,7 +68,9 @@ export class UserController {
         sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       });
 
-      res.status(200).json(user);
+      const { password, ...restUser } = user;
+
+      res.status(200).json(restUser);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";

@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-import userRoutes from "./User/application/routes/UserRoutes";
+import userRoutes from "./application/routes/UserRoutes";
 
 const allowedOrigins = ["http://localhost:3000"];
 

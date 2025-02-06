@@ -1,7 +1,7 @@
-import { Advertisement } from "../../Advertisement/domain/Advertisement";
-import { Favorite } from "../../Favorite/domain/Favorite";
-import { Review } from "../../Review/domain/Review";
 import { Image } from "../../Image/domain/Image";
+import { Advertisement } from "./Advertisement";
+import { Favorite } from "./Favorite";
+import { Review } from "./Review";
 
 export class Place {
   constructor(
