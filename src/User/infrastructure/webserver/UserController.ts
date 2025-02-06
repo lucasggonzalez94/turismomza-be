@@ -4,10 +4,12 @@ import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { LoginUser } from "../../domain/use-cases/LoginUser";
 import { PrismaRefreshTokenRepository } from "../../../RefreshToken/infrastructure/database/PrismaRefreshTokenRepository";
 import { GenerateRefreshToken } from "../../../RefreshToken/domain/use-cases/GenerateRefreshToken";
+import { EmailService } from "../services/EmailService";
 
 const userRepository = new PrismaUserRepository();
+const emailService = new EmailService();
 
-const registerUser = new RegisterUser(userRepository);
+const registerUser = new RegisterUser(userRepository, emailService);
 const loginUser = new LoginUser(userRepository);
 
 const refreshTokenRepository = new PrismaRefreshTokenRepository();

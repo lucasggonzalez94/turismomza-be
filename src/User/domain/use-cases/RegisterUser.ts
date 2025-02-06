@@ -1,9 +1,14 @@
+import { EmailService } from "../../infrastructure/services/EmailService";
+import { JwtService } from "../../infrastructure/services/JwtService";
 import { User } from "../entities/User";
 import { UserRepository } from "../ports/UserRepository";
 import bcrypt from "bcryptjs";
 
 export class RegisterUser {
-  constructor(private userRepository: UserRepository) {}
+  constructor(
+    private userRepository: UserRepository,
+    private emailService: EmailService
+  ) {}
 
   async execute(data: { name: string; email: string; password: string }) {
     const existingUser = await this.userRepository.getByEmail(data.email);
@@ -21,6 +26,10 @@ export class RegisterUser {
 
     user.validate();
     await this.userRepository.create(user);
-    return user;
+
+    const token = JwtService.generateAccessToken(user.id, user.role);
+    await this.emailService.sendWelcomeEmail(user.email, user.name);
+
+    return { user, token };
   }
 }

@@ -30,73 +30,73 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-export const register = [
-  ...registerValidator,
-  async (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+// export const register = [
+//   ...registerValidator,
+//   async (req: Request, res: Response) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
 
-    const { email, password: passwordReq, name } = req.body;
+//     const { email, password: passwordReq, name } = req.body;
 
-    try {
-      const existingUser = await prisma.user.findUnique({
-        where: { email },
-      });
+//     try {
+//       const existingUser = await prisma.user.findUnique({
+//         where: { email },
+//       });
 
-      if (existingUser) {
-        return res
-          .status(409)
-          .json({ error: "User with this email already exists" });
-      }
+//       if (existingUser) {
+//         return res
+//           .status(409)
+//           .json({ error: "User with this email already exists" });
+//       }
 
-      const hashedPassword = await bcrypt.hash(passwordReq, 12);
+//       const hashedPassword = await bcrypt.hash(passwordReq, 12);
 
-      const user = await prisma.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          role: "viewer",
-          name,
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          profile_picture: true,
-          role: true,
-        },
-      });
+//       const user = await prisma.user.create({
+//         data: {
+//           email,
+//           password: hashedPassword,
+//           role: "viewer",
+//           name,
+//         },
+//         select: {
+//           id: true,
+//           name: true,
+//           email: true,
+//           profile_picture: true,
+//           role: true,
+//         },
+//       });
 
-      const token = jwt.sign(
-        { userId: user.id, role: user.role },
-        process.env.ACCESS_TOKEN_SECRET as string,
-        { expiresIn: "1h" }
-      );
+//       const token = jwt.sign(
+//         { userId: user.id, role: user.role },
+//         process.env.ACCESS_TOKEN_SECRET as string,
+//         { expiresIn: "1h" }
+//       );
 
-      res.cookie("authToken", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 3600000,
-        sameSite: "strict",
-      });
+//       res.cookie("authToken", token, {
+//         httpOnly: true,
+//         secure: process.env.NODE_ENV === "production",
+//         maxAge: 3600000,
+//         sameSite: "strict",
+//       });
 
-      await transporter.sendMail({
-        from: `"Equipo de Turismomza" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: "¡Bienvenido a la plataforma de Turismomza!",
-        html: `<h1>Bienvenido, ${user.name}!</h1>
-               <p>Gracias por registrarte en nuestra plataforma. ¡Esperamos que disfrutes de la experiencia!</p>`,
-      });
+//       await transporter.sendMail({
+//         from: `"Equipo de Turismomza" <${process.env.EMAIL_USER}>`,
+//         to: user.email,
+//         subject: "¡Bienvenido a la plataforma de Turismomza!",
+//         html: `<h1>Bienvenido, ${user.name}!</h1>
+//                <p>Gracias por registrarte en nuestra plataforma. ¡Esperamos que disfrutes de la experiencia!</p>`,
+//       });
 
-      res.status(201).json(user);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Error registering user" });
-    }
-  },
-];
+//       res.status(201).json(user);
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ error: "Error registering user" });
+//     }
+//   },
+// ];
 
 export const login = [
   ...loginValidator,

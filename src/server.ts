@@ -5,14 +5,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-import advertisementsRoutes from "./routes/advertisementsRoutes";
 import userRoutes from "./User/application/routes/UserRoutes";
-import attractionsRoutes from "./routes/attractionsRoutes";
-import reviewsRoutes from "./routes/ReviewsRoutes";
-import contactRoutes from "./routes/contactRoutes";
-import favoritesRoutes from "./routes/favoritesRoutes";
-import notificationsRoutes from "./routes/notificationsRoutes";
-import paymentsRoutes from "./routes/paymentsRoutes";
 
 const allowedOrigins = ["http://localhost:3000"];
 
@@ -66,14 +59,14 @@ io.on("connection", (socket) => {
   });
 });
 
-app.use("/api/advertisements", advertisementsRoutes);
 app.use("/api/auth", userRoutes);
-app.use("/api/attractions", attractionsRoutes);
-app.use("/api/reviews", reviewsRoutes);
-app.use("/api/contact", contactRoutes);
-app.use("/api/favorites", favoritesRoutes);
-app.use("/api/notifications", notificationsRoutes);
-app.use("/api/payments", paymentsRoutes);
+// app.use("/api/advertisements", advertisementsRoutes);
+// app.use("/api/attractions", attractionsRoutes);
+// app.use("/api/reviews", reviewsRoutes);
+// app.use("/api/contact", contactRoutes);
+// app.use("/api/favorites", favoritesRoutes);
+// app.use("/api/notifications", notificationsRoutes);
+// app.use("/api/payments", paymentsRoutes);
 
 // Manejo de errores generales
 app.use(
