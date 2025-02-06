@@ -8,6 +8,7 @@ import {
   authorizeAdmin,
 } from "../../middleware/authMiddleware";
 import { updateValidator } from "../../validators/auth/updateValidator";
+import { deleteValidator } from "../../validators/auth/deleteValidator";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -23,6 +24,12 @@ router.put(
   upload.single("profilePicture"),
   updateValidator,
   UserController.update
+);
+router.delete(
+  "/delete",
+  authenticateToken,
+  deleteValidator,
+  UserController.delete
 );
 router.post("/refresh-token", UserController.refreshToken);
 

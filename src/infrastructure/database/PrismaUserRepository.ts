@@ -44,6 +44,12 @@ export class PrismaUserRepository implements UserRepository {
     }
   }
 
+  async delete(user: User): Promise<void> {
+    await prisma.user.delete({
+      where: { id: user.id },
+    });
+  }
+
   async getById(id: string): Promise<User | null> {
     const user = await prisma.user.findUnique({ where: { id } });
     return user
@@ -93,7 +99,7 @@ export class PrismaUserRepository implements UserRepository {
       take: pageSize,
       include: {
         profile_picture: true,
-      }
+      },
     });
     return users.map(
       (user) =>

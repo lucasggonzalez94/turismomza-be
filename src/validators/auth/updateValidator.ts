@@ -4,7 +4,7 @@ export const updateValidator = [
   body("email").isEmail().optional().withMessage("Please enter a valid email"),
   body("currentPassword")
     .isLength({ min: 8 })
-    .withMessage("Current password must be at least 6 characters long"),
+    .withMessage("Current password must be at least 8 characters long"),
   body("password")
     .optional()
     .isLength({ min: 8 })

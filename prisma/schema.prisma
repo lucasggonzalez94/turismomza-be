@@ -141,7 +141,7 @@ model RefreshToken {
   userId    String   @unique
   createdAt DateTime @default(now())
   expiresAt DateTime
-  user      User     @relation("UserRefreshToken", fields: [userId], references: [id])
+  user      User     @relation("UserRefreshToken", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

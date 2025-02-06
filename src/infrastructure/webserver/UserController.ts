@@ -9,6 +9,7 @@ import { validationResult } from "express-validator";
 import { LogoutUser } from "../../domain/use-cases/LogoutUser";
 import { UpdateUser } from "../../domain/use-cases/UpdateUser";
 import { ListUsers } from "../../domain/use-cases/ListUsers";
+import { DeleteUser } from "../../domain/use-cases/DeleteUser";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
@@ -22,6 +23,7 @@ const loginUser = new LoginUser(
 );
 const logoutUser = new LogoutUser(refreshTokenRepository);
 const updateUser = new UpdateUser(userRepository, emailService);
+const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);
 
 const generateRefreshToken = new GenerateRefreshToken(refreshTokenRepository);
@@ -122,6 +124,18 @@ export class UserController {
       });
 
       res.status(200).json({ message: "User updated successfully" });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(400).json({ error: errorMessage });
+    }
+  }
+
+  static async delete(req: Request, res: Response) {
+    try {
+      await deleteUser.execute(req.user!.userId, req.body.password);
+
+      res.status(200).json({ message: "User deleted successfully" });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
