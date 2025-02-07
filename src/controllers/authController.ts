@@ -381,52 +381,52 @@ const upload = multer({ storage });
 //   }
 // };
 
-export const refreshToken = async (req: Request, res: Response) => {
-  const refreshToken = req.cookies.refreshToken;
+// export const refreshToken = async (req: Request, res: Response) => {
+//   const refreshToken = req.cookies.refreshToken;
 
-  if (!refreshToken) {
-    return res.status(401).json({ error: "No refresh token provided" });
-  }
+//   if (!refreshToken) {
+//     return res.status(401).json({ error: "No refresh token provided" });
+//   }
 
-  try {
-    const tokenEntry = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
-    });
+//   try {
+//     const tokenEntry = await prisma.refreshToken.findUnique({
+//       where: { token: refreshToken },
+//     });
 
-    if (!tokenEntry) {
-      return res.status(403).json({ error: "Invalid refresh token" });
-    }
+//     if (!tokenEntry) {
+//       return res.status(403).json({ error: "Invalid refresh token" });
+//     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: tokenEntry.userId },
-      include: {
-        profile_picture: true,
-      },
-    });
+//     const user = await prisma.user.findUnique({
+//       where: { id: tokenEntry.userId },
+//       include: {
+//         profile_picture: true,
+//       },
+//     });
 
-    if (!user) {
-      return res.status(403).json({ error: "User not found" });
-    }
+//     if (!user) {
+//       return res.status(403).json({ error: "User not found" });
+//     }
 
-    const accessToken = jwt.sign(
-      { userId: user.id, role: user.role },
-      process.env.ACCESS_TOKEN_SECRET as string,
-      { expiresIn: "1h" }
-    );
+//     const accessToken = jwt.sign(
+//       { userId: user.id, role: user.role },
+//       process.env.ACCESS_TOKEN_SECRET as string,
+//       { expiresIn: "1h" }
+//     );
 
-    res.cookie("authToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 3600000,
-      sameSite: "strict",
-    });
+//     res.cookie("authToken", accessToken, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       maxAge: 3600000,
+//       sameSite: "strict",
+//     });
 
-    res.status(200).json({ accessToken });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error refreshing token" });
-  }
-};
+//     res.status(200).json({ accessToken });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Error refreshing token" });
+//   }
+// };
 
 export const verifyToken = async (req: Request, res: Response) => {
   const userId = req.user!.userId;

@@ -1,4 +1,3 @@
-// src/application/use-cases/ListUsers.ts
 import { UserRepository } from "../ports/UserRepository";
 
 export class ListUsers {

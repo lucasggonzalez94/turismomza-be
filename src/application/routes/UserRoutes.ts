@@ -10,6 +10,7 @@ import {
 import { updateValidator } from "../../validators/auth/updateValidator";
 import { deleteValidator } from "../../validators/auth/deleteValidator";
 import { RefreshTokenController } from "../../infrastructure/webserver/RefreshTokenController";
+import { VerifyTokenController } from "../../infrastructure/webserver/VerifySessionController";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -33,5 +34,6 @@ router.delete(
   UserController.delete
 );
 router.post("/refresh-token", RefreshTokenController.refresh);
+router.get("/verify-session", authenticateToken, VerifyTokenController.handle);
 
 export default router;
