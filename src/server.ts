@@ -29,7 +29,7 @@ app.use(
     contentSecurityPolicy: false,
     crossOriginResourcePolicy: { policy: "same-origin" },
     crossOriginOpenerPolicy: { policy: "same-origin"},
-    frameguard: true,
+    frameguard: { action: "deny"},
     ieNoOpen: true,
     noSniff: true,
     xssFilter: true,

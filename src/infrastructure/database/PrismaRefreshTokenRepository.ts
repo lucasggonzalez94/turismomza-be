@@ -31,8 +31,10 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
     }
   }
 
-  async findByToken(token: string): Promise<RefreshToken | null> {
-    const result = await prisma.refreshToken.findUnique({ where: { token } });
+  async findByToken(token: RefreshToken): Promise<RefreshToken | null> {
+    const result = await prisma.refreshToken.findUnique({
+      where: { token: token.token },
+    });
     return result
       ? new RefreshToken(
           result.id,
@@ -42,15 +44,5 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
           result.expiresAt
         )
       : null;
-  }
-
-  async delete(token: string): Promise<void> {
-    await prisma.refreshToken.delete({ where: { token } });
-  }
-
-  async deleteByUserId(userId: string): Promise<void> {
-    await prisma.refreshToken.deleteMany({
-      where: { userId },
-    });
   }
 }

@@ -51,7 +51,10 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async getById(id: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: { profile_picture: true },
+    });
     return user
       ? new User(
           user.id,
@@ -59,7 +62,17 @@ export class PrismaUserRepository implements UserRepository {
           user.email,
           user.password,
           user.role,
-          user.two_factor_enabled
+          user.two_factor_enabled,
+          user.two_factor_code ?? undefined,
+          user.two_factor_expires ?? undefined,
+          user.created_at,
+          user.profile_picture
+            ? new ProfilePicture(
+                user.profile_picture.id,
+                user.profile_picture.public_id,
+                user.profile_picture.url
+              )
+            : undefined
         )
       : null;
   }

@@ -9,6 +9,7 @@ import {
 } from "../../middleware/authMiddleware";
 import { updateValidator } from "../../validators/auth/updateValidator";
 import { deleteValidator } from "../../validators/auth/deleteValidator";
+import { RefreshTokenController } from "../../infrastructure/webserver/RefreshTokenController";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -31,6 +32,6 @@ router.delete(
   deleteValidator,
   UserController.delete
 );
-router.post("/refresh-token", UserController.refreshToken);
+router.post("/refresh-token", RefreshTokenController.refresh);
 
 export default router;

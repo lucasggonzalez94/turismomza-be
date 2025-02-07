@@ -5,9 +5,13 @@ export class RefreshToken {
     public userId: string,
     public createdAt: Date,
     public expiresAt: Date
-  ) {}
+  ) {
+    this.isValid();
+  }
 
-  isValid(): boolean {
-    return new Date() < this.expiresAt;
+  isValid() {
+    if (new Date() >= this.expiresAt) {
+      throw new Error("Refresh token expirado.");
+    }
   }
 }
