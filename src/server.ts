@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import helmet from "helmet";
 
 import userRoutes from "./application/routes/UserRoutes";
 
@@ -23,6 +24,17 @@ const io = new Server(server, {
 
 app.set("io", io);
 
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "same-origin" },
+    crossOriginOpenerPolicy: { policy: "same-origin"},
+    frameguard: true,
+    ieNoOpen: true,
+    noSniff: true,
+    xssFilter: true,
+  })
+);
 app.use(
   cors({
     origin: (origin, callback) => {

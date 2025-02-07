@@ -341,45 +341,45 @@ const upload = multer({ storage });
 //   },
 // ];
 
-export const listUsers = async (req: Request, res: Response) => {
-  const { page = 1, pageSize = 10 } = req.query;
+// export const listUsers = async (req: Request, res: Response) => {
+//   const { page = 1, pageSize = 10 } = req.query;
 
-  const pageNumber = parseInt(page as string, 10);
-  const pageSizeNumber = parseInt(pageSize as string, 10);
-  const skip = (pageNumber - 1) * pageSizeNumber;
+//   const pageNumber = parseInt(page as string, 10);
+//   const pageSizeNumber = parseInt(pageSize as string, 10);
+//   const skip = (pageNumber - 1) * pageSizeNumber;
 
-  try {
-    const totalUsers = await prisma.user.count();
+//   try {
+//     const totalUsers = await prisma.user.count();
 
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        created_at: true,
-        password: false,
-        two_factor_code: false,
-        two_factor_enabled: false,
-        two_factor_expires: false,
-        profile_picture: true,
-      },
-      skip,
-      take: pageSizeNumber,
-    });
+//     const users = await prisma.user.findMany({
+//       select: {
+//         id: true,
+//         name: true,
+//         email: true,
+//         role: true,
+//         created_at: true,
+//         password: false,
+//         two_factor_code: false,
+//         two_factor_enabled: false,
+//         two_factor_expires: false,
+//         profile_picture: true,
+//       },
+//       skip,
+//       take: pageSizeNumber,
+//     });
 
-    res.json({
-      total: totalUsers,
-      page: pageNumber,
-      pageSize,
-      totalPages: Math.ceil(totalUsers / pageSizeNumber),
-      data: users,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error listing users" });
-  }
-};
+//     res.json({
+//       total: totalUsers,
+//       page: pageNumber,
+//       pageSize,
+//       totalPages: Math.ceil(totalUsers / pageSizeNumber),
+//       data: users,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Error listing users" });
+//   }
+// };
 
 export const refreshToken = async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;
