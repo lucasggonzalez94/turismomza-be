@@ -4,7 +4,6 @@ import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { LoginUser } from "../../domain/use-cases/LoginUser";
 import { EmailService } from "../services/EmailService";
 import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
-// import { GenerateRefreshToken } from "../../domain/use-cases/GenerateRefreshToken";
 import { validationResult } from "express-validator";
 import { LogoutUser } from "../../domain/use-cases/LogoutUser";
 import { UpdateUser } from "../../domain/use-cases/UpdateUser";
@@ -25,8 +24,6 @@ const logoutUser = new LogoutUser(refreshTokenRepository);
 const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);
-
-// const generateRefreshToken = new GenerateRefreshToken(refreshTokenRepository);
 
 export class UserController {
   static async register(req: Request, res: Response) {
@@ -157,21 +154,4 @@ export class UserController {
       res.status(500).json({ error: "Error listing users" });
     }
   }
-
-  // static async refreshToken(req: Request, res: Response) {
-  //   try {
-  //     const errors = validationResult(req);
-  //     if (!errors.isEmpty()) {
-  //       return res.status(400).json({ errors: errors.array() });
-  //     }
-
-  //     const { userId } = req.body;
-  //     const result = await generateRefreshToken.execute(userId);
-  //     res.status(200).json(result);
-  //   } catch (error) {
-  //     const errorMessage =
-  //       error instanceof Error ? error.message : "Error desconocido";
-  //     res.status(400).json({ error: errorMessage });
-  //   }
-  // }
 }
