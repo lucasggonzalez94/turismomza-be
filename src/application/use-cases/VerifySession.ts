@@ -1,5 +1,5 @@
-import { UserRepository } from "../ports/UserRepository";
-import { User } from "../entities/User";
+import { UserRepository } from "../../domain/ports/UserRepository";
+import { User } from "../../domain/entities/User";
 
 export class VerifySession {
   constructor(private userRepository: UserRepository) {}

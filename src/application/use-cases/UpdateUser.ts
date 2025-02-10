@@ -1,7 +1,7 @@
-import { UserRepository } from "../ports/UserRepository";
+import { UserRepository } from "../../domain/ports/UserRepository";
 import { CloudinaryService } from "../../infrastructure/services/CloudinaryService";
 import bcrypt from "bcryptjs";
-import { ProfilePicture } from "../value-objects/ProfilePicture";
+import { ProfilePicture } from "../../domain/value-objects/ProfilePicture";
 import { EmailService } from "../../infrastructure/services/EmailService";
 
 export class UpdateUser {
@@ -30,7 +30,7 @@ export class UpdateUser {
 
     if (data.file) {
       if (user.profilePicture) {
-        await CloudinaryService.deleteImage(user.profilePicture.public_id);
+        await CloudinaryService.destroyImage(user.profilePicture.public_id);
       }
 
       const uploadResult = await CloudinaryService.uploadImage(data.file);

@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
-import { RefreshTokenRepository } from "../ports/RefreshTokenRepository";
-import { UserRepository } from "../ports/UserRepository";
+import { RefreshTokenRepository } from "../../domain/ports/RefreshTokenRepository";
+import { UserRepository } from "../../domain/ports/UserRepository";
 import { JwtService } from "../../infrastructure/services/JwtService";
-import { RefreshToken } from "../entities/RefreshToken";
+import { RefreshToken } from "../../domain/entities/RefreshToken";
 
 export class RefreshTokenUseCase {
   constructor(

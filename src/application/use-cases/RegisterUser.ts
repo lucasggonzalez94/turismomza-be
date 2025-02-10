@@ -1,7 +1,7 @@
 import { EmailService } from "../../infrastructure/services/EmailService";
 import { JwtService } from "../../infrastructure/services/JwtService";
-import { User } from "../entities/User";
-import { UserRepository } from "../ports/UserRepository";
+import { User } from "../../domain/entities/User";
+import { UserRepository } from "../../domain/ports/UserRepository";
 import bcrypt from "bcryptjs";
 
 export class RegisterUser {

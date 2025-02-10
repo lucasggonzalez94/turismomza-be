@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 
-export const createAttractionValidator = [
+export const createPlaceValidator = [
   body("title").trim().notEmpty().withMessage("Title is required"),
   body("description").notEmpty().withMessage("Description is required"),
   body("location").notEmpty().withMessage("Location is required"),

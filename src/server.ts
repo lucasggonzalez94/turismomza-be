@@ -7,6 +7,7 @@ import cors from "cors";
 import helmet from "helmet";
 
 import userRoutes from "./application/routes/UserRoutes";
+import placesRoutes from "./application/routes/PlaceRoutes";
 
 const allowedOrigins = ["http://localhost:3000"];
 
@@ -72,8 +73,8 @@ io.on("connection", (socket) => {
 });
 
 app.use("/api/auth", userRoutes);
+app.use("/api/places", placesRoutes);
 // app.use("/api/advertisements", advertisementsRoutes);
-// app.use("/api/attractions", attractionsRoutes);
 // app.use("/api/reviews", reviewsRoutes);
 // app.use("/api/contact", contactRoutes);
 // app.use("/api/favorites", favoritesRoutes);

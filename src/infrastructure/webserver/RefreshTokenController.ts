@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { RefreshTokenUseCase } from "../../domain/use-cases/RefreshTokenUseCase";
+import { RefreshTokenUseCase } from "../../application/use-cases/RefreshTokenUseCase";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
 

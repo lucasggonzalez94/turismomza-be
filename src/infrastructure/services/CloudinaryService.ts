@@ -1,4 +1,5 @@
 import cloudinary from "cloudinary";
+import { analyzeImage } from "../../helpers/analyzeImage";
 
 cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -23,7 +24,16 @@ export class CloudinaryService {
     });
   }
 
-  static async deleteImage(publicId: string): Promise<void> {
-    await cloudinary.v2.uploader.destroy(publicId);
+  static async destroyImage(publicId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      cloudinary.v2.uploader.destroy(publicId, (error, result) => {
+        if (error) return reject(error);
+        resolve();
+      });
+    });
+  }
+
+  static async analyzeImage(url: string): Promise<boolean> {
+    return analyzeImage(url);
   }
 }

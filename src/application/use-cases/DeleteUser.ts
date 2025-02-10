@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { UserRepository } from "../ports/UserRepository";
+import { UserRepository } from "../../domain/ports/UserRepository";
 
 export class DeleteUser {
   constructor(private userRepository: UserRepository) {}

@@ -1,5 +1,5 @@
-import { RefreshToken } from "../entities/RefreshToken";
-import { RefreshTokenRepository } from "../ports/RefreshTokenRepository";
+import { RefreshToken } from "../../domain/entities/RefreshToken";
+import { RefreshTokenRepository } from "../../domain/ports/RefreshTokenRepository";
 import crypto from "crypto";
 
 export class GenerateRefreshToken {

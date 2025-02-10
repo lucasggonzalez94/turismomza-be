@@ -26,5 +26,7 @@ export class Place {
     public facebook?: string,
     public price?: number,
     public currencyPrice?: "ars" | "usd"
-  ) {}
+  ) {
+    // TODO: Agregar validaciones de la logica de negocio
+  }
 }

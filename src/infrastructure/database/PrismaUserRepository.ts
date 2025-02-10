@@ -29,14 +29,14 @@ export class PrismaUserRepository implements UserRepository {
 
     if (user.profilePicture) {
       await prisma.profilePicture.upsert({
-        where: { userId: user.id },
+        where: { user_id: user.id },
         update: {
           public_id: user.profilePicture.public_id,
           url: user.profilePicture.url,
         },
         create: {
           id: user.profilePicture.id,
-          userId: user.id,
+          user_id: user.id,
           public_id: user.profilePicture.public_id,
           url: user.profilePicture.url,
         },
@@ -135,5 +135,15 @@ export class PrismaUserRepository implements UserRepository {
             : undefined
         )
     );
+  }
+
+  async updateUserRole(
+    userId: string,
+    role: "viewer" | "publisher" | "admin"
+  ): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { role },
+    });
   }
 }

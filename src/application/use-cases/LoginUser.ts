@@ -1,7 +1,7 @@
-import { UserRepository } from "../ports/UserRepository";
+import { UserRepository } from "../../domain/ports/UserRepository";
 import bcrypt from "bcryptjs";
 import { JwtService } from "../../infrastructure/services/JwtService";
-import { RefreshTokenRepository } from "../ports/RefreshTokenRepository";
+import { RefreshTokenRepository } from "../../domain/ports/RefreshTokenRepository";
 import { EmailService } from "../../infrastructure/services/EmailService";
 
 export class LoginUser {
