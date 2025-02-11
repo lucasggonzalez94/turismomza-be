@@ -1,36 +1,14 @@
 import { Place } from "../../domain/entities/Place";
 import { PlaceRepository } from "../../domain/ports/PlaceRepository";
-import { UserRepository } from "../../domain/ports/UserRepository";
 import { CloudinaryService } from "../../infrastructure/services/CloudinaryService";
 import { TextModerationService } from "../../infrastructure/services/TextModerationService";
 import { generateSlug } from "../../helpers/generateSlug";
+import { CreatePlaceInput } from "./CreatePlace";
 
-export interface CreatePlaceInput {
-  title: string;
-  description: string;
-  location: string;
-  category: string;
-  schedule: string;
-  services?: string[];
-  contactNumber?: string;
-  email?: string;
-  website?: string;
-  instagram?: string;
-  facebook?: string;
-  price?: number;
-  currencyPrice?: "ars" | "usd";
-  files: Express.Multer.File[];
-  userId: string;
-  userRole: string;
-}
+export class EditPlace {
+  constructor(private placeRepository: PlaceRepository) {}
 
-export class CreatePlace {
-  constructor(
-    private placeRepository: PlaceRepository,
-    private userRepository: UserRepository
-  ) {}
-
-  async execute(input: CreatePlaceInput): Promise<Place> {
+  async execute(placeId: string, input: CreatePlaceInput): Promise<Place> {
     const textToModerate = `Título: ${input.title} Descripción: ${input.description}`;
     const isTextAppropriate = await TextModerationService.moderateText(
       textToModerate
@@ -41,16 +19,12 @@ export class CreatePlace {
 
     const slug = await generateSlug(input.title);
 
-    if (input.userRole === "viewer") {
-      await this.userRepository.updateUserRole(input.userId, "publisher");
-    }
-
-    const uploadedImages: { url: string; publicId: string; order: number }[] =
+    const uploadedImages: { id: string, url: string; publicId: string; order: number }[] =
       [];
     const uploadedPublicIds: string[] = [];
 
-    for (let index = 0; index < input.files.length; index++) {
-      const file = input.files[index];
+    for (let index = 0; index < input?.files?.length; index++) {
+      const file = input?.files[index];
 
       const uploadResult = await CloudinaryService.uploadImage(file.buffer);
       if (!uploadResult?.url) {
@@ -71,6 +45,7 @@ export class CreatePlace {
         throw new Error("Inappropriate image detected");
       }
       uploadedImages.push({
+        id: "",
         url: uploadResult.url,
         publicId: uploadResult.publicId,
         order: index,
@@ -78,7 +53,7 @@ export class CreatePlace {
     }
 
     const newPlace = new Place(
-      "",
+      placeId,
       input.title,
       slug,
       input.description,
@@ -88,7 +63,7 @@ export class CreatePlace {
       new Date(),
       input.services || [],
       input.schedule,
-      [],
+      uploadedImages,
       [],
       [],
       [],
@@ -101,10 +76,10 @@ export class CreatePlace {
       input.currencyPrice
     );
 
-    const createdPlace = await this.placeRepository.createPlace(
+    const editedPlace = await this.placeRepository.editPlace(
       newPlace,
       uploadedImages
     );
-    return createdPlace;
+    return editedPlace;
   }
 }

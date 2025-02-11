@@ -16,13 +16,17 @@ export interface PlaceRepository {
     place: Place,
     images: { url: string; publicId: string; order: number }[]
   ): Promise<Place>;
+  editPlace(
+    place: Place,
+    images: { url: string; publicId: string; order: number }[]
+  ): Promise<Place>;
   listPlaces(
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
-  ): Promise<{ total: number; places: any[] }>;
+  ): Promise<{ total: number; places: Place[] }>;
   getBySlug(slug: string): Promise<Place | null>;
   listPlacesByUser(
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
-  ): Promise<{ total: number; places: any[] }>;
+  ): Promise<{ total: number; places: Place[] }>;
 }

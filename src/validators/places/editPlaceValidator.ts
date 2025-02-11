@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 
-export const updatePlaceValidator = [
+export const editPlaceValidator = [
   body("title").optional().trim().notEmpty().withMessage("Title is required"),
   body("description")
     .optional()

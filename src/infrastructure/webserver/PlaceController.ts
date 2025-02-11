@@ -5,11 +5,13 @@ import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { ListPlaces } from "../../application/use-cases/ListPlaces";
 import { GetPlaceBySlug } from "../../application/use-cases/GetPlaceBySlug";
 import ListPlacesByUser from "../../application/use-cases/ListPlacesByUser";
+import { EditPlace } from "../../application/use-cases/EditPlace";
 
 const placeRepository = new PrismaPlaceRepository();
 const userRepository = new PrismaUserRepository();
 
 const createPlace = new CreatePlace(placeRepository, userRepository);
+const editPlace = new EditPlace(placeRepository);
 const listPlaces = new ListPlaces(placeRepository);
 const getPlaceBySlug = new GetPlaceBySlug(placeRepository);
 const listPlacesByUser = new ListPlacesByUser(placeRepository);
@@ -62,6 +64,57 @@ export class PlaceController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error creating place" });
+    }
+  }
+
+  static async edit(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const {
+        title,
+        description,
+        location,
+        category,
+        contactNumber,
+        email,
+        website,
+        instagram,
+        facebook,
+        schedule,
+        price,
+        currencyPrice,
+        services,
+      } = req.body;
+
+      let parsedServices: string[] = [];
+      if (services) {
+        parsedServices = JSON.parse(services);
+      }
+
+      const input = {
+        title,
+        description,
+        location,
+        category,
+        schedule,
+        services: parsedServices,
+        contactNumber,
+        email,
+        website,
+        instagram,
+        facebook,
+        price: price ? parseFloat(price) : undefined,
+        currencyPrice,
+        files: req.files as Express.Multer.File[],
+        userId: req.user!.userId,
+        userRole: req.user!.role,
+      };
+
+      const place = await editPlace.execute(id, input);
+      res.status(201).json(place);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error editing place" });
     }
   }
 

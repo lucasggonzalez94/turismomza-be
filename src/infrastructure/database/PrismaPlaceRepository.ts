@@ -89,6 +89,126 @@ export class PrismaPlaceRepository implements PlaceRepository {
     );
   }
 
+  async editPlace(
+    placeData: {
+      id: string;
+      title: string;
+      description: string;
+      location: string;
+      category: string;
+      services: string[];
+      contactNumber?: string;
+      email?: string;
+      webSite?: string;
+      instagram?: string;
+      facebook?: string;
+      schedule: string;
+      price?: number;
+      currencyPrice?: "ars" | "usd";
+      creatorId: string;
+    },
+    images: { url: string; publicId: string; order: number }[]
+  ): Promise<Place> {
+    const newPlace = await prisma.place.update({
+      where: { id: placeData.id },
+      data: {
+        title: placeData.title,
+        slug: await generateSlug(placeData.title),
+        description: placeData.description,
+        location: placeData.location,
+        category: placeData.category,
+        services: placeData.services,
+        schedule: placeData.schedule,
+        creator_id: placeData.creatorId,
+        created_at: new Date(),
+        contact_number: placeData.contactNumber ?? null,
+        email: placeData.email ?? null,
+        webSite: placeData.webSite ?? null,
+        instagram: placeData.instagram ?? null,
+        facebook: placeData.facebook ?? null,
+        price: placeData.price ?? null,
+        currency_price: placeData.currencyPrice ?? null,
+        images: {
+          create: images.map((image) => ({
+            url: image.url,
+            public_id: image.publicId,
+            order: image.order,
+          })),
+        },
+      },
+      include: {
+        images: true,
+        reviews: {
+          select: {
+            id: true,
+            content: true,
+            rating: true,
+            user: { select: { id: true, name: true } },
+            creation_date: true,
+            likes: {
+              select: {
+                id: true,
+                user: { select: { id: true, name: true } },
+              },
+            },
+            reports: true,
+          },
+        },
+        favorites: { select: { id: true, user_id: true } },
+        advertisements: true,
+      },
+    });
+
+    return new Place(
+      newPlace.id,
+      newPlace.title,
+      newPlace.slug,
+      newPlace.description,
+      newPlace.location,
+      newPlace.category,
+      newPlace.creator_id,
+      newPlace.created_at,
+      newPlace.services,
+      newPlace.schedule,
+      newPlace.images.map((image) => ({
+        id: image.id,
+        url: image.url,
+        publicId: image.public_id,
+        order: image.order,
+      })),
+      newPlace.reviews.map((review) => ({
+        id: review.id,
+        content: review.content,
+        rating: review.rating,
+        userId: review.user.id,
+        creationDate: review.creation_date,
+      })),
+      newPlace.favorites.map((fav) => ({
+        id: fav.id,
+        userId: fav.user_id,
+      })),
+      newPlace.advertisements.map((ad) => ({
+        id: ad.id,
+        placeId: ad.place_id,
+        userId: ad.user_id,
+        createdAt: ad.created_at,
+        startDate: ad.start_date,
+        endDate: ad.end_date,
+        amountPaid: ad.amount_paid,
+        isActive: ad.is_active,
+        impressions: ad.impressions,
+        clicks: ad.clicks,
+      })),
+      newPlace.contact_number ?? undefined,
+      newPlace.email ?? undefined,
+      newPlace.webSite ?? undefined,
+      newPlace.instagram ?? undefined,
+      newPlace.facebook ?? undefined,
+      newPlace.price ?? undefined,
+      newPlace.currency_price ?? undefined
+    );
+  }
+
   async listPlaces(
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
@@ -263,8 +383,15 @@ export class PrismaPlaceRepository implements PlaceRepository {
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
   ): Promise<{ total: number; places: any[] }> {
-    const { searchTerm, creatorId, categories, location, priceMin, priceMax, rating } =
-      filters;
+    const {
+      searchTerm,
+      creatorId,
+      categories,
+      location,
+      priceMin,
+      priceMax,
+      rating,
+    } = filters;
     const { page, pageSize } = pagination;
     const skip = (page - 1) * pageSize;
 

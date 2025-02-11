@@ -3,6 +3,7 @@ import multer from "multer";
 import { PlaceController } from "../../infrastructure/webserver/PlaceController";
 import { authenticateToken } from "../../middleware/authMiddleware";
 import { createPlaceValidator } from "../../validators/places/createPlaceValidator";
+import { editPlaceValidator } from "../../validators/places/editPlaceValidator";
 
 const router = Router();
 const upload = multer();
@@ -14,8 +15,15 @@ router.post(
   createPlaceValidator,
   PlaceController.create
 );
+router.put(
+  "/:id",
+  authenticateToken,
+  upload.array("images"),
+  editPlaceValidator,
+  PlaceController.edit
+);
 router.get("/", PlaceController.list);
-// router.get("/:slug", PlaceController.getBySlug);
-router.get("/:userId", authenticateToken, PlaceController.listByUser);
+router.get("/:slug", PlaceController.getBySlug);
+router.get("/user/:userId", authenticateToken, PlaceController.listByUser);
 
 export default router;
