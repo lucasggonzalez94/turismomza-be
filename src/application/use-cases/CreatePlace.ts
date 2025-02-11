@@ -85,7 +85,7 @@ export class CreatePlace {
       input.currencyPrice
     );
 
-    const createdPlace = await this.placeRepository.create(
+    const createdPlace = await this.placeRepository.createPlace(
       newPlace,
       uploadedImages
     );
