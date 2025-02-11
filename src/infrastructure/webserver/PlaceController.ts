@@ -6,6 +6,7 @@ import { ListPlaces } from "../../application/use-cases/ListPlaces";
 import { GetPlaceBySlug } from "../../application/use-cases/GetPlaceBySlug";
 import ListPlacesByUser from "../../application/use-cases/ListPlacesByUser";
 import { EditPlace } from "../../application/use-cases/EditPlace";
+import { DeletePlace } from "../../application/use-cases/DeletePlace";
 
 const placeRepository = new PrismaPlaceRepository();
 const userRepository = new PrismaUserRepository();
@@ -15,6 +16,7 @@ const editPlace = new EditPlace(placeRepository);
 const listPlaces = new ListPlaces(placeRepository);
 const getPlaceBySlug = new GetPlaceBySlug(placeRepository);
 const listPlacesByUser = new ListPlacesByUser(placeRepository);
+const deletePlace = new DeletePlace(placeRepository);
 
 export class PlaceController {
   static async create(req: Request, res: Response) {
@@ -168,7 +170,8 @@ export class PlaceController {
       const place = await getPlaceBySlug.execute(slug, userId as string);
       res.json(place);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       res
         .status(errorMessage === "Place not found" ? 404 : 500)
         .json({ error: errorMessage });
@@ -215,6 +218,19 @@ export class PlaceController {
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ error: "Error listing places" });
+    }
+  }
+
+  static async delete(req: Request, res: Response) {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    try {
+      await deletePlace.execute(id, userId);
+      res.status(204).send();
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error deleting place" });
     }
   }
 }

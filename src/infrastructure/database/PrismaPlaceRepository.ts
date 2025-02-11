@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Place } from "../../domain/entities/Place";
+import { Image } from "../../domain/value-objects/Image";
 import {
   ListPlacesFilters,
   PlaceRepository,
@@ -462,5 +463,18 @@ export class PrismaPlaceRepository implements PlaceRepository {
     });
 
     return { total, places };
+  }
+
+  async deletePlace(placeId: string, userId: string): Promise<void> {
+    await prisma.place.delete({
+      where: { id: placeId, creator_id: userId },
+    });
+  }
+
+  async getImagesByPlaceId(placeId: string): Promise<{ public_id: string }[]> {
+    return prisma.image.findMany({
+      where: { place_id: placeId },
+      select: { public_id: true },
+    });
   }
 }

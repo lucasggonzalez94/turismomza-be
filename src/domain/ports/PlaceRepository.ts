@@ -1,4 +1,5 @@
 import { Place } from "../entities/Place";
+import { Image } from "../value-objects/Image";
 
 export interface ListPlacesFilters {
   searchTerm?: string;
@@ -29,4 +30,6 @@ export interface PlaceRepository {
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
   ): Promise<{ total: number; places: Place[] }>;
+  deletePlace(placeId: string, userId: string): Promise<void>;
+  getImagesByPlaceId(placeId: string): Promise<{ public_id: string }[]>;
 }
