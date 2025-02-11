@@ -3,12 +3,14 @@ import { CreatePlace } from "../../application/use-cases/CreatePlace";
 import { PrismaPlaceRepository } from "../database/PrismaPlaceRepository";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { ListPlaces } from "../../application/use-cases/ListPlaces";
+import { GetPlaceBySlug } from "../../application/use-cases/GetPlaceBySlug";
 
 const placeRepository = new PrismaPlaceRepository();
 const userRepository = new PrismaUserRepository();
 
 const createPlace = new CreatePlace(placeRepository, userRepository);
 const listPlaces = new ListPlaces(placeRepository);
+const getPlaceBySlug = new GetPlaceBySlug(placeRepository);
 
 export class PlaceController {
   static async create(req: Request, res: Response) {
@@ -100,6 +102,21 @@ export class PlaceController {
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ error: "Error listing places" });
+    }
+  }
+
+  static async getBySlug(req: Request, res: Response): Promise<void> {
+    const { slug } = req.params;
+    const { userId } = req.query;
+
+    try {
+      const place = await getPlaceBySlug.execute(slug, userId as string);
+      res.json(place);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res
+        .status(errorMessage === "Place not found" ? 404 : 500)
+        .json({ error: errorMessage });
     }
   }
 }

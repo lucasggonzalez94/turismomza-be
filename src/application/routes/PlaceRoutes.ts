@@ -14,9 +14,7 @@ router.post(
   createPlaceValidator,
   PlaceController.create
 );
-router.get(
-  "/",
-  PlaceController.list
-);
+router.get("/", PlaceController.list);
+router.get("/:slug", PlaceController.getBySlug);
 
 export default router;
