@@ -5,8 +5,8 @@ export const getMaxMinPrices = (places: Place[]) => {
     .map((attranction) => attranction.price)
     .filter((price) => price !== null && price !== undefined);
 
-  const maxPrice = Math.max(...prices);
-  const minPrice = Math.min(...prices);
+  const maxPrice = prices.length ? Math.max(...prices) : 0;
+  const minPrice = prices.length ? Math.min(...prices) : 0;
 
   return { maxPrice, minPrice };
 };

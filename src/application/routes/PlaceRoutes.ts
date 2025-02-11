@@ -15,6 +15,7 @@ router.post(
   PlaceController.create
 );
 router.get("/", PlaceController.list);
-router.get("/:slug", PlaceController.getBySlug);
+// router.get("/:slug", PlaceController.getBySlug);
+router.get("/:userId", authenticateToken, PlaceController.listByUser);
 
 export default router;

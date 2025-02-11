@@ -93,7 +93,8 @@ export class PrismaPlaceRepository implements PlaceRepository {
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
   ): Promise<{ total: number; places: any[] }> {
-    const { title, categories, location, priceMin, priceMax, rating } = filters;
+    const { searchTerm, categories, location, priceMin, priceMax, rating } =
+      filters;
     const { page, pageSize } = pagination;
     const skip = (page - 1) * pageSize;
 
@@ -109,7 +110,12 @@ export class PrismaPlaceRepository implements PlaceRepository {
 
     const total = await prisma.place.count({
       where: {
-        title: title ? { contains: title, mode: "insensitive" } : undefined,
+        title: searchTerm
+          ? { contains: searchTerm, mode: "insensitive" }
+          : undefined,
+        description: searchTerm
+          ? { contains: searchTerm as string, mode: "insensitive" }
+          : undefined,
         category: categories ? { in: categories } : undefined,
         location: location
           ? { contains: location, mode: "insensitive" }
@@ -126,7 +132,12 @@ export class PrismaPlaceRepository implements PlaceRepository {
 
     const places = await prisma.place.findMany({
       where: {
-        title: title ? { contains: title, mode: "insensitive" } : undefined,
+        title: searchTerm
+          ? { contains: searchTerm, mode: "insensitive" }
+          : undefined,
+        description: searchTerm
+          ? { contains: searchTerm as string, mode: "insensitive" }
+          : undefined,
         category: categories ? { in: categories } : undefined,
         location: location
           ? { contains: location, mode: "insensitive" }
@@ -246,5 +257,83 @@ export class PrismaPlaceRepository implements PlaceRepository {
       place.price ?? undefined,
       place.currency_price ?? undefined
     );
+  }
+
+  async listPlacesByUser(
+    filters: ListPlacesFilters,
+    pagination: { page: number; pageSize: number }
+  ): Promise<{ total: number; places: any[] }> {
+    const { searchTerm, creatorId, categories, location, priceMin, priceMax, rating } =
+      filters;
+    const { page, pageSize } = pagination;
+    const skip = (page - 1) * pageSize;
+
+    const ratingFilter: { [key: number]: { gte: number; lt: number } } = {
+      5: { gte: 4.5, lt: 5.1 },
+      4: { gte: 3.5, lt: 4.5 },
+      3: { gte: 2.5, lt: 3.5 },
+      2: { gte: 1.5, lt: 2.5 },
+      1: { gte: 0, lt: 1.5 },
+    };
+
+    const ratingRange = rating ? ratingFilter[rating] : undefined;
+
+    const total = await prisma.place.count({
+      where: {
+        title: searchTerm
+          ? { contains: searchTerm, mode: "insensitive" }
+          : undefined,
+        description: searchTerm
+          ? { contains: searchTerm as string, mode: "insensitive" }
+          : undefined,
+        category: categories ? { in: categories } : undefined,
+        location: location
+          ? { contains: location, mode: "insensitive" }
+          : undefined,
+        price: {
+          gte: priceMin !== undefined ? priceMin : undefined,
+          lte: priceMax !== undefined ? priceMax : undefined,
+        },
+        reviews: ratingRange
+          ? { some: { rating: { gte: ratingRange.gte, lt: ratingRange.lt } } }
+          : undefined,
+        creator_id: creatorId,
+      },
+    });
+
+    const places = await prisma.place.findMany({
+      where: {
+        title: searchTerm
+          ? { contains: searchTerm as string, mode: "insensitive" }
+          : undefined,
+        description: searchTerm
+          ? { contains: searchTerm as string, mode: "insensitive" }
+          : undefined,
+        category: categories ? { in: categories } : undefined,
+        location: location
+          ? { contains: location as string, mode: "insensitive" }
+          : undefined,
+        price: {
+          gte: priceMin ? priceMin : undefined,
+          lte: priceMax ? priceMax : undefined,
+        },
+        creator_id: creatorId,
+      },
+      include: {
+        images: {
+          select: {
+            url: true,
+            public_id: true,
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
+      },
+      skip,
+      take: pageSize,
+    });
+
+    return { total, places };
   }
 }

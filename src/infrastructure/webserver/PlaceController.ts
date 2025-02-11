@@ -4,6 +4,7 @@ import { PrismaPlaceRepository } from "../database/PrismaPlaceRepository";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { ListPlaces } from "../../application/use-cases/ListPlaces";
 import { GetPlaceBySlug } from "../../application/use-cases/GetPlaceBySlug";
+import ListPlacesByUser from "../../application/use-cases/ListPlacesByUser";
 
 const placeRepository = new PrismaPlaceRepository();
 const userRepository = new PrismaUserRepository();
@@ -11,6 +12,7 @@ const userRepository = new PrismaUserRepository();
 const createPlace = new CreatePlace(placeRepository, userRepository);
 const listPlaces = new ListPlaces(placeRepository);
 const getPlaceBySlug = new GetPlaceBySlug(placeRepository);
+const listPlacesByUser = new ListPlacesByUser(placeRepository);
 
 export class PlaceController {
   static async create(req: Request, res: Response) {
@@ -117,6 +119,49 @@ export class PlaceController {
       res
         .status(errorMessage === "Place not found" ? 404 : 500)
         .json({ error: errorMessage });
+    }
+  }
+
+  static async listByUser(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        title,
+        description,
+        categories,
+        location,
+        priceMin,
+        priceMax,
+        rating,
+        page = "1",
+        pageSize = "10",
+      } = req.query;
+
+      const userId = req.user!.userId;
+
+      const filters = {
+        title: title ? String(title) : undefined,
+        description: description ? String(description) : undefined,
+        creatorId: userId ? String(userId) : undefined,
+        categories: categories
+          ? Array.isArray(categories)
+            ? categories.map(String)
+            : [String(categories)]
+          : undefined,
+        location: location ? String(location) : undefined,
+        priceMin: priceMin ? parseFloat(String(priceMin)) : undefined,
+        priceMax: priceMax ? parseFloat(String(priceMax)) : undefined,
+        rating: rating ? parseInt(String(rating), 10) : undefined,
+      };
+
+      const pagination = {
+        page: parseInt(String(page), 10),
+        pageSize: parseInt(String(pageSize), 10),
+      };
+
+      const result = await listPlacesByUser.execute(filters, pagination);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: "Error listing places" });
     }
   }
 }

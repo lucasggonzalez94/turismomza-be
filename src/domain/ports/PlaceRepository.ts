@@ -1,7 +1,7 @@
 import { Place } from "../entities/Place";
 
 export interface ListPlacesFilters {
-  title?: string;
+  searchTerm?: string;
   creatorId?: string;
   categories?: string[];
   location?: string;
@@ -21,4 +21,8 @@ export interface PlaceRepository {
     pagination: { page: number; pageSize: number }
   ): Promise<{ total: number; places: any[] }>;
   getBySlug(slug: string): Promise<Place | null>;
+  listPlacesByUser(
+    filters: ListPlacesFilters,
+    pagination: { page: number; pageSize: number }
+  ): Promise<{ total: number; places: any[] }>;
 }
