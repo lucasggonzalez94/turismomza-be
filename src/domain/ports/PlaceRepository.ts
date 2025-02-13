@@ -1,5 +1,4 @@
 import { Place } from "../entities/Place";
-import { Image } from "../value-objects/Image";
 
 export interface ListPlacesFilters {
   searchTerm?: string;

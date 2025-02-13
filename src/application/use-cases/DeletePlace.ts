@@ -1,10 +1,5 @@
-import { Place } from "../../domain/entities/Place";
 import { PlaceRepository } from "../../domain/ports/PlaceRepository";
-import { UserRepository } from "../../domain/ports/UserRepository";
 import { CloudinaryService } from "../../infrastructure/services/CloudinaryService";
-import { TextModerationService } from "../../infrastructure/services/TextModerationService";
-import { generateSlug } from "../../helpers/generateSlug";
-import { Image } from "../../domain/value-objects/Image";
 
 export class DeletePlace {
   constructor(private placeRepository: PlaceRepository) {}

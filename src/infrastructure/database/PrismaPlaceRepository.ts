@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import { Place } from "../../domain/entities/Place";
-import { Image } from "../../domain/value-objects/Image";
 import {
   ListPlacesFilters,
   PlaceRepository,

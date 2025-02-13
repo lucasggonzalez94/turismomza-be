@@ -22,11 +22,7 @@ router.put(
   editPlaceValidator,
   PlaceController.edit
 );
-router.delete(
-  "/:id",
-  authenticateToken,
-  PlaceController.delete
-);
+router.delete("/:id", authenticateToken, PlaceController.delete);
 router.get("/", PlaceController.list);
 router.get("/:slug", PlaceController.getBySlug);
 router.get("/user/:userId", authenticateToken, PlaceController.listByUser);
