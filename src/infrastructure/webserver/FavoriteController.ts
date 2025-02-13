@@ -1,9 +1,12 @@
 import { Request, Response } from "express";
 import { AddOrRemoveFavorite } from "../../application/use-cases/AddOrRemoveFavorite";
 import { PrismaFavoriteRepository } from "../database/PrismaFavoriteRepository";
+import ListFavoritesByUser from "../../application/use-cases/ListFavoritesByUser";
 
 const favoriteRepository = new PrismaFavoriteRepository();
+
 const addOrRemoveFavorite = new AddOrRemoveFavorite(favoriteRepository);
+const listFavoritesByUser = new ListFavoritesByUser(favoriteRepository);
 
 export class FavoriteController {
   static async addOrRemove(req: Request, res: Response) {
@@ -19,6 +22,23 @@ export class FavoriteController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error adding to favorites" });
+    }
+  }
+
+  static async listByUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { page = "1", pageSize = "10" } = req.query;
+      const userId = req.user!.userId;
+
+      const pagination = {
+        page: parseInt(String(page), 10),
+        pageSize: parseInt(String(pageSize), 10),
+      };
+
+      const result = await listFavoritesByUser.execute(userId, pagination);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: "Error listing favorite places" });
     }
   }
 }

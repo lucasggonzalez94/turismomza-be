@@ -1,5 +1,3 @@
-// src/application/use-cases/ListPlaces.ts
-import { Favorite } from "../../domain/entities/Favorite";
 import {
   PlaceRepository,
   ListPlacesFilters,

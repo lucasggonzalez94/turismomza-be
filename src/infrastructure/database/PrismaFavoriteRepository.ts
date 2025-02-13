@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { FavoriteRepository } from "../../domain/ports/FavoriteRepository";
 import { Favorite } from "../../domain/entities/Favorite";
+import { Place } from "../../domain/entities/Place";
 
 const prisma = new PrismaClient();
 
@@ -26,15 +27,100 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
       const favorite = await prisma.favorite.create({
         data: {
           user_id: userId,
-          place_id: placeId
+          place_id: placeId,
         },
       });
-      
+
       return new Favorite(favorite.id, favorite.user_id, favorite.place_id);
     }
   }
-  async getByUser(userId: string): Promise<Favorite[]> {
-    throw new Error("Method not implemented.");
+  async getByUser(
+    userId: string,
+    pagination: { page: number; pageSize: number }
+  ): Promise<{ total: number; places: Place[] }> {
+    const { page, pageSize } = pagination;
+    const pageNumber = page || 1;
+    const pageSizeNumber = pageSize || 10;
+    const skip = (pageNumber - 1) * pageSizeNumber;
+
+    const totalPlaces = await prisma.favorite.count({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    const favorites = await prisma.favorite.findMany({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        place: {
+          include: {
+            images: true,
+            reviews: {
+              select: {
+                content: true,
+                rating: true,
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
+                creation_date: true,
+                likes: {
+                  select: {
+                    user: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                  },
+                },
+                reports: true,
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take: pageSizeNumber,
+    });
+
+    const favoritePlaces = favorites.map((favorite) => favorite.place);
+
+    return {
+      total: totalPlaces,
+      places: favoritePlaces.map(
+        (place) =>
+          new Place(
+            place.id,
+            place.title,
+            place.slug,
+            place.description,
+            place.location,
+            place.category,
+            place.creator_id,
+            place.created_at,
+            place.services,
+            place.schedule,
+            place.images.map((image) => ({
+              id: image.id,
+              url: image.url,
+              publicId: image.public_id,
+              order: image.order,
+            })),
+            [],
+            [],
+            [],
+            place.contact_number ?? undefined,
+            place.email ?? undefined,
+            place.webSite ?? undefined,
+            place.instagram ?? undefined,
+            place.facebook ?? undefined,
+            place.price ?? undefined,
+            place.currency_price ?? undefined
+          )
+      ),
+    };
   }
-  
 }

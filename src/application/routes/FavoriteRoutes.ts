@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { PlaceController } from "../../infrastructure/webserver/PlaceController";
 import { authenticateToken } from "../../middleware/authMiddleware";
 import { addOrRemoveFavoriteValidator } from "../../validators/favorites/addOrRemoveFavoriteValidator";
 import { FavoriteController } from "../../infrastructure/webserver/FavoriteController";
@@ -12,6 +11,6 @@ router.post(
   addOrRemoveFavoriteValidator,
   FavoriteController.addOrRemove
 );
-router.get("/:slug", PlaceController.getBySlug);
+router.get("/", authenticateToken, FavoriteController.listByUser);
 
 export default router;
