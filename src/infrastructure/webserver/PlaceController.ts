@@ -124,7 +124,6 @@ export class PlaceController {
     try {
       const {
         title,
-        creatorId,
         categories,
         location,
         priceMin,
@@ -134,10 +133,11 @@ export class PlaceController {
         page = "1",
         pageSize = "10",
       } = req.query;
+      const userId = req?.user?.userId;
 
       const filters = {
         title: title ? String(title) : undefined,
-        creatorId: creatorId ? String(creatorId) : undefined,
+        creatorId: userId ? String(userId) : undefined,
         categories: categories
           ? Array.isArray(categories)
             ? categories.map(String)

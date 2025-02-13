@@ -1,12 +1,13 @@
 import { Router } from "express";
 import multer from "multer";
 import { PlaceController } from "../../infrastructure/webserver/PlaceController";
-import { authenticateToken } from "../../middleware/authMiddleware";
+import { authenticateToken, getUser } from "../../middleware/authMiddleware";
 import { createPlaceValidator } from "../../validators/places/createPlaceValidator";
 import { editPlaceValidator } from "../../validators/places/editPlaceValidator";
 
 const router = Router();
-const upload = multer();
+const storage = multer.memoryStorage();
+const upload = multer( { storage: storage } );
 
 router.post(
   "/",
@@ -23,7 +24,7 @@ router.put(
   PlaceController.edit
 );
 router.delete("/:id", authenticateToken, PlaceController.delete);
-router.get("/", PlaceController.list);
+router.get("/", getUser, PlaceController.list);
 router.get("/:slug", PlaceController.getBySlug);
 router.get("/user/:userId", authenticateToken, PlaceController.listByUser);
 

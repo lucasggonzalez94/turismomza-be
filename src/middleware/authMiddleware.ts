@@ -30,6 +30,34 @@ export const authenticateToken = (
   );
 };
 
+export const getUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.cookies.authToken;
+
+  if (token == null) next();
+
+  jwt.verify(
+    token,
+    process.env.ACCESS_TOKEN_SECRET as string,
+    (err: Error | null, decoded: JwtPayload | string | undefined) => {
+      if (err) return next();
+
+      if (decoded && typeof decoded !== "string") {
+        req.user = {
+          userId: decoded.userId,
+          role: decoded.role,
+        };
+        next();
+      } else {
+        next();
+      }
+    }
+  );
+};
+
 export const authorizeAdmin = (
   req: Request,
   res: Response,

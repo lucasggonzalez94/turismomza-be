@@ -1,4 +1,5 @@
 // src/application/use-cases/ListPlaces.ts
+import { Favorite } from "../../domain/entities/Favorite";
 import {
   PlaceRepository,
   ListPlacesFilters,
@@ -88,7 +89,7 @@ export class ListPlaces {
     // Marcar si el place es favorito para el usuario (si creatorId está presente en filters)
     const favoritePlaces = finalPlaces.map((place: any) => {
       const isFavorite = filters.creatorId
-        ? place.favorites.some((fav: any) => fav.userId === filters.creatorId)
+        ? place.favorites.some((fav: any) => fav.user_id === filters.creatorId)
         : false;
       const { favorites, ...placeWithoutFavorites } = place;
       return { ...placeWithoutFavorites, isFavorite };

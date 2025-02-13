@@ -13,7 +13,7 @@ export class FavoriteController {
 
       const favorite = await addOrRemoveFavorite.execute(placeId, userId);
       if (favorite) {
-        res.status(201).json(favorite);
+        return res.status(201).json(favorite);
       }
       res.status(200).json({ ok: true });
     } catch (error) {
