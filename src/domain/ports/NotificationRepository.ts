@@ -5,5 +5,5 @@ export interface NotificationRepository {
   listUnreadNotifications(userId: string): Promise<Notification[]>;
   listAditionalNotifications(userId: string, take: number): Promise<Notification[]>;
   markAsRead(notificationId: string): Promise<void>;
-  // TODO: Implementar metodo para marcar notificaciones como no leidas
+  markAsUnread(notificationId: string): Promise<void>;
 }

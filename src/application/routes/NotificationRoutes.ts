@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { authenticateToken } from "../../middleware/authMiddleware";
 import { NotificationsController } from "../../infrastructure/webserver/NotificationController";
-import { markAsReadValidator } from "../../validators/notifications/markAsReadValidator";
 
 const router = Router();
 
@@ -11,10 +10,14 @@ router.get(
   NotificationsController.list
 );
 router.post(
-  "/:id",
+  "/read/:id",
   authenticateToken,
-  markAsReadValidator,
   NotificationsController.markAsRead
+);
+router.post(
+  "/unread/:id",
+  authenticateToken,
+  NotificationsController.markAsUnread
 );
 
 export default router;

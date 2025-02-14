@@ -105,4 +105,11 @@ export class PrismaNotificationRepository implements NotificationRepository {
       data: { read: true },
     });
   }
+  
+  async markAsUnread(notificationId: string): Promise<void> {
+    await prisma.notification.update({
+      where: { id: notificationId },
+      data: { read: false },
+    });
+  }
 }
