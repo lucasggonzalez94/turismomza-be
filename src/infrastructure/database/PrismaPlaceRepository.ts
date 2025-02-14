@@ -144,6 +144,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
             content: true,
             rating: true,
             user: { select: { id: true, name: true } },
+            place_id: true,
             creation_date: true,
             likes: {
               select: {
@@ -182,6 +183,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
         rating: review.rating,
         userId: review.user.id,
         creationDate: review.creation_date,
+        placeId: review.place_id,
       })),
       newPlace.favorites.map((fav) => ({
         id: fav.id,
@@ -298,9 +300,9 @@ export class PrismaPlaceRepository implements PlaceRepository {
     return { total, places };
   }
 
-  async getBySlug(slug: string): Promise<Place | null> {
+  async getById(placeId: string): Promise<Place | null> {
     const place = await prisma.place.findUnique({
-      where: { slug },
+      where: { id: placeId },
       include: {
         images: {
           select: { id: true, url: true, public_id: true, order: true },
@@ -312,6 +314,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
             content: true,
             rating: true,
             user: { select: { id: true, name: true } },
+            place_id: true,
             creation_date: true,
             likes: {
               select: {
@@ -352,6 +355,90 @@ export class PrismaPlaceRepository implements PlaceRepository {
         rating: review.rating,
         userId: review.user.id,
         creationDate: review.creation_date,
+        placeId: review.place_id,
+      })),
+      place.favorites.map((fav) => ({
+        id: fav.id,
+        userId: fav.user_id,
+      })),
+      place.advertisements.map((ad) => ({
+        id: ad.id,
+        placeId: ad.place_id,
+        userId: ad.user_id,
+        createdAt: ad.created_at,
+        startDate: ad.start_date,
+        endDate: ad.end_date,
+        amountPaid: ad.amount_paid,
+        isActive: ad.is_active,
+        impressions: ad.impressions,
+        clicks: ad.clicks,
+      })),
+      place.contact_number ?? undefined,
+      place.email ?? undefined,
+      place.webSite ?? undefined,
+      place.instagram ?? undefined,
+      place.facebook ?? undefined,
+      place.price ?? undefined,
+      place.currency_price ?? undefined
+    );
+  }
+
+  async getBySlug(slug: string): Promise<Place | null> {
+    const place = await prisma.place.findUnique({
+      where: { slug },
+      include: {
+        images: {
+          select: { id: true, url: true, public_id: true, order: true },
+          orderBy: { order: "asc" },
+        },
+        reviews: {
+          select: {
+            id: true,
+            content: true,
+            rating: true,
+            user: { select: { id: true, name: true } },
+            place_id: true,
+            creation_date: true,
+            likes: {
+              select: {
+                id: true,
+                user: { select: { id: true, name: true } },
+              },
+            },
+            reports: true,
+          },
+        },
+        favorites: { select: { id: true, user_id: true } },
+        advertisements: true,
+      },
+    });
+
+    if (!place) return null;
+
+    return new Place(
+      place.id,
+      place.title,
+      place.slug,
+      place.description,
+      place.location,
+      place.category,
+      place.creator_id,
+      place.created_at,
+      place.services,
+      place.schedule,
+      place.images.map((image) => ({
+        id: image.id,
+        url: image.url,
+        publicId: image.public_id,
+        order: image.order,
+      })),
+      place.reviews.map((review) => ({
+        id: review.id,
+        content: review.content,
+        rating: review.rating,
+        userId: review.user.id,
+        creationDate: review.creation_date,
+        placeId: review.place_id,
       })),
       place.favorites.map((fav) => ({
         id: fav.id,

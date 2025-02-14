@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { VerifySession } from "../../application/use-cases/VerifySession";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
+import { VerifySession } from "../../application/use-cases/Auth/VerifySession";
 
 const userRepository = new PrismaUserRepository();
 const verifySession = new VerifySession(userRepository);

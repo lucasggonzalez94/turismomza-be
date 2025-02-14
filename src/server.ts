@@ -9,6 +9,7 @@ import helmet from "helmet";
 import userRoutes from "./application/routes/UserRoutes";
 import placeRoutes from "./application/routes/PlaceRoutes";
 import favoriteRoutes from "./application/routes/FavoriteRoutes";
+import reviewRoutes from "./application/routes/ReviewRoutes";
 
 const allowedOrigins = ["http://localhost:3000"];
 
@@ -76,8 +77,8 @@ io.on("connection", (socket) => {
 app.use("/api/auth", userRoutes);
 app.use("/api/places", placeRoutes);
 app.use("/api/favorites", favoriteRoutes);
+app.use("/api/reviews", reviewRoutes);
 // app.use("/api/advertisements", advertisementsRoutes);
-// app.use("/api/reviews", reviewsRoutes);
 // app.use("/api/contact", contactRoutes);
 // app.use("/api/notifications", notificationsRoutes);
 // app.use("/api/payments", paymentsRoutes);

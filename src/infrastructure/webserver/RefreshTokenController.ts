@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { RefreshTokenUseCase } from "../../application/use-cases/RefreshTokenUseCase";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
+import { RefreshTokenUseCase } from "../../application/use-cases/Auth/RefreshTokenUseCase";
 
 const userRepository = new PrismaUserRepository();
 const refreshTokenRepository = new PrismaRefreshTokenRepository();

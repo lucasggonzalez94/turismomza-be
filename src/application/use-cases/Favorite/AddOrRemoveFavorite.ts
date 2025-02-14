@@ -1,5 +1,5 @@
-import { Favorite } from "../../domain/entities/Favorite";
-import { FavoriteRepository } from "../../domain/ports/FavoriteRepository";
+import { Favorite } from "../../../domain/entities/Favorite";
+import { FavoriteRepository } from "../../../domain/ports/FavoriteRepository";
 
 export class AddOrRemoveFavorite {
   constructor(private favoriteRepository: FavoriteRepository) {}

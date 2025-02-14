@@ -1,9 +1,9 @@
 import {
   PlaceRepository,
   ListPlacesFilters,
-} from "../../domain/ports/PlaceRepository";
-import { getMaxMinPrices } from "../../helpers/getMaxMinPrices";
-import { shuffleArray } from "../../helpers/shuffleArray";
+} from "../../../domain/ports/PlaceRepository";
+import { getMaxMinPrices } from "../../../helpers/getMaxMinPrices";
+import { shuffleArray } from "../../../helpers/shuffleArray";
 
 export class ListPlaces {
   constructor(private placeRepository: PlaceRepository) {}

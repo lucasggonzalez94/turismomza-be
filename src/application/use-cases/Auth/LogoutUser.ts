@@ -1,4 +1,4 @@
-import { RefreshTokenRepository } from "../../domain/ports/RefreshTokenRepository";
+import { RefreshTokenRepository } from "../../../domain/ports/RefreshTokenRepository";
 
 export class LogoutUser {
   constructor(private refreshTokenRepository: RefreshTokenRepository) {}

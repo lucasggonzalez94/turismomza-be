@@ -24,6 +24,7 @@ export interface PlaceRepository {
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
   ): Promise<{ total: number; places: Place[] }>;
+  getById(slug: string): Promise<Place | null>;
   getBySlug(slug: string): Promise<Place | null>;
   listPlacesByUser(
     filters: ListPlacesFilters,

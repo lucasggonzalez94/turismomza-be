@@ -1,4 +1,4 @@
-import { FavoriteRepository } from "../../domain/ports/FavoriteRepository";
+import { FavoriteRepository } from "../../../domain/ports/FavoriteRepository";
 
 export class ListFavoritesByUser {
   constructor(private favoriteRepository: FavoriteRepository) {}

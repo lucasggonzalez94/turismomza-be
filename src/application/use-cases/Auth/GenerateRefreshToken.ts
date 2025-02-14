@@ -1,6 +1,6 @@
-import { RefreshToken } from "../../domain/entities/RefreshToken";
-import { RefreshTokenRepository } from "../../domain/ports/RefreshTokenRepository";
 import crypto from "crypto";
+import { RefreshTokenRepository } from "../../../domain/ports/RefreshTokenRepository";
+import { RefreshToken } from "../../../domain/entities/RefreshToken";
 
 export class GenerateRefreshToken {
   constructor(private refreshTokenRepository: RefreshTokenRepository) {}

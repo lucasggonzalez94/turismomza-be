@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
-import { RegisterUser } from "../../application/use-cases/RegisterUser";
+import { validationResult } from "express-validator";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
-import { LoginUser } from "../../application/use-cases/LoginUser";
 import { EmailService } from "../services/EmailService";
 import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
-import { validationResult } from "express-validator";
-import { LogoutUser } from "../../application/use-cases/LogoutUser";
-import { UpdateUser } from "../../application/use-cases/UpdateUser";
-import { ListUsers } from "../../application/use-cases/ListUsers";
-import { DeleteUser } from "../../application/use-cases/DeleteUser";
+import { DeleteUser } from "../../application/use-cases/Auth/DeleteUser";
+import { ListUsers } from "../../application/use-cases/Auth/ListUsers";
+import { LoginUser } from "../../application/use-cases/Auth/LoginUser";
+import { LogoutUser } from "../../application/use-cases/Auth/LogoutUser";
+import { RegisterUser } from "../../application/use-cases/Auth/RegisterUser";
+import { UpdateUser } from "../../application/use-cases/Auth/UpdateUser";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();

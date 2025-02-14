@@ -1,8 +1,8 @@
 import {
   PlaceRepository,
   ListPlacesFilters,
-} from "../../domain/ports/PlaceRepository";
-import { getMaxMinPrices } from "../../helpers/getMaxMinPrices";
+} from "../../../domain/ports/PlaceRepository";
+import { getMaxMinPrices } from "../../../helpers/getMaxMinPrices";
 
 export class ListPlacesByUser {
   constructor(private placeRepository: PlaceRepository) {}

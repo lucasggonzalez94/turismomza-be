@@ -1,9 +1,9 @@
-import { Place } from "../../domain/entities/Place";
-import { PlaceRepository } from "../../domain/ports/PlaceRepository";
-import { UserRepository } from "../../domain/ports/UserRepository";
-import { CloudinaryService } from "../../infrastructure/services/CloudinaryService";
-import { TextModerationService } from "../../infrastructure/services/TextModerationService";
-import { generateSlug } from "../../helpers/generateSlug";
+import { Place } from "../../../domain/entities/Place";
+import { PlaceRepository } from "../../../domain/ports/PlaceRepository";
+import { UserRepository } from "../../../domain/ports/UserRepository";
+import { CloudinaryService } from "../../../infrastructure/services/CloudinaryService";
+import { TextModerationService } from "../../../infrastructure/services/TextModerationService";
+import { generateSlug } from "../../../helpers/generateSlug";
 
 export interface CreatePlaceInput {
   title: string;

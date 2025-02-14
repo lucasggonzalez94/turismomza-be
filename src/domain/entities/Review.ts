@@ -8,7 +8,7 @@ export class Review {
     public rating: number | null,
     public userId: string,
     public creationDate: Date,
-    public placeId?: string,
+    public placeId: string,
     public likes?: Like[],
     public reports?: Report[],
   ) {

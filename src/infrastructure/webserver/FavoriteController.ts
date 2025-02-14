@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { AddOrRemoveFavorite } from "../../application/use-cases/AddOrRemoveFavorite";
+import { AddOrRemoveFavorite } from "../../application/use-cases/Favorite/AddOrRemoveFavorite";
 import { PrismaFavoriteRepository } from "../database/PrismaFavoriteRepository";
-import ListFavoritesByUser from "../../application/use-cases/ListFavoritesByUser";
+import ListFavoritesByUser from "../../application/use-cases/Favorite/ListFavoritesByUser";
 
 const favoriteRepository = new PrismaFavoriteRepository();
 

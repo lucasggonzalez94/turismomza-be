@@ -1,5 +1,5 @@
-import { PlaceRepository } from "../../domain/ports/PlaceRepository";
-import { CloudinaryService } from "../../infrastructure/services/CloudinaryService";
+import { PlaceRepository } from "../../../domain/ports/PlaceRepository";
+import { CloudinaryService } from "../../../infrastructure/services/CloudinaryService";
 
 export class DeletePlace {
   constructor(private placeRepository: PlaceRepository) {}

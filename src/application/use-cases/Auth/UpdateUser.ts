@@ -1,8 +1,8 @@
-import { UserRepository } from "../../domain/ports/UserRepository";
-import { CloudinaryService } from "../../infrastructure/services/CloudinaryService";
 import bcrypt from "bcryptjs";
-import { ProfilePicture } from "../../domain/value-objects/ProfilePicture";
-import { EmailService } from "../../infrastructure/services/EmailService";
+import { UserRepository } from "../../../domain/ports/UserRepository";
+import { ProfilePicture } from "../../../domain/value-objects/ProfilePicture";
+import { CloudinaryService } from "../../../infrastructure/services/CloudinaryService";
+import { EmailService } from "../../../infrastructure/services/EmailService";
 
 export class UpdateUser {
   constructor(

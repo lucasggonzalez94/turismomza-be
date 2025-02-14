@@ -6,5 +6,5 @@ export const addReviewValidator = [
     .optional()
     .isInt({ min: 1, max: 5 }) // Validar que el rating esté entre 1 y 5
     .withMessage("Rating must be a number between 1 and 5"),
-  body("attractionId").notEmpty().withMessage("Attraction id is required"),
+  body("placeId").notEmpty().withMessage("Place id is required"),
 ];

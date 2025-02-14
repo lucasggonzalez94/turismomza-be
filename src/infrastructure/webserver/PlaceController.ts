@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
-import { CreatePlace } from "../../application/use-cases/CreatePlace";
+import { CreatePlace } from "../../application/use-cases/Place/CreatePlace";
 import { PrismaPlaceRepository } from "../database/PrismaPlaceRepository";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
-import { ListPlaces } from "../../application/use-cases/ListPlaces";
-import { GetPlaceBySlug } from "../../application/use-cases/GetPlaceBySlug";
-import ListPlacesByUser from "../../application/use-cases/ListPlacesByUser";
-import { EditPlace } from "../../application/use-cases/EditPlace";
-import { DeletePlace } from "../../application/use-cases/DeletePlace";
+import { ListPlaces } from "../../application/use-cases/Place/ListPlaces";
+import { GetPlaceBySlug } from "../../application/use-cases/Place/GetPlaceBySlug";
+import ListPlacesByUser from "../../application/use-cases/Place/ListPlacesByUser";
+import { EditPlace } from "../../application/use-cases/Place/EditPlace";
+import { DeletePlace } from "../../application/use-cases/Place/DeletePlace";
 
 const placeRepository = new PrismaPlaceRepository();
 const userRepository = new PrismaUserRepository();
