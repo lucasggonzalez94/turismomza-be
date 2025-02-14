@@ -36,4 +36,28 @@ export class EmailService {
       text: `Hola ${name},\n\nTu contraseña ha sido actualizada exitosamente. Si no fuiste tú quien realizó este cambio, por favor contacta a nuestro soporte.\n\nSaludos,\nEl equipo de Turismomza.`,
     });
   }
+
+  async sendContactEmail(
+    email: string,
+    name: string,
+    subject: string,
+    message: string
+  ) {
+    await this.transporter.sendMail({
+      from: `"${name}" <${email}>`,
+      to: process.env.EMAIL_USER,
+      subject: subject,
+      text: message,
+      html: `
+      <p>Has recibido un nuevo mensaje de contacto.</p>
+      <h3>Detalles:</h3>
+      <ul>
+        <li><strong>Nombre:</strong> ${name}</li>
+        <li><strong>Email:</strong> ${email}</li>
+        <li><strong>Asunto:</strong> ${subject}</li>
+        <li><strong>Mensaje:</strong> ${message}</li>
+      </ul>
+    `,
+    });
+  }
 }
