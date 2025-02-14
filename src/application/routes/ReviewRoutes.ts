@@ -23,5 +23,10 @@ router.delete(
   authenticateToken,
   ReviewController.delete
 );
+router.post(
+  "/:reviewId",
+  authenticateToken,
+  ReviewController.report
+);
 
 export default router;

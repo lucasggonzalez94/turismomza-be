@@ -5,4 +5,5 @@ export interface ReviewRepository {
   editReview(review: Review): Promise<Review>;
   findById(reviewId: string): Promise<{ id: string; user_id: string } | null>;
   deleteReview(reviewId: string): Promise<void>;
+  reportReview(reviewId: string, userId: string, reason: string): Promise<void>;
 }

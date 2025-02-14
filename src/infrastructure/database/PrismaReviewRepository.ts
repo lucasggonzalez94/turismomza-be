@@ -66,4 +66,18 @@ export class PrismaReviewRepository implements ReviewRepository {
       where: { id: reviewId },
     });
   }
+
+  async reportReview(
+    reviewId: string,
+    userId: string,
+    reason: string
+  ): Promise<void> {
+    await prisma.report.create({
+      data: {
+        review_id: reviewId,
+        user_id: userId,
+        reason,
+      },
+    });
+  }
 }
