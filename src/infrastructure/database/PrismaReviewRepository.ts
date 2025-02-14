@@ -24,8 +24,33 @@ export class PrismaReviewRepository implements ReviewRepository {
       createdReview.content,
       createdReview.rating,
       createdReview.user_id,
-      createdReview.creation_date,
       createdReview.place_id,
+      createdReview.creation_date,
+    );
+  }
+
+  async editReview(review: Review): Promise<Review> {
+    const editedReview = await prisma.review.update({
+      where: {
+        id: review.id,
+      },
+      data: {
+        content: review.content,
+        rating: review.rating,
+      },
+      include: {
+        user: true,
+        likes: true,
+      }
+    });
+
+    return new Review(
+      editedReview.id,
+      editedReview.content,
+      editedReview.rating,
+      editedReview.user_id,
+      editedReview.place_id,
+      editedReview.creation_date,
     );
   }
 }

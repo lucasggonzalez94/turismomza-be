@@ -37,8 +37,8 @@ export class AddReview {
       content,
       rating,
       userId,
+      placeId,
       creationDate,
-      placeId
     );
     const review = await this.reviewRepository.addReview(newReview);
 
