@@ -8,15 +8,17 @@ import { PrismaNotificationRepository } from "../database/PrismaNotificationRepo
 import { SocketService } from "../services/SocketService";
 import { NotFoundError } from "../../domain/errors/NotFoundError";
 import { EditReview } from "../../application/use-cases/Review/EditReview";
+import { DeleteReview } from "../../application/use-cases/Review/DeleteReview";
 
 const reviewRepository = new PrismaReviewRepository();
 const placeRepository = new PrismaPlaceRepository();
 const notificationRepository = new PrismaNotificationRepository();
 
 const editReview = new EditReview(reviewRepository, placeRepository);
+const deleteReview = new DeleteReview(reviewRepository);
 
 export class ReviewController {
-  static async addReview(req: Request, res: Response) {
+  static async add(req: Request, res: Response) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -54,7 +56,7 @@ export class ReviewController {
     }
   }
 
-  static async editReview(req: Request, res: Response) {
+  static async edit(req: Request, res: Response) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -82,6 +84,24 @@ export class ReviewController {
         return res.status(404).json({ error: error.message });
       }
       res.status(500).json({ error: "Error adding review" });
+    }
+  }
+
+  static async delete(req: Request, res: Response) {
+    const { reviewId } = req.params;
+    const userId = req.user?.userId;
+
+    try {
+      await deleteReview.execute(reviewId, userId);
+      res.status(204);
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        return res.status(403).json({ error: error.message });
+      }
+      if (error instanceof NotFoundError) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Error deleting review" });
     }
   }
 }

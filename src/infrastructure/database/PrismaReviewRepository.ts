@@ -16,7 +16,7 @@ export class PrismaReviewRepository implements ReviewRepository {
       include: {
         user: true,
         likes: true,
-      }
+      },
     });
 
     return new Review(
@@ -25,7 +25,7 @@ export class PrismaReviewRepository implements ReviewRepository {
       createdReview.rating,
       createdReview.user_id,
       createdReview.place_id,
-      createdReview.creation_date,
+      createdReview.creation_date
     );
   }
 
@@ -41,7 +41,7 @@ export class PrismaReviewRepository implements ReviewRepository {
       include: {
         user: true,
         likes: true,
-      }
+      },
     });
 
     return new Review(
@@ -50,7 +50,20 @@ export class PrismaReviewRepository implements ReviewRepository {
       editedReview.rating,
       editedReview.user_id,
       editedReview.place_id,
-      editedReview.creation_date,
+      editedReview.creation_date
     );
+  }
+
+  async findById(reviewId: string) {
+    return prisma.review.findUnique({
+      where: { id: reviewId },
+      select: { id: true, user_id: true },
+    });
+  }
+
+  async deleteReview(reviewId: string) {
+    await prisma.review.delete({
+      where: { id: reviewId },
+    });
   }
 }

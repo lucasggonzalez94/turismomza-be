@@ -17,19 +17,19 @@ export class EditReview {
     userId: string,
     placeId: string
   ): Promise<Review> {
-    const place = await this.placeRepository.getById(placeId);
+    const review = await this.reviewRepository.findById(reviewId);
 
-    if (!place) {
-      throw new NotFoundError("Place not found");
+    if (!review) {
+      throw new NotFoundError("Comment not found");
     }
 
-    if (place.creatorId === userId) {
-      throw new UnauthorizedError("You cannot review your own place");
+    if (review.user_id !== userId) {
+      throw new UnauthorizedError("You can only edit your own comments");
     }
 
     const newReview = new Review(reviewId, content, rating, userId, placeId);
-    const review = await this.reviewRepository.editReview(newReview);
+    const editedReview = await this.reviewRepository.editReview(newReview);
 
-    return review;
+    return editedReview;
   }
 }

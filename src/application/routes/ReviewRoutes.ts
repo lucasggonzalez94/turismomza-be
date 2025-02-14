@@ -10,13 +10,18 @@ router.post(
   "/",
   authenticateToken,
   addReviewValidator,
-  ReviewController.addReview
+  ReviewController.add
 );
 router.put(
   "/:reviewId",
   authenticateToken,
   editReviewValidator,
-  ReviewController.editReview
+  ReviewController.edit
+);
+router.delete(
+  "/:reviewId",
+  authenticateToken,
+  ReviewController.delete
 );
 
 export default router;
