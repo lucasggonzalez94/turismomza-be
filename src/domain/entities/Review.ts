@@ -1,4 +1,4 @@
-import { Like } from "./Like";
+import { Like } from "../value-objects/Like";
 import { Report } from "./Report";
 
 export class Review {

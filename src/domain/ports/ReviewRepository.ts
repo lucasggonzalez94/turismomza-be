@@ -6,4 +6,7 @@ export interface ReviewRepository {
   findById(reviewId: string): Promise<{ id: string; user_id: string } | null>;
   deleteReview(reviewId: string): Promise<void>;
   reportReview(reviewId: string, userId: string, reason: string): Promise<void>;
+  findLike(reviewId: string, userId: string): Promise<boolean>;
+  like(reviewId: string, userId: string): Promise<void>;
+  dislike(reviewId: string, userId: string): Promise<void>;
 }

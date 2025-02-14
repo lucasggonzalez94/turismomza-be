@@ -55,13 +55,7 @@ EMAIL_USER=turismomzacontact@gmail.com
 EMAIL_PASSWORD=<your_password>
 ```
 
-### 4. Levantar la Base de Datos con Docker
-
-```bash
-docker-compose up -d
-```
-
-### 5. Conectar Prisma a la Base de Datos
+### 4. Conectar Prisma a la Base de Datos
 
 Una vez que el contenedor esté en funcionamiento, asegúrate de que Prisma esté configurado para usar la URL de conexión en el archivo .env. Luego, ejecuta las migraciones para crear las tablas en la base de datos:
 
@@ -69,7 +63,7 @@ Una vez que el contenedor esté en funcionamiento, asegúrate de que Prisma est�
 npx prisma migrate dev
 ```
 
-### 6. Levantar el servidor localmente
+### 5. Levantar el servidor localmente
 
 ```bash
 npm run dev

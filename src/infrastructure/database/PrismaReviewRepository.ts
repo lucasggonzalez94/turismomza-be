@@ -80,4 +80,38 @@ export class PrismaReviewRepository implements ReviewRepository {
       },
     });
   }
+
+  async findLike(reviewId: string, userId: string): Promise<boolean> {
+    const existingLike = await prisma.like.findUnique({
+      where: {
+        user_id_review_id: {
+          user_id: userId,
+          review_id: reviewId,
+        },
+      },
+    });
+
+    return !!existingLike;
+  }
+
+  async like(reviewId: string, userId: string): Promise<void> {
+    await prisma.like.create({
+      data: {
+        user_id: userId,
+        review_id: reviewId,
+        like: true,
+      },
+    });
+  }
+
+  async dislike(reviewId: string, userId: string): Promise<void> {
+    await prisma.like.delete({
+      where: {
+        user_id_review_id: {
+          user_id: userId,
+          review_id: reviewId,
+        },
+      },
+    });
+  }
 }

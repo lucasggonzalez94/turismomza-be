@@ -28,5 +28,10 @@ router.post(
   authenticateToken,
   ReviewController.report
 );
+router.post(
+  "/like/:reviewId",
+  authenticateToken,
+  ReviewController.likeDislike
+);
 
 export default router;

@@ -10,6 +10,7 @@ import { NotFoundError } from "../../domain/errors/NotFoundError";
 import { EditReview } from "../../application/use-cases/Review/EditReview";
 import { DeleteReview } from "../../application/use-cases/Review/DeleteReview";
 import { ReportReview } from "../../application/use-cases/Review/ReportReview";
+import { LikeDislike } from "../../application/use-cases/Review/LikeDislike";
 
 const reviewRepository = new PrismaReviewRepository();
 const placeRepository = new PrismaPlaceRepository();
@@ -120,6 +121,32 @@ export class ReviewController {
         return res.status(404).json({ error: error.message });
       }
       res.status(500).json({ error: "Error deleting review" });
+    }
+  }
+
+  static async likeDislike(req: Request, res: Response) {
+    const { reviewId } = req.params;
+    const userId = req.user?.userId;
+
+    try {
+      const socketService = new SocketService(req.app.get("io"));
+
+      const likeDislikeReview = new LikeDislike(
+        reviewRepository,
+        notificationRepository,
+        socketService
+      );
+
+      await likeDislikeReview.execute(reviewId, userId);
+      res.status(200).json({ ok: true });
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        return res.status(403).json({ error: error.message });
+      }
+      if (error instanceof NotFoundError) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Error liking review" });
     }
   }
 }

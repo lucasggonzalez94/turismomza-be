@@ -1,7 +1,7 @@
 import { ProfilePicture } from "../value-objects/ProfilePicture";
 import { Advertisement } from "./Advertisement";
 import { Favorite } from "./Favorite";
-import { Like } from "./Like";
+import { Like } from "../value-objects/Like";
 import { Place } from "./Place";
 import { RefreshToken } from "./RefreshToken";
 import { Review } from "./Review";
