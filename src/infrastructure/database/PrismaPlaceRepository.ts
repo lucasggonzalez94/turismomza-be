@@ -398,12 +398,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
             user: { select: { id: true, name: true } },
             place_id: true,
             creation_date: true,
-            likes: {
-              select: {
-                id: true,
-                user: { select: { id: true, name: true } },
-              },
-            },
+            likes: true,
             reports: true,
           },
         },
@@ -435,9 +430,17 @@ export class PrismaPlaceRepository implements PlaceRepository {
         id: review.id,
         content: review.content,
         rating: review.rating,
+        user: { id: review.user.id, name: review.user.name },
         userId: review.user.id,
         creationDate: review.creation_date,
         placeId: review.place_id,
+        likes: review.likes.map((like) => ({
+          id: like.id,
+          userId: like.user_id,
+          reviewId: like.review_id,
+          like: like.like,
+          creationDate: like.creation_date,
+        })),
       })),
       place.favorites.map((fav) => ({
         id: fav.id,
