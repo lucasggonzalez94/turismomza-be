@@ -36,7 +36,7 @@ export class FavoriteController {
       };
 
       const result = await listFavoritesByUser.execute(userId, pagination);
-      res.json(result);
+      res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({ error: "Error listing favorite places" });
     }

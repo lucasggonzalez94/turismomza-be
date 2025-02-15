@@ -120,7 +120,6 @@ export class PrismaPlaceRepository implements PlaceRepository {
         services: placeData.services,
         schedule: placeData.schedule,
         creator_id: placeData.creatorId,
-        created_at: new Date(),
         contact_number: placeData.contactNumber ?? null,
         email: placeData.email ?? null,
         webSite: placeData.webSite ?? null,

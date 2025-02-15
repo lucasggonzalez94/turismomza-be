@@ -148,7 +148,7 @@ export class UserController {
 
     try {
       const result = await listUsers.execute(pageNumber, pageSizeNumber);
-      res.json(result);
+      res.status(200).json(result);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error listing users" });

@@ -120,7 +120,7 @@ export class PlaceController {
     }
   }
 
-  static async list(req: Request, res: Response): Promise<void> {
+  static async list(req: Request, res: Response) {
     try {
       const {
         title,
@@ -156,7 +156,7 @@ export class PlaceController {
       };
 
       const result = await listPlaces.execute(filters, pagination);
-      res.json(result);
+      res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({ error: "Error listing places" });
     }
@@ -168,7 +168,7 @@ export class PlaceController {
 
     try {
       const place = await getPlaceBySlug.execute(slug, userId as string);
-      res.json(place);
+      res.status(200).json(place);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -215,7 +215,7 @@ export class PlaceController {
       };
 
       const result = await listPlacesByUser.execute(filters, pagination);
-      res.json(result);
+      res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({ error: "Error listing places" });
     }

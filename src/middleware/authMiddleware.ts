@@ -37,7 +37,7 @@ export const getUser = (
 ) => {
   const token = req.cookies.authToken;
 
-  if (token == null) next();
+  if (token == null) return next();
 
   jwt.verify(
     token,
@@ -50,9 +50,9 @@ export const getUser = (
           userId: decoded.userId,
           role: decoded.role,
         };
-        next();
+        return next();
       } else {
-        next();
+        return next();
       }
     }
   );
