@@ -123,7 +123,7 @@ export class PlaceController {
   static async list(req: Request, res: Response) {
     try {
       const {
-        title,
+        searchTerm,
         categories,
         location,
         priceMin,
@@ -133,11 +133,9 @@ export class PlaceController {
         page = "1",
         pageSize = "10",
       } = req.query;
-      const userId = req?.user?.userId;
 
       const filters = {
-        title: title ? String(title) : undefined,
-        creatorId: userId ? String(userId) : undefined,
+        searchTerm: searchTerm ? String(searchTerm) : undefined,
         categories: categories
           ? Array.isArray(categories)
             ? categories.map(String)

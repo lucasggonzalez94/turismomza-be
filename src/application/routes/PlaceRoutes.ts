@@ -24,7 +24,7 @@ router.put(
   PlaceController.edit
 );
 router.delete("/:id", authenticateToken, PlaceController.delete);
-router.get("/", getUser, PlaceController.list);
+router.get("/", PlaceController.list);
 router.get("/:slug", PlaceController.getBySlug);
 router.get("/user/:userId", authenticateToken, PlaceController.listByUser);
 

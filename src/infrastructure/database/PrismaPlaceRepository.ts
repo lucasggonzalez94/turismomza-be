@@ -242,8 +242,8 @@ export class PrismaPlaceRepository implements PlaceRepository {
           ? { contains: location, mode: "insensitive" }
           : undefined,
         price: {
-          gte: priceMin !== undefined ? priceMin : undefined,
-          lte: priceMax !== undefined ? priceMax : undefined,
+          gte: priceMin !== undefined && priceMin !== 0 ? priceMin : undefined,
+          lte: priceMax !== undefined && priceMax !== 0 ? priceMax : undefined,
         },
         reviews: ratingRange
           ? { some: { rating: { gte: ratingRange.gte, lt: ratingRange.lt } } }
@@ -264,8 +264,8 @@ export class PrismaPlaceRepository implements PlaceRepository {
           ? { contains: location, mode: "insensitive" }
           : undefined,
         price: {
-          gte: priceMin !== undefined ? priceMin : undefined,
-          lte: priceMax !== undefined ? priceMax : undefined,
+          gte: priceMin !== undefined && priceMin !== 0 ? priceMin : undefined,
+          lte: priceMax !== undefined && priceMax !== 0 ? priceMax : undefined,
         },
         reviews: ratingRange
           ? { some: { rating: { gte: ratingRange.gte, lt: ratingRange.lt } } }
