@@ -5,13 +5,31 @@ import { NotificationRepository } from "../../domain/ports/NotificationRepositor
 const prisma = new PrismaClient();
 
 export class PrismaNotificationRepository implements NotificationRepository {
-  async createNotification(notification: Notification): Promise<Notification> {
+  async createNotification(
+    userId: string,
+    notification: Notification
+  ): Promise<Notification> {
     const createdNotification = await prisma.notification.create({
       data: {
-        user_id: notification.userId,
+        user_id: userId,
         triggeredBy_id: notification.userId,
         message: notification.message,
         type: notification.type,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        triggered_by: {
+          select: {
+            id: true,
+            name: true,
+            profile_picture: true,
+          },
+        },
       },
     });
 
@@ -21,6 +39,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
       createdNotification.type as "review" | "like",
       createdNotification.message,
       createdNotification.read,
+      createdNotification.triggered_by,
       createdNotification.creation_date
     );
   }
@@ -55,6 +74,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
         notification.type as "review" | "like",
         notification.message,
         notification.read,
+        notification.triggered_by,
         notification.creation_date
       );
     });
@@ -94,6 +114,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
         notification.type as "review" | "like",
         notification.message,
         notification.read,
+        notification.triggered_by,
         notification.creation_date
       );
     });
@@ -105,7 +126,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
       data: { read: true },
     });
   }
-  
+
   async markAsUnread(notificationId: string): Promise<void> {
     await prisma.notification.update({
       where: { id: notificationId },

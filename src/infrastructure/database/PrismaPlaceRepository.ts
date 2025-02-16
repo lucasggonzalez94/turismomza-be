@@ -213,7 +213,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
   async listPlaces(
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
-  ): Promise<{ total: number; places: any[] }> {
+  ): Promise<{ total: number; places: Place[] }> {
     const { searchTerm, categories, location, priceMin, priceMax, rating } =
       filters;
     const { page, pageSize } = pagination;
@@ -274,7 +274,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
       include: {
         advertisements: true,
         images: {
-          select: { url: true, public_id: true, order: true },
+          select: { id: true, url: true, public_id: true, order: true },
           orderBy: { order: "asc" },
         },
         reviews: {
@@ -282,7 +282,8 @@ export class PrismaPlaceRepository implements PlaceRepository {
             id: true,
             content: true,
             rating: true,
-            user: { select: { name: true } },
+            user_id: true,
+            place_id: true,
             creation_date: true,
             likes: { select: { user_id: true } },
             reports: true,
@@ -296,7 +297,60 @@ export class PrismaPlaceRepository implements PlaceRepository {
       take: pageSize,
     });
 
-    return { total, places };
+    return {
+      total,
+      places: places.map((place) => {
+        return new Place(
+          place.id,
+          place.title,
+          place.slug,
+          place.description,
+          place.location,
+          place.category,
+          place.creator_id,
+          place.created_at,
+          place.services,
+          place.schedule,
+          place.images.map((image) => ({
+            id: image.id,
+            url: image.url,
+            publicId: image.public_id,
+            order: image.order,
+          })),
+          place.reviews.map((review) => ({
+            id: review.id,
+            content: review.content,
+            rating: review.rating,
+            userId: review.user_id,
+            creationDate: review.creation_date,
+            placeId: review.place_id,
+          })),
+          place.favorites.map((fav) => ({
+            id: fav.id,
+            userId: fav.user_id,
+          })),
+          place.advertisements.map((ad) => ({
+            id: ad.id,
+            placeId: ad.place_id,
+            userId: ad.user_id,
+            createdAt: ad.created_at,
+            startDate: ad.start_date,
+            endDate: ad.end_date,
+            amountPaid: ad.amount_paid,
+            isActive: ad.is_active,
+            impressions: ad.impressions,
+            clicks: ad.clicks,
+          })),
+          place.contact_number ?? undefined,
+          place.email ?? undefined,
+          place.webSite ?? undefined,
+          place.instagram ?? undefined,
+          place.facebook ?? undefined,
+          place.price ?? undefined,
+          place.currency_price ?? undefined
+        );
+      }),
+    };
   }
 
   async getById(placeId: string): Promise<Place | null> {
@@ -471,7 +525,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
   async listPlacesByUser(
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
-  ): Promise<{ total: number; places: any[] }> {
+  ): Promise<{ total: number; places: Place[] }> {
     const {
       searchTerm,
       creatorId,
@@ -536,21 +590,85 @@ export class PrismaPlaceRepository implements PlaceRepository {
         creator_id: creatorId,
       },
       include: {
+        advertisements: true,
         images: {
+          select: { id: true, url: true, public_id: true, order: true },
+          orderBy: { order: "asc" },
+        },
+        reviews: {
           select: {
-            url: true,
-            public_id: true,
+            id: true,
+            content: true,
+            rating: true,
+            user_id: true,
+            place_id: true,
+            creation_date: true,
+            likes: { select: { user_id: true } },
+            reports: true,
           },
-          orderBy: {
-            order: "asc",
-          },
+        },
+        favorites: {
+          select: { id: true, user_id: true },
         },
       },
       skip,
       take: pageSize,
     });
 
-    return { total, places };
+    return {
+      total,
+      places: places.map((place) => {
+        return new Place(
+          place.id,
+          place.title,
+          place.slug,
+          place.description,
+          place.location,
+          place.category,
+          place.creator_id,
+          place.created_at,
+          place.services,
+          place.schedule,
+          place.images.map((image) => ({
+            id: image.id,
+            url: image.url,
+            publicId: image.public_id,
+            order: image.order,
+          })),
+          place.reviews.map((review) => ({
+            id: review.id,
+            content: review.content,
+            rating: review.rating,
+            userId: review.user_id,
+            creationDate: review.creation_date,
+            placeId: review.place_id,
+          })),
+          place.favorites.map((fav) => ({
+            id: fav.id,
+            userId: fav.user_id,
+          })),
+          place.advertisements.map((ad) => ({
+            id: ad.id,
+            placeId: ad.place_id,
+            userId: ad.user_id,
+            createdAt: ad.created_at,
+            startDate: ad.start_date,
+            endDate: ad.end_date,
+            amountPaid: ad.amount_paid,
+            isActive: ad.is_active,
+            impressions: ad.impressions,
+            clicks: ad.clicks,
+          })),
+          place.contact_number ?? undefined,
+          place.email ?? undefined,
+          place.webSite ?? undefined,
+          place.instagram ?? undefined,
+          place.facebook ?? undefined,
+          place.price ?? undefined,
+          place.currency_price ?? undefined
+        );
+      }),
+    };
   }
 
   async deletePlace(placeId: string, userId: string): Promise<void> {

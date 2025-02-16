@@ -1,3 +1,4 @@
+import { Place } from "../../../domain/entities/Place";
 import {
   PlaceRepository,
   ListPlacesFilters,
@@ -18,7 +19,7 @@ export class ListPlaces {
     totalPages: number;
     minPrice: number;
     maxPrice: number;
-    data: any[];
+    data: Place[];
   }> {
     const { total, places } = await this.placeRepository.listPlaces(
       filters,

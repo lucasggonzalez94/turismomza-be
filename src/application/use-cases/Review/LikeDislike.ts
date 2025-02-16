@@ -37,10 +37,13 @@ export class LikeDislike {
         new Date()
       );
 
-      await this.notificationRepository.createNotification(notification);
+      await this.notificationRepository.createNotification(
+        review.user_id,
+        notification
+      );
 
       this.socketService.sendNotification(userId, {
-        userId: userId,
+        userId: review.user_id,
         triggeredById: userId,
         message: notification.message,
         type: notification.type,

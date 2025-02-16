@@ -1,3 +1,5 @@
+import { ProfilePicture } from "../value-objects/ProfilePicture";
+
 export class Notification {
   constructor(
     public id: string,
@@ -5,6 +7,11 @@ export class Notification {
     public type: "review" | "like",
     public message: string,
     public read: boolean,
-    public creationDate: Date
+    public triggeredBy?: {
+      id: string;
+      name: string;
+      profile_picture: ProfilePicture | null;
+    },
+    public creationDate?: Date
   ) {}
 }

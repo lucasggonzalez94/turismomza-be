@@ -38,7 +38,7 @@ export class AddReview {
       rating,
       userId,
       placeId,
-      creationDate,
+      creationDate
     );
     const review = await this.reviewRepository.addReview(newReview);
 
@@ -48,18 +48,20 @@ export class AddReview {
         userId,
         "review",
         `New review on your place: ${review.content}`,
-        false,
-        new Date()
+        false
       );
 
-      await this.notificationRepository.createNotification(notification);
+      await this.notificationRepository.createNotification(
+        place.creatorId,
+        notification
+      );
 
       this.socketService.sendNotification(place.creatorId, {
         userId: place.creatorId,
         triggeredById: userId,
         message: `New review on your place: ${review.content}`,
         type: "review",
-      })
+      });
     }
 
     return review;
