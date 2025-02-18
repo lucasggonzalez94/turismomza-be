@@ -133,9 +133,11 @@ export class PlaceController {
         page = "1",
         pageSize = "10",
       } = req.query;
+      const userId = req?.user?.userId;
 
       const filters = {
         searchTerm: searchTerm ? String(searchTerm) : undefined,
+        creatorId: userId ? String(userId) : undefined,
         categories: categories
           ? Array.isArray(categories)
             ? categories.map(String)

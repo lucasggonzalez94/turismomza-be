@@ -34,7 +34,6 @@ export class LikeDislike {
         "like",
         "Liked your review.",
         false,
-        new Date()
       );
 
       await this.notificationRepository.createNotification(

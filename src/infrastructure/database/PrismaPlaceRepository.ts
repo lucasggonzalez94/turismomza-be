@@ -10,22 +10,7 @@ const prisma = new PrismaClient();
 
 export class PrismaPlaceRepository implements PlaceRepository {
   async createPlace(
-    placeData: {
-      title: string;
-      description: string;
-      location: string;
-      category: string;
-      services: string[];
-      contactNumber?: string;
-      email?: string;
-      webSite?: string;
-      instagram?: string;
-      facebook?: string;
-      schedule: string;
-      price?: number;
-      currencyPrice?: "ars" | "usd";
-      creatorId: string;
-    },
+    placeData: Place,
     images: { url: string; publicId: string; order: number }[]
   ): Promise<Place> {
     const newPlace = await prisma.place.create({
@@ -41,7 +26,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
         created_at: new Date(),
         contact_number: placeData.contactNumber ?? null,
         email: placeData.email ?? null,
-        webSite: placeData.webSite ?? null,
+        webSite: placeData.website ?? null,
         instagram: placeData.instagram ?? null,
         facebook: placeData.facebook ?? null,
         price: placeData.price ?? null,
@@ -213,7 +198,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
   async listPlaces(
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
-  ): Promise<{ total: number; places: Place[] }> {
+  ): Promise<{ total: number; allPlaces: Place[]; places: Place[] }> {
     const { searchTerm, categories, location, priceMin, priceMax, rating } =
       filters;
     const { page, pageSize } = pagination;
@@ -297,8 +282,84 @@ export class PrismaPlaceRepository implements PlaceRepository {
       take: pageSize,
     });
 
+    const allPlaces = await prisma.place.findMany({
+      include: {
+        advertisements: true,
+        images: {
+          select: { id: true, url: true, public_id: true, order: true },
+          orderBy: { order: "asc" },
+        },
+        reviews: {
+          select: {
+            id: true,
+            content: true,
+            rating: true,
+            user_id: true,
+            place_id: true,
+            creation_date: true,
+            likes: { select: { user_id: true } },
+            reports: true,
+          },
+        },
+        favorites: {
+          select: { id: true, user_id: true },
+        },
+      },
+    });
+
     return {
       total,
+      allPlaces: allPlaces.map((place) => {
+        return new Place(
+          place.id,
+          place.title,
+          place.slug,
+          place.description,
+          place.location,
+          place.category,
+          place.creator_id,
+          place.created_at,
+          place.services,
+          place.schedule,
+          place.images.map((image) => ({
+            id: image.id,
+            url: image.url,
+            publicId: image.public_id,
+            order: image.order,
+          })),
+          place.reviews.map((review) => ({
+            id: review.id,
+            content: review.content,
+            rating: review.rating,
+            userId: review.user_id,
+            creationDate: review.creation_date,
+            placeId: review.place_id,
+          })),
+          place.favorites.map((fav) => ({
+            id: fav.id,
+            userId: fav.user_id,
+          })),
+          place.advertisements.map((ad) => ({
+            id: ad.id,
+            placeId: ad.place_id,
+            userId: ad.user_id,
+            createdAt: ad.created_at,
+            startDate: ad.start_date,
+            endDate: ad.end_date,
+            amountPaid: ad.amount_paid,
+            isActive: ad.is_active,
+            impressions: ad.impressions,
+            clicks: ad.clicks,
+          })),
+          place.contact_number ?? undefined,
+          place.email ?? undefined,
+          place.webSite ?? undefined,
+          place.instagram ?? undefined,
+          place.facebook ?? undefined,
+          place.price ?? undefined,
+          place.currency_price ?? undefined
+        );
+      }),
       places: places.map((place) => {
         return new Place(
           place.id,

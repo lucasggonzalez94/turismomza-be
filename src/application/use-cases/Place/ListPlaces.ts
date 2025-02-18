@@ -21,7 +21,7 @@ export class ListPlaces {
     maxPrice: number;
     data: Place[];
   }> {
-    const { total, places } = await this.placeRepository.listPlaces(
+    const { total, allPlaces, places } = await this.placeRepository.listPlaces(
       filters,
       pagination
     );
@@ -94,7 +94,7 @@ export class ListPlaces {
       return { ...placeWithoutFavorites, isFavorite };
     });
 
-    const { minPrice, maxPrice } = getMaxMinPrices(favoritePlaces);
+    const { minPrice, maxPrice } = getMaxMinPrices(allPlaces);
 
     return {
       total,

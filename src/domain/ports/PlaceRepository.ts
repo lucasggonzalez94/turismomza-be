@@ -23,7 +23,7 @@ export interface PlaceRepository {
   listPlaces(
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
-  ): Promise<{ total: number; places: Place[] }>;
+  ): Promise<{ total: number; allPlaces: Place[], places: Place[] }>;
   getById(slug: string): Promise<Place | null>;
   getBySlug(slug: string): Promise<Place | null>;
   listPlacesByUser(
