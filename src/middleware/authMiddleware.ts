@@ -8,7 +8,7 @@ export const authenticateToken = (
 ) => {
   const token = req.cookies.authToken;
 
-  if (token == null)
+  if (!token)
     return res.status(401).json({ error: "No token provided" });
 
   jwt.verify(
@@ -30,14 +30,10 @@ export const authenticateToken = (
   );
 };
 
-export const getUser = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getUser = (req: Request, res: Response, next: NextFunction) => {
   const token = req.cookies.authToken;
 
-  if (token == null) return next();
+  if (!token) return next();
 
   jwt.verify(
     token,
@@ -50,10 +46,8 @@ export const getUser = (
           userId: decoded.userId,
           role: decoded.role,
         };
-        return next();
-      } else {
-        return next();
       }
+      return next();
     }
   );
 };
