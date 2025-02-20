@@ -18,8 +18,15 @@ export class User {
     public twoFactorEnabled: boolean,
     public twoFactorCode?: string,
     public twoFactorExpires?: Date,
+    public bio?: string,
+    public location?: string,
+    public website?: string,
+    public language?: string[],
+    public verified?: boolean,
     public createdAt?: Date,
     public profilePicture?: ProfilePicture,
+    public places_count?: number,
+    public review_count?: number,
     public places?: Place[],
     public reviews?: Review[],
     public favorites?: Favorite[],
@@ -27,7 +34,7 @@ export class User {
     public likes?: Like[],
     public reports?: Report[],
     public advertisements?: Advertisement[],
-    public refreshToken?: RefreshToken
+    public refreshToken?: RefreshToken,
   ) {
     this.validate();
   }

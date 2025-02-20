@@ -111,16 +111,21 @@ export class UserController {
 
   static async update(req: Request, res: Response) {
     try {
-      await updateUser.execute({
+      const user = await updateUser.execute({
         userId: req.user!.userId,
         currentPassword: req.body.currentPassword,
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
+        bio: req.body.bio,
+        location: req.body.location,
+        website: req.body.website,
+        language: req.body.language,
+        verified: req.body.verified,
         file: req.file ? req.file.buffer : undefined,
       });
 
-      res.status(200).json({ message: "User updated successfully" });
+      res.status(200).json(user);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
