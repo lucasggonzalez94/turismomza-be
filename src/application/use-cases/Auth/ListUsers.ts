@@ -19,6 +19,7 @@ export class ListUsers {
         role: user.role,
         createdAt: user.createdAt,
         profilePicture: user.profilePicture,
+        location: user.location
       })),
     };
   }
