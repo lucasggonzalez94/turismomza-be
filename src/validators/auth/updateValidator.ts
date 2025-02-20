@@ -18,4 +18,9 @@ export const updateValidator = [
     .matches(/[!@#$%^&*(),.?":{}|<>]/)
     .withMessage("Password must contain at least one special character"),
   body("name").notEmpty().optional().withMessage("Name is required"),
+  body("bio").isString().notEmpty().optional().withMessage("Bio is required"),
+  body("location").isString().notEmpty().optional().withMessage("Location is required"),
+  body("website").isURL().notEmpty().optional().withMessage("Website is required"),
+  body("language").isArray().notEmpty().optional().withMessage("Language is required"),
+  body("verified").isBoolean().notEmpty().optional().withMessage("Verified is required"),
 ];

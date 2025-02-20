@@ -19,7 +19,7 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async update(user: User): Promise<User | null> {
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         name: user.name,
@@ -49,27 +49,27 @@ export class PrismaUserRepository implements UserRepository {
       });
     }
 
-    return user
+    return updatedUser
       ? new User(
-          user.id,
-          user.name,
-          user.email,
-          user.password,
-          user.role,
-          user.twoFactorEnabled,
-          user.twoFactorCode ?? undefined,
-          user.twoFactorExpires ?? undefined,
-          user.bio ?? undefined,
-          user.location ?? undefined,
-          user.website ?? undefined,
-          user.language ?? undefined,
-          user.verified ?? undefined,
-          user.createdAt,
-          user.profilePicture
+          updatedUser.id,
+          updatedUser.name,
+          updatedUser.email,
+          updatedUser.password,
+          updatedUser.role,
+          updatedUser.two_factor_enabled,
+          updatedUser.two_factor_code ?? undefined,
+          updatedUser.two_factor_expires ?? undefined,
+          updatedUser.bio ?? undefined,
+          updatedUser.location ?? undefined,
+          updatedUser.website ?? undefined,
+          updatedUser.language ?? undefined,
+          updatedUser.verified ?? undefined,
+          updatedUser.created_at,
+          updatedUser.profile_picture
             ? new ProfilePicture(
-                user.profilePicture.id,
-                user.profilePicture.public_id,
-                user.profilePicture.url
+                updatedUser.profile_picture.id,
+                updatedUser.profile_picture.public_id,
+                updatedUser.profile_picture.url
               )
             : undefined
         )
