@@ -19,20 +19,6 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async update(user: User): Promise<User | null> {
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        name: user.name,
-        email: user.email,
-        bio: user.bio,
-        location: user.location,
-        website: user.website,
-        language: user.language,
-        verified: user.verified,
-      },
-      include: { profile_picture: true },
-    });
-
     if (user.profilePicture) {
       await prisma.profilePicture.upsert({
         where: { user_id: user.id },
@@ -48,6 +34,20 @@ export class PrismaUserRepository implements UserRepository {
         },
       });
     }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name: user.name,
+        email: user.email,
+        bio: user.bio,
+        location: user.location,
+        website: user.website,
+        language: user.language,
+        verified: user.verified,
+      },
+      include: { profile_picture: true },
+    });
 
     return updatedUser
       ? new User(
@@ -111,7 +111,7 @@ export class PrismaUserRepository implements UserRepository {
               )
             : undefined,
           user?.places?.length || 0,
-          user?.reviews?.length || 0,
+          user?.reviews?.length || 0
         )
       : null;
   }
