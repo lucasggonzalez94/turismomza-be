@@ -3,6 +3,7 @@ import { UserRepository } from "../../../domain/ports/UserRepository";
 import { ProfilePicture } from "../../../domain/value-objects/ProfilePicture";
 import { CloudinaryService } from "../../../infrastructure/services/CloudinaryService";
 import { EmailService } from "../../../infrastructure/services/EmailService";
+import { User } from "../../../domain/entities/User";
 
 export class UpdateUser {
   constructor(
@@ -16,8 +17,13 @@ export class UpdateUser {
     name?: string;
     email?: string;
     password?: string;
+    bio?: string;
+    location?: string;
+    website?: string;
+    language?: string[];
+    verified?: boolean;
     file?: Buffer;
-  }) {
+  }): Promise<User | null> {
     const user = await this.userRepository.getById(data.userId);
     if (!user) throw new Error("User not found");
 
@@ -45,11 +51,18 @@ export class UpdateUser {
 
     if (data.name) user.name = data.name;
     if (data.email) user.email = data.email;
+    if (data.bio) user.bio = data.bio;
+    if (data.location) user.location = data.location;
+    if (data.website) user.website = data.website;
+    if (data.language) user.language = data.language;
+    if (data.verified) user.verified = data.verified;
     if (data.password) {
       user.password = await bcrypt.hash(data.password, 12);
       await this.emailService.sendPasswordUpdateEmail(user.email, user.name);
     }
 
-    await this.userRepository.update(user);
+    const updatedUser = await this.userRepository.update(user);
+
+    return updatedUser;
   }
 }

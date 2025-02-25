@@ -9,6 +9,8 @@ import { LoginUser } from "../../application/use-cases/Auth/LoginUser";
 import { LogoutUser } from "../../application/use-cases/Auth/LogoutUser";
 import { RegisterUser } from "../../application/use-cases/Auth/RegisterUser";
 import { UpdateUser } from "../../application/use-cases/Auth/UpdateUser";
+import { GetUserById } from "../../application/use-cases/Auth/GetUserById";
+import { NotFoundError } from "../../domain/errors/NotFoundError";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
@@ -24,6 +26,7 @@ const logoutUser = new LogoutUser(refreshTokenRepository);
 const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);
+const getUserById = new GetUserById(userRepository);
 
 export class UserController {
   static async register(req: Request, res: Response) {
@@ -111,16 +114,21 @@ export class UserController {
 
   static async update(req: Request, res: Response) {
     try {
-      await updateUser.execute({
+      const user = await updateUser.execute({
         userId: req.user!.userId,
         currentPassword: req.body.currentPassword,
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
+        bio: req.body.bio,
+        location: req.body.location,
+        website: req.body.website,
+        language: req.body.language,
+        verified: req.body.verified,
         file: req.file ? req.file.buffer : undefined,
       });
 
-      res.status(200).json({ message: "User updated successfully" });
+      res.status(200).json(user);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
@@ -137,6 +145,21 @@ export class UserController {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
       res.status(400).json({ error: errorMessage });
+    }
+  }
+
+  static async getById(req: Request, res: Response) {
+    const { userId } = req.params;
+
+    try {
+      const result = await getUserById.execute(userId);
+      res.status(200).json(result);
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundError) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Error getting user" });
     }
   }
 

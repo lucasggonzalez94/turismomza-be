@@ -18,15 +18,7 @@ export class PrismaUserRepository implements UserRepository {
     });
   }
 
-  async update(user: User): Promise<void> {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        name: user.name,
-        email: user.email,
-      },
-    });
-
+  async update(user: User): Promise<User | null> {
     if (user.profilePicture) {
       await prisma.profilePicture.upsert({
         where: { user_id: user.id },
@@ -42,6 +34,46 @@ export class PrismaUserRepository implements UserRepository {
         },
       });
     }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name: user.name,
+        email: user.email,
+        bio: user.bio,
+        location: user.location,
+        website: user.website,
+        language: user.language,
+        verified: user.verified,
+      },
+      include: { profile_picture: true },
+    });
+
+    return updatedUser
+      ? new User(
+          updatedUser.id,
+          updatedUser.name,
+          updatedUser.email,
+          updatedUser.password,
+          updatedUser.role,
+          updatedUser.two_factor_enabled,
+          updatedUser.two_factor_code ?? undefined,
+          updatedUser.two_factor_expires ?? undefined,
+          updatedUser.bio ?? undefined,
+          updatedUser.location ?? undefined,
+          updatedUser.website ?? undefined,
+          updatedUser.language ?? undefined,
+          updatedUser.verified ?? undefined,
+          updatedUser.created_at,
+          updatedUser.profile_picture
+            ? new ProfilePicture(
+                updatedUser.profile_picture.id,
+                updatedUser.profile_picture.public_id,
+                updatedUser.profile_picture.url
+              )
+            : undefined
+        )
+      : null;
   }
 
   async delete(user: User): Promise<void> {
@@ -53,7 +85,7 @@ export class PrismaUserRepository implements UserRepository {
   async getById(id: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: { id },
-      include: { profile_picture: true },
+      include: { profile_picture: true, places: true, reviews: true },
     });
     return user
       ? new User(
@@ -65,6 +97,11 @@ export class PrismaUserRepository implements UserRepository {
           user.two_factor_enabled,
           user.two_factor_code ?? undefined,
           user.two_factor_expires ?? undefined,
+          user.bio ?? undefined,
+          user.location ?? undefined,
+          user.website ?? undefined,
+          user.language ?? undefined,
+          user.verified ?? undefined,
           user.created_at,
           user.profile_picture
             ? new ProfilePicture(
@@ -72,7 +109,9 @@ export class PrismaUserRepository implements UserRepository {
                 user.profile_picture.public_id,
                 user.profile_picture.url
               )
-            : undefined
+            : undefined,
+          user?.places?.length || 0,
+          user?.reviews?.length || 0
         )
       : null;
   }
@@ -92,6 +131,11 @@ export class PrismaUserRepository implements UserRepository {
           user.two_factor_enabled,
           user.two_factor_code ?? undefined,
           user.two_factor_expires ?? undefined,
+          user.bio ?? undefined,
+          user.location ?? undefined,
+          user.website ?? undefined,
+          user.language ?? undefined,
+          user.verified ?? undefined,
           user.created_at,
           user.profile_picture
             ? new ProfilePicture(
@@ -125,6 +169,11 @@ export class PrismaUserRepository implements UserRepository {
           user.two_factor_enabled,
           user.two_factor_code ?? undefined,
           user.two_factor_expires ?? undefined,
+          user.bio ?? undefined,
+          user.location ?? undefined,
+          user.website ?? undefined,
+          user.language ?? undefined,
+          user.verified ?? undefined,
           user.created_at,
           user.profile_picture
             ? new ProfilePicture(
