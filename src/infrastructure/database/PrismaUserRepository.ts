@@ -5,6 +5,29 @@ import { ProfilePicture } from "../../domain/value-objects/ProfilePicture";
 
 const prisma = new PrismaClient();
 
+export const findOrCreateUser = async (userData: any) => {
+  let user = await prisma.user.findUnique({
+    where: { email: userData.email },
+  });
+
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        role: "viewer",
+        password: "",
+        profile_picture: {
+          create: { url: userData.profilePicture, public_id: userData.id },
+        },
+      },
+    });
+  }
+
+  return user;
+};
+
 export class PrismaUserRepository implements UserRepository {
   async create(user: User): Promise<void> {
     await prisma.user.create({

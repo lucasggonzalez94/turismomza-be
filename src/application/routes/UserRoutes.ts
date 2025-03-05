@@ -11,6 +11,7 @@ import { updateValidator } from "../../validators/auth/updateValidator";
 import { deleteValidator } from "../../validators/auth/deleteValidator";
 import { RefreshTokenController } from "../../infrastructure/webserver/RefreshTokenController";
 import { VerifyTokenController } from "../../infrastructure/webserver/VerifySessionController";
+import passport from "passport";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -36,5 +37,17 @@ router.delete(
 );
 router.post("/refresh-token", RefreshTokenController.refresh);
 router.get("/verify-session", authenticateToken, VerifyTokenController.handle);
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { failureRedirect: "/" }),
+  (req, res) => {
+    res.redirect("http://localhost:3000/dashboard");
+  }
+);
 
 export default router;

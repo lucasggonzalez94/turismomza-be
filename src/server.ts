@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
+import session from "express-session";
 
 import userRoutes from "./application/routes/UserRoutes";
 import placeRoutes from "./application/routes/PlaceRoutes";
@@ -12,6 +13,7 @@ import favoriteRoutes from "./application/routes/FavoriteRoutes";
 import reviewRoutes from "./application/routes/ReviewRoutes";
 import notificationRoutes from "./application/routes/NotificationRoutes";
 import contactRoutes from "./application/routes/ContactRoutes";
+import passport from "./infrastructure/services/GoogleAuthService";
 
 const allowedOrigins = ["http://localhost:3000"];
 
@@ -29,6 +31,15 @@ const io = new Server(server, {
 
 app.set("io", io);
 
+app.use(
+  session({
+    secret: process.env.ACCESS_TOKEN_SECRET!,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(
   helmet({
     contentSecurityPolicy: false,
