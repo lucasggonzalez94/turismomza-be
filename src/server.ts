@@ -13,7 +13,7 @@ import reviewRoutes from "./application/routes/ReviewRoutes";
 import notificationRoutes from "./application/routes/NotificationRoutes";
 import contactRoutes from "./application/routes/ContactRoutes";
 
-const allowedOrigins = ["http://localhost:3000"];
+const allowedOrigins = ["http://localhost:3000", "https://turismomza.vercel.app/"];
 
 dotenv.config();
 
