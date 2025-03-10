@@ -15,7 +15,7 @@ import notificationRoutes from "./application/routes/NotificationRoutes";
 import contactRoutes from "./application/routes/ContactRoutes";
 import passport from "./infrastructure/services/GoogleAuthService";
 
-const allowedOrigins = ["http://localhost:3000"];
+const allowedOrigins = ["http://localhost:3000", "https://turismomza.vercel.app"];
 
 dotenv.config();
 
