@@ -36,6 +36,6 @@ router.delete(
 );
 router.post("/refresh-token", RefreshTokenController.refresh);
 router.get("/verify-session", authenticateToken, VerifyTokenController.handle);
-router.get("/google");
+router.get("/google", UserController.google);
 
 export default router;

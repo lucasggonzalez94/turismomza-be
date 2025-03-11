@@ -1,12 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import { UserRepository } from "../../domain/ports/UserRepository";
-import { UserE } from "../../domain/entities/User";
+import { User } from "../../domain/entities/User";
 import { ProfilePicture } from "../../domain/value-objects/ProfilePicture";
 
 const prisma = new PrismaClient();
 
 export class PrismaUserRepository implements UserRepository {
-  async create(user: UserE): Promise<void> {
+  async create(user: User): Promise<void> {
     await prisma.user.create({
       data: {
         id: user.id,
@@ -23,14 +23,14 @@ export class PrismaUserRepository implements UserRepository {
     email: string,
     image: string,
     googleId: string
-  ): Promise<UserE> {
+  ): Promise<User> {
     const user = await prisma.user.upsert({
       where: { email },
       update: { name, googleImage: image, googleId },
       create: { email, name, googleImage: image, googleId, role: "viewer" },
     });
 
-    return new UserE(
+    return new User(
       user?.id,
       user?.name,
       user?.email,
@@ -39,7 +39,7 @@ export class PrismaUserRepository implements UserRepository {
     );
   }
 
-  async update(user: UserE): Promise<UserE | null> {
+  async update(user: User): Promise<User | null> {
     if (user.profilePicture) {
       await prisma.profilePicture.upsert({
         where: { user_id: user.id },
@@ -71,7 +71,7 @@ export class PrismaUserRepository implements UserRepository {
     });
 
     return updatedUser
-      ? new UserE(
+      ? new User(
           updatedUser.id,
           updatedUser.name,
           updatedUser.email,
@@ -99,19 +99,19 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
-  async delete(user: UserE): Promise<void> {
+  async delete(user: User): Promise<void> {
     await prisma.user.delete({
       where: { id: user.id },
     });
   }
 
-  async getById(id: string): Promise<UserE | null> {
+  async getById(id: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: { id },
       include: { profile_picture: true, places: true, reviews: true },
     });
     return user
-      ? new UserE(
+      ? new User(
           user.id,
           user.name,
           user.email,
@@ -141,13 +141,13 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
-  async getByEmail(email: string): Promise<UserE | null> {
+  async getByEmail(email: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: { email },
       include: { profile_picture: true },
     });
     return user
-      ? new UserE(
+      ? new User(
           user.id,
           user.name,
           user.email,
@@ -175,7 +175,7 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
-  async getAll(page: number, pageSize: number): Promise<UserE[]> {
+  async getAll(page: number, pageSize: number): Promise<User[]> {
     const skip = (page - 1) * pageSize;
 
     const users = await prisma.user.findMany({
@@ -187,7 +187,7 @@ export class PrismaUserRepository implements UserRepository {
     });
     return users.map(
       (user) =>
-        new UserE(
+        new User(
           user.id,
           user.name,
           user.email,

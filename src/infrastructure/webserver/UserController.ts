@@ -11,6 +11,7 @@ import { RegisterUser } from "../../application/use-cases/Auth/RegisterUser";
 import { UpdateUser } from "../../application/use-cases/Auth/UpdateUser";
 import { GetUserById } from "../../application/use-cases/Auth/GetUserById";
 import { NotFoundError } from "../../domain/errors/NotFoundError";
+import { LoginWithGoogle } from "../../application/use-cases/Auth/LoginWithGoogle";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
@@ -22,6 +23,7 @@ const loginUser = new LoginUser(
   refreshTokenRepository,
   emailService
 );
+const loginWithGoogle = new LoginWithGoogle(userRepository, emailService);
 const logoutUser = new LogoutUser(refreshTokenRepository);
 const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
@@ -37,6 +39,39 @@ export class UserController {
       }
 
       const { user, accessToken } = await registerUser.execute(req.body);
+
+      res.cookie("authToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 3600000,
+        sameSite: "strict",
+      });
+
+      const { password, ...restUser } = user;
+
+      res.status(201).json(restUser);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(400).json({ error: errorMessage });
+    }
+  }
+
+  static async google(req: Request, res: Response) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { name, email, image, googleId } = req.body;
+
+      const { user, accessToken } = await loginWithGoogle.execute(
+        name,
+        email,
+        image,
+        googleId
+      );
 
       res.cookie("authToken", accessToken, {
         httpOnly: true,

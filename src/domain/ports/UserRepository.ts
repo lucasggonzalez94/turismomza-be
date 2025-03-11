@@ -1,17 +1,17 @@
-import { UserE } from "../entities/User";
+import { User } from "../entities/User";
 
 export interface UserRepository {
-  create(user: UserE): Promise<void>;
+  create(user: User): Promise<void>;
   createWithGoogle(
     name: string,
     email: string,
     image: string,
     googleId: string
-  ): Promise<UserE>;
-  update(user: UserE): Promise<UserE | null>;
-  delete(user: UserE): Promise<void>;
-  getById(id: string): Promise<UserE | null>;
-  getByEmail(email: string): Promise<UserE | null>;
-  getAll(page: number, pageSize: number): Promise<UserE[]>;
+  ): Promise<User>;
+  update(user: User): Promise<User | null>;
+  delete(user: User): Promise<void>;
+  getById(id: string): Promise<User | null>;
+  getByEmail(email: string): Promise<User | null>;
+  getAll(page: number, pageSize: number): Promise<User[]>;
   updateUserRole(userId: string, role: string): Promise<void>;
 }

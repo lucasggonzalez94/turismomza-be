@@ -8,7 +8,7 @@ import { Review } from "./Review";
 import { Notification } from "./Notification";
 import { Report } from "./Report";
 
-export class UserE {
+export class User {
   constructor(
     public id: string,
     public name: string,
