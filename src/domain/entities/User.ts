@@ -8,14 +8,16 @@ import { Review } from "./Review";
 import { Notification } from "./Notification";
 import { Report } from "./Report";
 
-export class User {
+export class UserE {
   constructor(
     public id: string,
     public name: string,
     public email: string,
-    public password: string,
     public role: "viewer" | "publisher" | "admin",
     public twoFactorEnabled: boolean,
+    public password?: string,
+    public googleId?: string,
+    public googleImage?: string,
     public twoFactorCode?: string,
     public twoFactorExpires?: Date,
     public bio?: string,
@@ -41,7 +43,7 @@ export class User {
 
   validate() {
     if (!this.email.includes("@")) throw new Error("Email inválido.");
-    if (this.password.length < 6)
+    if (this?.password && this?.password?.length < 6)
       throw new Error("Contraseña demasiado corta.");
   }
 

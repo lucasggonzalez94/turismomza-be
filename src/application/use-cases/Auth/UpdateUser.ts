@@ -3,7 +3,7 @@ import { UserRepository } from "../../../domain/ports/UserRepository";
 import { ProfilePicture } from "../../../domain/value-objects/ProfilePicture";
 import { CloudinaryService } from "../../../infrastructure/services/CloudinaryService";
 import { EmailService } from "../../../infrastructure/services/EmailService";
-import { User } from "../../../domain/entities/User";
+import { UserE } from "../../../domain/entities/User";
 
 export class UpdateUser {
   constructor(
@@ -23,7 +23,7 @@ export class UpdateUser {
     language?: string[];
     verified?: boolean;
     file?: Buffer;
-  }): Promise<User | null> {
+  }): Promise<UserE | null> {
     const user = await this.userRepository.getById(data.userId);
     if (!user) throw new Error("User not found");
 

@@ -1,12 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import { UserRepository } from "../../domain/ports/UserRepository";
-import { User } from "../../domain/entities/User";
+import { UserE } from "../../domain/entities/User";
 import { ProfilePicture } from "../../domain/value-objects/ProfilePicture";
 
 const prisma = new PrismaClient();
 
 export class PrismaUserRepository implements UserRepository {
-  async create(user: User): Promise<void> {
+  async create(user: UserE): Promise<void> {
     await prisma.user.create({
       data: {
         id: user.id,
@@ -18,7 +18,28 @@ export class PrismaUserRepository implements UserRepository {
     });
   }
 
-  async update(user: User): Promise<User | null> {
+  async createWithGoogle(
+    name: string,
+    email: string,
+    image: string,
+    googleId: string
+  ): Promise<UserE> {
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: { name, googleImage: image, googleId },
+      create: { email, name, googleImage: image, googleId, role: "viewer" },
+    });
+
+    return new UserE(
+      user?.id,
+      user?.name,
+      user?.email,
+      user?.role,
+      user?.two_factor_enabled
+    );
+  }
+
+  async update(user: UserE): Promise<UserE | null> {
     if (user.profilePicture) {
       await prisma.profilePicture.upsert({
         where: { user_id: user.id },
@@ -50,13 +71,15 @@ export class PrismaUserRepository implements UserRepository {
     });
 
     return updatedUser
-      ? new User(
+      ? new UserE(
           updatedUser.id,
           updatedUser.name,
           updatedUser.email,
-          updatedUser.password,
           updatedUser.role,
           updatedUser.two_factor_enabled,
+          updatedUser.password ?? undefined,
+          updatedUser.googleId ?? undefined,
+          updatedUser.googleImage ?? undefined,
           updatedUser.two_factor_code ?? undefined,
           updatedUser.two_factor_expires ?? undefined,
           updatedUser.bio ?? undefined,
@@ -76,25 +99,27 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
-  async delete(user: User): Promise<void> {
+  async delete(user: UserE): Promise<void> {
     await prisma.user.delete({
       where: { id: user.id },
     });
   }
 
-  async getById(id: string): Promise<User | null> {
+  async getById(id: string): Promise<UserE | null> {
     const user = await prisma.user.findUnique({
       where: { id },
       include: { profile_picture: true, places: true, reviews: true },
     });
     return user
-      ? new User(
+      ? new UserE(
           user.id,
           user.name,
           user.email,
-          user.password,
           user.role,
           user.two_factor_enabled,
+          user.password ?? undefined,
+          user.googleId ?? undefined,
+          user.googleImage ?? undefined,
           user.two_factor_code ?? undefined,
           user.two_factor_expires ?? undefined,
           user.bio ?? undefined,
@@ -116,19 +141,21 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
-  async getByEmail(email: string): Promise<User | null> {
+  async getByEmail(email: string): Promise<UserE | null> {
     const user = await prisma.user.findUnique({
       where: { email },
       include: { profile_picture: true },
     });
     return user
-      ? new User(
+      ? new UserE(
           user.id,
           user.name,
           user.email,
-          user.password,
           user.role,
           user.two_factor_enabled,
+          user.password ?? undefined,
+          user.googleId ?? undefined,
+          user.googleImage ?? undefined,
           user.two_factor_code ?? undefined,
           user.two_factor_expires ?? undefined,
           user.bio ?? undefined,
@@ -148,7 +175,7 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
-  async getAll(page: number, pageSize: number): Promise<User[]> {
+  async getAll(page: number, pageSize: number): Promise<UserE[]> {
     const skip = (page - 1) * pageSize;
 
     const users = await prisma.user.findMany({
@@ -160,13 +187,15 @@ export class PrismaUserRepository implements UserRepository {
     });
     return users.map(
       (user) =>
-        new User(
+        new UserE(
           user.id,
           user.name,
           user.email,
-          user.password ?? undefined,
           user.role,
           user.two_factor_enabled,
+          user.password ?? undefined,
+          user.googleId ?? undefined,
+          user.googleImage ?? undefined,
           user.two_factor_code ?? undefined,
           user.two_factor_expires ?? undefined,
           user.bio ?? undefined,

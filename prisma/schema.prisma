@@ -11,9 +11,11 @@ model User {
   id                      String          @id @default(uuid())
   name                    String
   email                   String          @unique
-  password                String
   profile_picture         ProfilePicture?
   role                    Role
+  password                String?
+  googleId                String?
+  googleImage             String?
   bio                     String?
   location                String?
   website                 String?
