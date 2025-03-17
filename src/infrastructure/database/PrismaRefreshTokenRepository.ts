@@ -5,14 +5,14 @@ import { RefreshToken } from "../../domain/entities/RefreshToken";
 const prisma = new PrismaClient();
 
 export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
-  async save(user_id: string, token: RefreshToken): Promise<void> {
+  async save(userId: string, token: RefreshToken): Promise<void> {
     const existingToken = await prisma.refreshToken.findUnique({
-      where: { user_id },
+      where: { userId },
     });
 
     if (existingToken) {
       await prisma.refreshToken.update({
-        where: { user_id },
+        where: { userId },
         data: {
           id: token.id,
           token: token.token,
@@ -23,7 +23,7 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
       await prisma.refreshToken.create({
         data: {
           id: token.id,
-          user_id: token.userId,
+          userId: token.userId,
           token: token.token,
           expires_at: token.expiresAt,
         },
@@ -39,8 +39,8 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
       ? new RefreshToken(
           result.id,
           result.token,
-          result.user_id,
-          result.created_at,
+          result.userId,
+          result.createdAt,
           result.expires_at
         )
       : null;
@@ -48,7 +48,7 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
 
   async deleteByUserId(userId: string): Promise<void> {
     await prisma.refreshToken.deleteMany({
-      where: { user_id: userId },
+      where: { userId },
     });
   }
 }

@@ -20,7 +20,7 @@ export class CloudinaryService {
             "/upload/",
             "/upload/f_webp,q_auto/"
           );
-          resolve({ url: optimizedUrl, publicId: result.public_id });
+          resolve({ url: optimizedUrl, publicId: result.publicId });
         }
       );
 

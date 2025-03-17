@@ -223,7 +223,7 @@ export class PlaceController {
 
   static async delete(req: Request, res: Response) {
     const { id } = req.params;
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
 
     try {
       await deletePlace.execute(id, userId);

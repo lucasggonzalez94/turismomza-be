@@ -9,9 +9,9 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
   async addOrRemove(placeId: string, userId: string): Promise<Favorite | void> {
     const existingFavorite = await prisma.favorite.findUnique({
       where: {
-        user_id_place_id: {
-          user_id: userId,
-          place_id: placeId,
+        userId_placeId: {
+          userId,
+          placeId,
         },
       },
     });
@@ -20,18 +20,18 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
       await prisma.favorite.delete({
         where: {
           id: existingFavorite?.id,
-          user_id: userId,
+          userId,
         },
       });
     } else {
       const favorite = await prisma.favorite.create({
         data: {
-          user_id: userId,
-          place_id: placeId,
+          userId,
+          placeId,
         },
       });
 
-      return new Favorite(favorite.id, favorite.user_id, favorite.place_id);
+      return new Favorite(favorite.id, favorite.userId, favorite.placeId);
     }
   }
   async getByUser(
@@ -45,13 +45,13 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
 
     const totalPlaces = await prisma.favorite.count({
       where: {
-        user_id: userId,
+        userId,
       },
     });
 
     const favorites = await prisma.favorite.findMany({
       where: {
-        user_id: userId,
+        userId,
       },
       include: {
         place: {
@@ -66,7 +66,7 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
                     name: true,
                   },
                 },
-                creation_date: true,
+                creationDate: true,
                 likes: {
                   select: {
                     user: {
@@ -99,26 +99,26 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
             place.description,
             place.location,
             place.category,
-            place.creator_id,
-            place.created_at,
+            place.creatorId,
+            place.createdAt,
             place.services,
             place.schedule,
             place.images.map((image) => ({
               id: image.id,
               url: image.url,
-              publicId: image.public_id,
+              publicId: image.publicId,
               order: image.order,
             })),
             [],
             [],
             [],
-            place.contact_number ?? undefined,
+            place.contactNumber ?? undefined,
             place.email ?? undefined,
             place.webSite ?? undefined,
             place.instagram ?? undefined,
             place.facebook ?? undefined,
             place.price ?? undefined,
-            place.currency_price ?? undefined
+            place.currencyPrice ?? undefined
           )
       ),
     };

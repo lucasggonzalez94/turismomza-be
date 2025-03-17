@@ -19,7 +19,7 @@ export class LikeDislike {
       throw new NotFoundError("Comment not found");
     }
 
-    if (review.user_id !== userId) {
+    if (review.userId !== userId) {
       throw new UnauthorizedError("You can only like your own comments");
     }
 
@@ -37,12 +37,12 @@ export class LikeDislike {
       );
 
       await this.notificationRepository.createNotification(
-        review.user_id,
+        review.userId,
         notification
       );
 
       this.socketService.sendNotification(userId, {
-        userId: review.user_id,
+        userId: review.userId,
         triggeredById: userId,
         message: notification.message,
         type: notification.type,

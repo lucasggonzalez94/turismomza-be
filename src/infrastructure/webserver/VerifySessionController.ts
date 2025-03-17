@@ -6,7 +6,7 @@ const userRepository = new PrismaUserRepository();
 const verifySession = new VerifySession(userRepository);
 
 export class VerifyTokenController {
-  static async handle(req: Request, res: Response) {
+  static async verify(req: Request, res: Response) {
     try {
       const userId = req.user!.userId;
       const user = await verifySession.execute(userId);

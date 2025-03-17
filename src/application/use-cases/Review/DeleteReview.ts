@@ -12,7 +12,7 @@ export class DeleteReview {
       throw new NotFoundError("Comment not found");
     }
 
-    if (review.user_id !== userId) {
+    if (review.userId !== userId) {
       throw new UnauthorizedError("You can only delete your own comments");
     }
 

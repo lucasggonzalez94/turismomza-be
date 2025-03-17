@@ -28,7 +28,7 @@ export class ReviewController {
     }
 
     const { content, rating, placeId } = req.body;
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
 
     try {
       const socketService = new SocketService(req.app.get("io"));
@@ -67,7 +67,7 @@ export class ReviewController {
 
     const { content, rating, placeId } = req.body;
     const { reviewId } = req.params;
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
 
     try {
       const review = await editReview.execute(
@@ -92,7 +92,7 @@ export class ReviewController {
 
   static async delete(req: Request, res: Response) {
     const { reviewId } = req.params;
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
 
     try {
       await deleteReview.execute(reviewId, userId);
@@ -111,7 +111,7 @@ export class ReviewController {
   static async report(req: Request, res: Response) {
     const { reviewId } = req.params;
     const { reason } = req.body;
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
 
     try {
       await reportReview.execute(reviewId, userId, reason);
@@ -126,7 +126,7 @@ export class ReviewController {
 
   static async likeDislike(req: Request, res: Response) {
     const { reviewId } = req.params;
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
 
     try {
       const socketService = new SocketService(req.app.get("io"));

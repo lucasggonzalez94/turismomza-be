@@ -23,7 +23,7 @@ export class EditReview {
       throw new NotFoundError("Comment not found");
     }
 
-    if (review.user_id !== userId) {
+    if (review.userId !== userId) {
       throw new UnauthorizedError("You can only edit your own comments");
     }
 

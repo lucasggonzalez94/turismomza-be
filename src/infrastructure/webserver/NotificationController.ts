@@ -12,7 +12,7 @@ const markAsUnread = new MarkAsUnread(notificationRepository);
 
 export class NotificationsController {
   static async list(req: Request, res: Response) {
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
 
     try {
       const notifications = await listNotifications.execute(userId);

@@ -11,24 +11,21 @@ import { RegisterUser } from "../../application/use-cases/Auth/RegisterUser";
 import { UpdateUser } from "../../application/use-cases/Auth/UpdateUser";
 import { GetUserById } from "../../application/use-cases/Auth/GetUserById";
 import { NotFoundError } from "../../domain/errors/NotFoundError";
-import { LoginWithGoogle } from "../../application/use-cases/Auth/LoginWithGoogle";
+import { GetUserByEmail } from "../../application/use-cases/Auth/GetUserByEmail";
+import { JwtService } from "../services/JwtService";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
 const refreshTokenRepository = new PrismaRefreshTokenRepository();
 
 const registerUser = new RegisterUser(userRepository, emailService);
-const loginUser = new LoginUser(
-  userRepository,
-  refreshTokenRepository,
-  emailService
-);
-const loginWithGoogle = new LoginWithGoogle(userRepository, emailService);
+const loginUser = new LoginUser(userRepository);
 const logoutUser = new LogoutUser(refreshTokenRepository);
 const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);
 const getUserById = new GetUserById(userRepository);
+const getUserByEmail = new GetUserByEmail(userRepository);
 
 export class UserController {
   static async register(req: Request, res: Response) {
@@ -38,75 +35,9 @@ export class UserController {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { user, accessToken } = await registerUser.execute(req.body);
-
-      res.cookie("authToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 3600000,
-        sameSite: "strict",
-      });
-
-      const { password, ...restUser } = user;
-
-      res.status(201).json(restUser);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Error desconocido";
-      res.status(400).json({ error: errorMessage });
-    }
-  }
-
-  static async google(req: Request, res: Response) {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { name, email, image, googleId } = req.body;
-
-      const { user, accessToken } = await loginWithGoogle.execute(
-        name,
-        email,
-        image,
-        googleId
-      );
-
-      res.cookie("authToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 3600000,
-        sameSite: "strict",
-      });
-
-      const { password, ...restUser } = user;
-
-      res.status(201).json(restUser);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Error desconocido";
-      res.status(400).json({ error: errorMessage });
-    }
-  }
-
-  static async login(req: Request, res: Response) {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { user, accessToken, refreshToken } = await loginUser.execute(
+      const { user, accessToken, refreshToken } = await registerUser.execute(
         req.body
       );
-
-      res.cookie("authToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 3600000,
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -117,7 +48,34 @@ export class UserController {
 
       const { password, ...restUser } = user;
 
-      res.status(200).json(restUser);
+      res.status(201).json({ accessToken, restUser });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(401).json({ error: errorMessage });
+    }
+  }
+
+  static async login(req: Request, res: Response) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { email, password } = req.body;
+      const { accessToken, refreshToken } = await loginUser.execute(
+        email,
+        password
+      );
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      });
+
+      res.json({ accessToken });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
@@ -198,6 +156,21 @@ export class UserController {
     }
   }
 
+  static async getByEmail(req: Request, res: Response) {
+    const { email } = req.params;
+
+    try {
+      const result = await getUserByEmail.execute(email);
+      res.status(200).json(result);
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundError) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Error getting user" });
+    }
+  }
+
   static async list(req: Request, res: Response) {
     const { page = 1, pageSize = 10 } = req.query;
 
@@ -210,6 +183,22 @@ export class UserController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error listing users" });
+    }
+  }
+
+  static async refresh(req: Request, res: Response) {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) return res.status(401).json({ error: "No autorizado" });
+
+    try {
+      const decoded = JwtService.verifyRefreshToken(refreshToken);
+      const accessToken = JwtService.generateAccessToken(
+        (decoded as any).userId,
+        (decoded as any).userRole
+      );
+      res.json({ accessToken });
+    } catch {
+      return res.status(401).json({ error: "Token inválido" });
     }
   }
 }

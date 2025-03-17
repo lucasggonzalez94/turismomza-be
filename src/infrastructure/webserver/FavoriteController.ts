@@ -12,7 +12,7 @@ export class FavoriteController {
   static async addOrRemove(req: Request, res: Response) {
     try {
       const { placeId } = req.body;
-      const userId = req.user?.userId;
+      const userId = req.user!.userId;
 
       const favorite = await addOrRemoveFavorite.execute(placeId, userId);
       if (favorite) {

@@ -35,22 +35,22 @@ export class PrismaUserRepository implements UserRepository {
       user?.name,
       user?.email,
       user?.role,
-      user?.two_factor_enabled
+      user?.twoFactorEnabled
     );
   }
 
   async update(user: User): Promise<User | null> {
     if (user.profilePicture) {
       await prisma.profilePicture.upsert({
-        where: { user_id: user.id },
+        where: { userId: user.id },
         update: {
-          public_id: user.profilePicture.public_id,
+          publicId: user.profilePicture.publicId,
           url: user.profilePicture.url,
         },
         create: {
           id: user.profilePicture.id,
-          user_id: user.id,
-          public_id: user.profilePicture.public_id,
+          userId: user.id,
+          publicId: user.profilePicture.publicId,
           url: user.profilePicture.url,
         },
       });
@@ -67,7 +67,7 @@ export class PrismaUserRepository implements UserRepository {
         language: user.language,
         verified: user.verified,
       },
-      include: { profile_picture: true },
+      include: { profilePicture: true },
     });
 
     return updatedUser
@@ -76,23 +76,23 @@ export class PrismaUserRepository implements UserRepository {
           updatedUser.name,
           updatedUser.email,
           updatedUser.role,
-          updatedUser.two_factor_enabled,
+          updatedUser.twoFactorEnabled,
           updatedUser.password ?? undefined,
           updatedUser.googleId ?? undefined,
           updatedUser.googleImage ?? undefined,
-          updatedUser.two_factor_code ?? undefined,
-          updatedUser.two_factor_expires ?? undefined,
+          updatedUser.twoFactorCode ?? undefined,
+          updatedUser.twoFactorExpires ?? undefined,
           updatedUser.bio ?? undefined,
           updatedUser.location ?? undefined,
           updatedUser.website ?? undefined,
           updatedUser.language ?? undefined,
           updatedUser.verified ?? undefined,
-          updatedUser.created_at,
-          updatedUser.profile_picture
+          updatedUser.createdAt,
+          updatedUser.profilePicture
             ? new ProfilePicture(
-                updatedUser.profile_picture.id,
-                updatedUser.profile_picture.public_id,
-                updatedUser.profile_picture.url
+                updatedUser.profilePicture.id,
+                updatedUser.profilePicture.publicId,
+                updatedUser.profilePicture.url
               )
             : undefined
         )
@@ -108,7 +108,7 @@ export class PrismaUserRepository implements UserRepository {
   async getById(id: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: { id },
-      include: { profile_picture: true, places: true, reviews: true },
+      include: { profilePicture: true, places: true, reviews: true },
     });
     return user
       ? new User(
@@ -116,23 +116,59 @@ export class PrismaUserRepository implements UserRepository {
           user.name,
           user.email,
           user.role,
-          user.two_factor_enabled,
+          user.twoFactorEnabled,
           user.password ?? undefined,
           user.googleId ?? undefined,
           user.googleImage ?? undefined,
-          user.two_factor_code ?? undefined,
-          user.two_factor_expires ?? undefined,
+          user.twoFactorCode ?? undefined,
+          user.twoFactorExpires ?? undefined,
           user.bio ?? undefined,
           user.location ?? undefined,
           user.website ?? undefined,
           user.language ?? undefined,
           user.verified ?? undefined,
-          user.created_at,
-          user.profile_picture
+          user.createdAt,
+          user.profilePicture
             ? new ProfilePicture(
-                user.profile_picture.id,
-                user.profile_picture.public_id,
-                user.profile_picture.url
+                user.profilePicture.id,
+                user.profilePicture.publicId,
+                user.profilePicture.url
+              )
+            : undefined,
+          user?.places?.length || 0,
+          user?.reviews?.length || 0
+        )
+      : null;
+  }
+
+  async getByGoogleId(id: string): Promise<User | null> {
+    const user = await prisma.user.findUnique({
+      where: { googleId: id },
+      include: { profilePicture: true, places: true, reviews: true },
+    });
+    return user
+      ? new User(
+          user.id,
+          user.name,
+          user.email,
+          user.role,
+          user.twoFactorEnabled,
+          user.password ?? undefined,
+          user.googleId ?? undefined,
+          user.googleImage ?? undefined,
+          user.twoFactorCode ?? undefined,
+          user.twoFactorExpires ?? undefined,
+          user.bio ?? undefined,
+          user.location ?? undefined,
+          user.website ?? undefined,
+          user.language ?? undefined,
+          user.verified ?? undefined,
+          user.createdAt,
+          user.profilePicture
+            ? new ProfilePicture(
+                user.profilePicture.id,
+                user.profilePicture.publicId,
+                user.profilePicture.url
               )
             : undefined,
           user?.places?.length || 0,
@@ -144,7 +180,7 @@ export class PrismaUserRepository implements UserRepository {
   async getByEmail(email: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: { email },
-      include: { profile_picture: true },
+      include: { profilePicture: true },
     });
     return user
       ? new User(
@@ -152,23 +188,23 @@ export class PrismaUserRepository implements UserRepository {
           user.name,
           user.email,
           user.role,
-          user.two_factor_enabled,
+          user.twoFactorEnabled,
           user.password ?? undefined,
           user.googleId ?? undefined,
           user.googleImage ?? undefined,
-          user.two_factor_code ?? undefined,
-          user.two_factor_expires ?? undefined,
+          user.twoFactorCode ?? undefined,
+          user.twoFactorExpires ?? undefined,
           user.bio ?? undefined,
           user.location ?? undefined,
           user.website ?? undefined,
           user.language ?? undefined,
           user.verified ?? undefined,
-          user.created_at,
-          user.profile_picture
+          user.createdAt,
+          user.profilePicture
             ? new ProfilePicture(
-                user.profile_picture.id,
-                user.profile_picture.public_id,
-                user.profile_picture.url
+                user.profilePicture.id,
+                user.profilePicture.publicId,
+                user.profilePicture.url
               )
             : undefined
         )
@@ -182,7 +218,7 @@ export class PrismaUserRepository implements UserRepository {
       skip,
       take: pageSize,
       include: {
-        profile_picture: true,
+        profilePicture: true,
       },
     });
     return users.map(
@@ -192,23 +228,23 @@ export class PrismaUserRepository implements UserRepository {
           user.name,
           user.email,
           user.role,
-          user.two_factor_enabled,
+          user.twoFactorEnabled,
           user.password ?? undefined,
           user.googleId ?? undefined,
           user.googleImage ?? undefined,
-          user.two_factor_code ?? undefined,
-          user.two_factor_expires ?? undefined,
+          user.twoFactorCode ?? undefined,
+          user.twoFactorExpires ?? undefined,
           user.bio ?? undefined,
           user.location ?? undefined,
           user.website ?? undefined,
           user.language ?? undefined,
           user.verified ?? undefined,
-          user.created_at,
-          user.profile_picture
+          user.createdAt,
+          user.profilePicture
             ? new ProfilePicture(
-                user.profile_picture.id,
-                user.profile_picture.public_id,
-                user.profile_picture.url
+                user.profilePicture.id,
+                user.profilePicture.publicId,
+                user.profilePicture.url
               )
             : undefined
         )
@@ -222,6 +258,16 @@ export class PrismaUserRepository implements UserRepository {
     await prisma.user.update({
       where: { id: userId },
       data: { role },
+    });
+  }
+
+  async updateRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken },
     });
   }
 }

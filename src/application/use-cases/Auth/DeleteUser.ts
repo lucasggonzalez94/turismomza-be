@@ -12,7 +12,7 @@ export class DeleteUser {
       throw new Error("Password is required");
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(password, user.password as string);
     if (!passwordMatch) {
       throw new Error("Password is incorrect");
     }

@@ -10,8 +10,8 @@ export class PrismaReviewRepository implements ReviewRepository {
       data: {
         content: review.content,
         rating: review.rating,
-        user_id: review.userId,
-        place_id: review.placeId,
+        userId: review.userId,
+        placeId: review.placeId,
       },
       include: {
         user: true,
@@ -23,9 +23,9 @@ export class PrismaReviewRepository implements ReviewRepository {
       createdReview.id,
       createdReview.content,
       createdReview.rating,
-      createdReview.user_id,
-      createdReview.place_id,
-      createdReview.creation_date
+      createdReview.userId,
+      createdReview.placeId,
+      createdReview.creationDate
     );
   }
 
@@ -48,16 +48,16 @@ export class PrismaReviewRepository implements ReviewRepository {
       editedReview.id,
       editedReview.content,
       editedReview.rating,
-      editedReview.user_id,
-      editedReview.place_id,
-      editedReview.creation_date
+      editedReview.userId,
+      editedReview.placeId,
+      editedReview.creationDate
     );
   }
 
   async findById(reviewId: string) {
     return prisma.review.findUnique({
       where: { id: reviewId },
-      select: { id: true, user_id: true },
+      select: { id: true, userId: true },
     });
   }
 
@@ -74,8 +74,8 @@ export class PrismaReviewRepository implements ReviewRepository {
   ): Promise<void> {
     await prisma.report.create({
       data: {
-        review_id: reviewId,
-        user_id: userId,
+        reviewId,
+        userId,
         reason,
       },
     });
@@ -85,8 +85,8 @@ export class PrismaReviewRepository implements ReviewRepository {
     const existingLike = await prisma.like.findUnique({
       where: {
         user_id_review_id: {
-          user_id: userId,
-          review_id: reviewId,
+          userId,
+          reviewId,
         },
       },
     });
@@ -97,8 +97,8 @@ export class PrismaReviewRepository implements ReviewRepository {
   async like(reviewId: string, userId: string): Promise<void> {
     await prisma.like.create({
       data: {
-        user_id: userId,
-        review_id: reviewId,
+        userId,
+        reviewId,
         like: true,
       },
     });
@@ -108,8 +108,8 @@ export class PrismaReviewRepository implements ReviewRepository {
     await prisma.like.delete({
       where: {
         user_id_review_id: {
-          user_id: userId,
-          review_id: reviewId,
+          userId,
+          reviewId,
         },
       },
     });

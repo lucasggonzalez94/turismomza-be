@@ -11,7 +11,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
   ): Promise<Notification> {
     const createdNotification = await prisma.notification.create({
       data: {
-        user_id: userId,
+        userId,
         triggeredBy_id: notification.userId,
         message: notification.message,
         type: notification.type,
@@ -23,11 +23,11 @@ export class PrismaNotificationRepository implements NotificationRepository {
             name: true,
           },
         },
-        triggered_by: {
+        triggeredBy: {
           select: {
             id: true,
             name: true,
-            profile_picture: true,
+            profilePicture: true,
           },
         },
       },
@@ -35,18 +35,18 @@ export class PrismaNotificationRepository implements NotificationRepository {
 
     return new Notification(
       createdNotification.id,
-      createdNotification.user_id,
+      createdNotification.userId,
       createdNotification.type as "review" | "like",
       createdNotification.message,
       createdNotification.read,
-      createdNotification.triggered_by,
-      createdNotification.creation_date
+      createdNotification.triggeredBy,
+      createdNotification.creationDate
     );
   }
 
   async listUnreadNotifications(userId: string): Promise<Notification[]> {
     const unreadNotifications = await prisma.notification.findMany({
-      where: { user_id: userId, read: false },
+      where: { userId, read: false },
       include: {
         user: {
           select: {
@@ -54,28 +54,28 @@ export class PrismaNotificationRepository implements NotificationRepository {
             name: true,
           },
         },
-        triggered_by: {
+        triggeredBy: {
           select: {
             id: true,
             name: true,
-            profile_picture: true,
+            profilePicture: true,
           },
         },
       },
       orderBy: {
-        creation_date: "desc",
+        creationDate: "desc",
       },
     });
 
     return unreadNotifications.map((notification) => {
       return new Notification(
         notification.id,
-        notification.user_id,
+        notification.userId,
         notification.type as "review" | "like",
         notification.message,
         notification.read,
-        notification.triggered_by,
-        notification.creation_date
+        notification.triggeredBy,
+        notification.creationDate
       );
     });
   }
@@ -85,7 +85,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
     take: number
   ): Promise<Notification[]> {
     const additionalNotifications = await prisma.notification.findMany({
-      where: { user_id: userId, read: true },
+      where: { userId, read: true },
       include: {
         user: {
           select: {
@@ -93,16 +93,16 @@ export class PrismaNotificationRepository implements NotificationRepository {
             name: true,
           },
         },
-        triggered_by: {
+        triggeredBy: {
           select: {
             id: true,
             name: true,
-            profile_picture: true,
+            profilePicture: true,
           },
         },
       },
       orderBy: {
-        creation_date: "desc",
+        creationDate: "desc",
       },
       take,
     });
@@ -110,12 +110,12 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return additionalNotifications.map((notification) => {
       return new Notification(
         notification.id,
-        notification.user_id,
+        notification.userId,
         notification.type as "review" | "like",
         notification.message,
         notification.read,
-        notification.triggered_by,
-        notification.creation_date
+        notification.triggeredBy,
+        notification.creationDate
       );
     });
   }

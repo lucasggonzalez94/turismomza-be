@@ -12,7 +12,7 @@ export class RegisterUser {
 
   async execute(data: { name: string; email: string; password: string }) {
     const existingUser = await this.userRepository.getByEmail(data.email);
-    if (existingUser) throw new Error("User with this email already exists.");
+    if (existingUser) throw new Error("El email ya está en uso");
 
     const hashedPassword = await bcrypt.hash(data.password, 12);
     const user = new User(
@@ -27,9 +27,9 @@ export class RegisterUser {
     user.validate();
     await this.userRepository.create(user);
 
-    const accessToken = JwtService.generateAccessToken(user.id, user.role);
+    const { accessToken, refreshToken } = JwtService.generateTokens(user.id, user.role);
     await this.emailService.sendWelcomeEmail(user.email, user.name);
 
-    return { user, accessToken };
+    return { user, accessToken, refreshToken };
   }
 }

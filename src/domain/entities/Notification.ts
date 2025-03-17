@@ -10,7 +10,7 @@ export class Notification {
     public triggeredBy?: {
       id: string;
       name: string;
-      profile_picture: ProfilePicture | null;
+      profilePicture: ProfilePicture | null;
     },
     public creationDate?: Date
   ) {}
