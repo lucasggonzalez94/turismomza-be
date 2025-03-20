@@ -14,6 +14,8 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+router.get('/google', UserController.googleAuth);
+router.get('/google/callback', UserController.googleCallback);
 router.get("/users", authenticateToken, authorizeAdmin, UserController.list);
 router.get("/user/:userId", UserController.getById);
 router.post("/register", registerValidator, UserController.register);

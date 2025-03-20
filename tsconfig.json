@@ -9,8 +9,9 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "moduleResolution": "node",
-    "sourceMap": true
+    "sourceMap": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": ["node_modules"]
 }

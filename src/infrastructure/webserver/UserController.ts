@@ -13,11 +13,14 @@ import { GetUserById } from "../../application/use-cases/Auth/GetUserById";
 import { NotFoundError } from "../../domain/errors/NotFoundError";
 import { GetUserByEmail } from "../../application/use-cases/Auth/GetUserByEmail";
 import { JwtService } from "../services/JwtService";
+import { GoogleAuthUser } from "../../application/use-cases/Auth/GoogleAuthUser";
+import passport from "passport";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
 const refreshTokenRepository = new PrismaRefreshTokenRepository();
 
+const googleAuthUser = new GoogleAuthUser(userRepository);
 const registerUser = new RegisterUser(userRepository, emailService);
 const loginUser = new LoginUser(userRepository);
 const logoutUser = new LogoutUser(refreshTokenRepository);
@@ -28,6 +31,41 @@ const getUserById = new GetUserById(userRepository);
 const getUserByEmail = new GetUserByEmail(userRepository);
 
 export class UserController {
+  static googleAuth = passport.authenticate("google", {
+    scope: ["profile", "email"],
+  });
+
+  static async googleCallback(req: Request, res: Response) {
+    passport.authenticate("google", async (err: any, user: any) => {
+      if (err || !user) {
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/auth/login?error=Google authentication failed`
+        );
+      }
+
+      try {
+        const { accessToken, refreshToken } = await googleAuthUser.execute(
+          user
+        );
+
+        res.cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        res.redirect(
+          `${process.env.FRONTEND_URL}/auth/callback?accessToken=${accessToken}`
+        );
+      } catch (error) {
+        res.redirect(
+          `${process.env.FRONTEND_URL}/auth/login?error=Authentication failed`
+        );
+      }
+    })(req, res);
+  }
+
   static async register(req: Request, res: Response) {
     try {
       const errors = validationResult(req);
