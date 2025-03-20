@@ -11,7 +11,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: `${process.env.API_URL}/api/auth/google/callback`,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
       scope: ["profile", "email"],
     },
     async (accessToken, refreshToken, profile, done) => {
@@ -30,5 +30,13 @@ passport.use(
   )
 );
 
-export { passport };
+// Serialización y deserialización de usuario
+passport.serializeUser((user: any, done) => {
+  done(null, user);
+});
 
+passport.deserializeUser((user: any, done) => {
+  done(null, user);
+});
+
+export { passport };

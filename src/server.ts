@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
+import session from "express-session";
+import { passport } from "./infrastructure/services/PassportService";
 
 import userRoutes from "./application/routes/UserRoutes";
 import placeRoutes from "./application/routes/PlaceRoutes";
@@ -49,10 +51,9 @@ app.use(
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = "El CORS policy no permite acceso desde este origen.";
+        const msg = "The CORS policy for this site does not allow access from the specified Origin.";
         return callback(new Error(msg), false);
       }
-
       return callback(null, true);
     },
     credentials: true,
@@ -60,6 +61,24 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
+
+// Configuración de express-session (necesario para passport)
+app.use(
+  session({
+    secret: process.env.ACCESS_TOKEN_SECRET!,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    },
+  })
+);
+
+// Inicializar Passport y restaurar estado de autenticación desde la sesión
+app.use(passport.initialize());
+app.use(passport.session());
 
 const userSockets: {
   [userId: string]: string;
