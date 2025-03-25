@@ -1,9 +1,9 @@
-import { RefreshTokenRepository } from "../../../domain/ports/RefreshTokenRepository";
+import { UserRepository } from "../../../domain/ports/UserRepository";
 
 export class LogoutUser {
-  constructor(private refreshTokenRepository: RefreshTokenRepository) {}
+  constructor(private userRepository: UserRepository) {}
 
   async execute(userId: string): Promise<void> {
-    await this.refreshTokenRepository.deleteByUserId(userId);
+    await this.userRepository.updateRefreshToken(userId, null);
   }
 }

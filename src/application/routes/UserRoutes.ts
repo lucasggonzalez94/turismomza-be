@@ -21,7 +21,7 @@ router.get("/user/:userId", UserController.getById);
 router.get("/user/google/:googleId", UserController.getByGoogleId);
 router.post("/register", registerValidator, UserController.register);
 router.post("/login", loginValidator, UserController.login);
-router.post("/logout", authenticateToken, UserController.logout);
+// router.post("/logout", authenticateToken, UserController.logout);
 router.put(
   "/update",
   authenticateToken,

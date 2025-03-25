@@ -12,7 +12,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
     const createdNotification = await prisma.notification.create({
       data: {
         userId,
-        triggeredBy_id: notification.userId,
+        triggeredById: notification.userId,
         message: notification.message,
         type: notification.type,
       },

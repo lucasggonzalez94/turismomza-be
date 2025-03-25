@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { EmailService } from "../services/EmailService";
-import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
 import { DeleteUser } from "../../application/use-cases/Auth/DeleteUser";
 import { ListUsers } from "../../application/use-cases/Auth/ListUsers";
 import { LoginUser } from "../../application/use-cases/Auth/LoginUser";
@@ -19,12 +18,11 @@ import { GetUserByGoogleId } from "../../application/use-cases/Auth/GetUserByGoo
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
-const refreshTokenRepository = new PrismaRefreshTokenRepository();
 
 const googleAuthUser = new GoogleAuthUser(userRepository);
 const registerUser = new RegisterUser(userRepository, emailService);
 const loginUser = new LoginUser(userRepository);
-const logoutUser = new LogoutUser(refreshTokenRepository);
+const logoutUser = new LogoutUser(userRepository);
 const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);

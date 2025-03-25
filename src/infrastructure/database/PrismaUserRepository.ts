@@ -356,7 +356,7 @@ export class PrismaUserRepository implements UserRepository {
 
   async updateRefreshToken(
     userId: string,
-    refreshToken: string,
+    refreshToken: string | null,
   ): Promise<void> {
     await prisma.user.update({
       where: { id: userId },
