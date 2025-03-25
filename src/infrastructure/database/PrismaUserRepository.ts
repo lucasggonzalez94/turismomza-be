@@ -24,19 +24,112 @@ export class PrismaUserRepository implements UserRepository {
     image: string,
     googleId: string
   ): Promise<User> {
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: { name, googleImage: image, googleId },
-      create: { email, name, googleImage: image, googleId, role: "viewer" },
-    });
+    try {
+      // Validaciones básicas
+      if (!email || !email.includes('@')) {
+        throw new Error('Email inválido');
+      }
+      if (!googleId) {
+        throw new Error('Google ID es requerido');
+      }
 
-    return new User(
-      user?.id,
-      user?.name,
-      user?.email,
-      user?.role,
-      user?.twoFactorEnabled
-    );
+      // Buscar usuario existente por googleId o email
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { googleId },
+            { email }
+          ]
+        },
+        include: {
+          profilePicture: true
+        }
+      });
+
+      let user;
+
+      if (existingUser) {
+        // Actualizar usuario existente
+        user = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            name,
+            googleId,
+            googleImage: image,
+            verified: true
+          },
+          include: {
+            profilePicture: true
+          }
+        });
+
+        // Actualizar o crear foto de perfil si existe imagen
+        if (image) {
+          await prisma.profilePicture.upsert({
+            where: { userId: user.id },
+            update: {
+              url: image
+            },
+            create: {
+              userId: user.id,
+              url: image,
+              publicId: `google_${googleId}`
+            }
+          });
+        }
+      } else {
+        // Crear nuevo usuario
+        user = await prisma.user.create({
+          data: {
+            email,
+            name,
+            googleId,
+            googleImage: image,
+            role: "viewer",
+            verified: true,
+            profilePicture: image ? {
+              create: {
+                url: image,
+                publicId: `google_${googleId}`
+              }
+            } : undefined
+          },
+          include: {
+            profilePicture: true
+          }
+        });
+      }
+
+      // Construir y retornar el objeto User del dominio
+      return new User(
+        user.id,
+        user.name,
+        user.email,
+        user.role,
+        user.twoFactorEnabled,
+        undefined, // No password for Google users
+        user.googleId ?? undefined,
+        user.googleImage ?? undefined,
+        user.twoFactorCode ?? undefined,
+        user.twoFactorExpires ?? undefined,
+        user.bio ?? undefined,
+        user.location ?? undefined,
+        user.website ?? undefined,
+        user.language,
+        user.verified ?? undefined,
+        user.createdAt,
+        user.profilePicture
+          ? new ProfilePicture(
+              user.profilePicture.id,
+              user.profilePicture.publicId,
+              user.profilePicture.url
+            )
+          : undefined
+      );
+    } catch (error) {
+      console.error('Error en createWithGoogle:', error);
+      throw error;
+    }
   }
 
   async update(user: User): Promise<User | null> {

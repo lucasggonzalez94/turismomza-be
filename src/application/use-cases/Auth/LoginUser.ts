@@ -21,6 +21,6 @@ export class LoginUser {
 
     await this.userRepository.updateRefreshToken(user.id, refreshToken);
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, user };
   }
 }

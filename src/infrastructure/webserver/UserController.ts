@@ -15,6 +15,7 @@ import { GetUserByEmail } from "../../application/use-cases/Auth/GetUserByEmail"
 import { JwtService } from "../services/JwtService";
 import { GoogleAuthUser } from "../../application/use-cases/Auth/GoogleAuthUser";
 import passport from "passport";
+import { GetUserByGoogleId } from "../../application/use-cases/Auth/GetUserByGoogleId";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
@@ -28,6 +29,7 @@ const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);
 const getUserById = new GetUserById(userRepository);
+const getUserByGoogleId = new GetUserByGoogleId(userRepository);
 const getUserByEmail = new GetUserByEmail(userRepository);
 
 export class UserController {
@@ -36,34 +38,32 @@ export class UserController {
   });
 
   static async googleCallback(req: Request, res: Response) {
-    passport.authenticate("google", async (err: any, user: any) => {
-      if (err || !user) {
-        return res.redirect(
-          `${process.env.FRONTEND_URL}/auth/login?error=Google authentication failed`
-        );
+    try {
+      const { name, email, image, googleId } = req.body;
+
+      if (!email || !googleId) {
+        return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      try {
-        const { accessToken, refreshToken } = await googleAuthUser.execute(
-          user
-        );
+      const { user, accessToken, refreshToken } = await googleAuthUser.execute({
+        id: googleId,
+        displayName: name,
+        emails: [{ value: email }],
+        photos: image ? [{ value: image }] : []
+      });
 
-        res.cookie("refreshToken", refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
 
-        res.redirect(
-          `${process.env.FRONTEND_URL}/auth/callback?accessToken=${accessToken}`
-        );
-      } catch (error) {
-        res.redirect(
-          `${process.env.FRONTEND_URL}/auth/login?error=Authentication failed`
-        );
-      }
-    })(req, res);
+      res.status(200).json({ user, accessToken });
+    } catch (error) {
+      console.error('Error in Google callback:', error);
+      res.status(500).json({ error: 'Authentication failed' });
+    }
   }
 
   static async register(req: Request, res: Response) {
@@ -102,7 +102,7 @@ export class UserController {
       }
 
       const { email, password } = req.body;
-      const { accessToken, refreshToken } = await loginUser.execute(
+      const { accessToken, refreshToken, user } = await loginUser.execute(
         email,
         password
       );
@@ -113,7 +113,7 @@ export class UserController {
         sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       });
 
-      res.json({ accessToken });
+      res.json({ accessToken, user });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
@@ -184,6 +184,21 @@ export class UserController {
 
     try {
       const result = await getUserById.execute(userId);
+      res.status(200).json(result);
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundError) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Error getting user" });
+    }
+  }
+
+  static async getByGoogleId(req: Request, res: Response) {
+    const { googleId } = req.params;
+
+    try {
+      const result = await getUserByGoogleId.execute(googleId);
       res.status(200).json(result);
     } catch (error) {
       console.error(error);

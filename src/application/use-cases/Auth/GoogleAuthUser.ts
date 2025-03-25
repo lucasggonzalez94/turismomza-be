@@ -1,5 +1,4 @@
 import { UserRepository } from "../../../domain/ports/UserRepository";
-import { User } from "../../../domain/entities/User";
 import { JwtService } from "../../../infrastructure/services/JwtService";
 
 interface GoogleProfile {
@@ -19,21 +18,15 @@ export class GoogleAuthUser {
     let user = await this.userRepository.getByEmail(email);
 
     if (!user) {
-      // Create new user if doesn't exist
-      user = new User(
-        crypto.randomUUID(),
+      user = await this.userRepository.createWithGoogle(
         profile.displayName,
         email,
-        "viewer",
-        true, // Google users are verified by default
-        "", // No password for Google users
-        profile.photos[0]?.value,
+        profile.photos[0]?.value || "",
         profile.id
       );
-
-      await this.userRepository.create(user);
     } else if (!user.googleId) {
-      // Link Google account to existing user
+      user.googleId = profile.id;
+      user.googleImage = profile.photos[0]?.value || "";
       await this.userRepository.update(user);
     }
 

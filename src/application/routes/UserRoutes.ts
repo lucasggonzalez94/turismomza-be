@@ -15,12 +15,12 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 router.get('/google', UserController.googleAuth);
-router.get('/google/callback', UserController.googleCallback);
+router.post('/google/callback', UserController.googleCallback);
 router.get("/users", authenticateToken, authorizeAdmin, UserController.list);
 router.get("/user/:userId", UserController.getById);
+router.get("/user/google/:googleId", UserController.getByGoogleId);
 router.post("/register", registerValidator, UserController.register);
 router.post("/login", loginValidator, UserController.login);
-
 router.post("/logout", authenticateToken, UserController.logout);
 router.put(
   "/update",
