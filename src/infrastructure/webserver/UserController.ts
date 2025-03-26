@@ -30,6 +30,18 @@ const getUserById = new GetUserById(userRepository);
 const getUserByGoogleId = new GetUserByGoogleId(userRepository);
 const getUserByEmail = new GetUserByEmail(userRepository);
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite:
+    process.env.NODE_ENV === "production"
+      ? ("none" as const)
+      : ("lax" as const),
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: "/",
+  domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
+};
+
 export class UserController {
   static googleAuth = passport.authenticate("google", {
     scope: ["profile", "email"],
@@ -40,27 +52,21 @@ export class UserController {
       const { name, email, image, googleId } = req.body;
 
       if (!email || !googleId) {
-        return res.status(400).json({ error: 'Missing required fields' });
+        return res.status(400).json({ error: "Missing required fields" });
       }
 
       const { user, accessToken, refreshToken } = await googleAuthUser.execute({
         id: googleId,
         displayName: name,
         emails: [{ value: email }],
-        photos: image ? [{ value: image }] : []
+        photos: image ? [{ value: image }] : [],
       });
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
-
+      res.cookie("refreshToken", refreshToken, cookieOptions);
       res.status(200).json({ user, accessToken });
     } catch (error) {
-      console.error('Error in Google callback:', error);
-      res.status(500).json({ error: 'Authentication failed' });
+      console.error("Error in Google callback:", error);
+      res.status(500).json({ error: "Authentication failed" });
     }
   }
 
@@ -75,15 +81,9 @@ export class UserController {
         req.body
       );
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 604800000, // 7 días
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      });
+      res.cookie("refreshToken", refreshToken, cookieOptions);
 
       const { password, ...restUser } = user;
-
       res.status(201).json({ accessToken, restUser });
     } catch (error) {
       const errorMessage =
@@ -105,12 +105,7 @@ export class UserController {
         password
       );
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      });
-
+      res.cookie("refreshToken", refreshToken, cookieOptions);
       res.json({ accessToken, user });
     } catch (error) {
       const errorMessage =
@@ -123,18 +118,7 @@ export class UserController {
     try {
       await logoutUser.execute(req.user!.userId);
 
-      res.clearCookie("authToken", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      });
-
-      res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      });
-
+      res.clearCookie("refreshToken", cookieOptions);
       return res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
       return res.status(500).json({ error: "Error logging out" });
@@ -238,8 +222,13 @@ export class UserController {
   }
 
   static async refresh(req: Request, res: Response) {
+    console.log("Todas las cookies:", req.cookies);
+    console.log("Headers:", req.headers);
     const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) return res.status(401).json({ error: "No autorizado" });
+    if (!refreshToken) {
+      console.log("No se encontró el refresh token");
+      return res.status(401).json({ error: "No autorizado" });
+    }
 
     try {
       const decoded = JwtService.verifyRefreshToken(refreshToken);
@@ -247,8 +236,19 @@ export class UserController {
         (decoded as any).userId,
         (decoded as any).userRole
       );
-      res.json({ accessToken });
-    } catch {
+
+      const user = await getUserById.execute((decoded as any).userId);
+
+      // Renovar también el refresh token
+      const newRefreshToken = JwtService.generateRefreshToken(
+        (decoded as any).userId
+      );
+
+      res.cookie("refreshToken", newRefreshToken, cookieOptions);
+
+      res.json({ accessToken, user });
+    } catch (error: unknown) {
+      console.error("Error al verificar el refresh token:", error);
       return res.status(401).json({ error: "Token inválido" });
     }
   }

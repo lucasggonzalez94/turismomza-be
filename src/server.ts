@@ -15,18 +15,15 @@ import reviewRoutes from "./application/routes/ReviewRoutes";
 import notificationRoutes from "./application/routes/NotificationRoutes";
 import contactRoutes from "./application/routes/ContactRoutes";
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://turismomza.vercel.app",
-];
-
 dotenv.config();
 
 const app: Application = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['https://turismomza.vercel.app']
+      : ['http://localhost:3000'],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -37,32 +34,27 @@ app.set("io", io);
 app.use(
   helmet({
     contentSecurityPolicy: false,
-    crossOriginResourcePolicy: { policy: "same-origin" },
-    crossOriginOpenerPolicy: { policy: "same-origin" },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     frameguard: { action: "deny" },
     ieNoOpen: true,
     noSniff: true,
     xssFilter: true,
   })
 );
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = "The CORS policy for this site does not allow access from the specified Origin.";
-        return callback(new Error(msg), false);
-      }
-      return callback(null, true);
-    },
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://turismomza.vercel.app']
+    : ['http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(cookieParser());
 app.use(express.json());
 
-// Configuración de express-session (necesario para passport)
 app.use(
   session({
     secret: process.env.ACCESS_TOKEN_SECRET!,

@@ -13,8 +13,8 @@ export class JwtService {
   }
 
   static generateTokens = (userId: string, userRole: string) => {
-    const accessToken = jwt.sign({ userId, userRole }, process.env.JWT_SECRET!, { expiresIn: "15m" });
-    const refreshToken = jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+    const accessToken = jwt.sign({ userId, userRole }, ACCESS_SECRET, { expiresIn: "15m" });
+    const refreshToken = jwt.sign({ userId }, REFRESH_SECRET, { expiresIn: "7d" });
   
     return { accessToken, refreshToken };
   }
