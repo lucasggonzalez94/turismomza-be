@@ -8,13 +8,13 @@ export class JwtService {
     return jwt.sign({ userId, userRole }, ACCESS_SECRET, { expiresIn: "15m" });
   }
 
-  static generateRefreshToken(userId: string) {
-    return jwt.sign({ userId }, REFRESH_SECRET, { expiresIn: "7d" });
+  static generateRefreshToken(userId: string, provider: string) {
+    return jwt.sign({ userId, provider }, REFRESH_SECRET, { expiresIn: "7d" });
   }
 
-  static generateTokens = (userId: string, userRole: string) => {
+  static generateTokens = (userId: string, userRole: string, provider: string) => {
     const accessToken = jwt.sign({ userId, userRole }, ACCESS_SECRET, { expiresIn: "15m" });
-    const refreshToken = jwt.sign({ userId }, REFRESH_SECRET, { expiresIn: "7d" });
+    const refreshToken = jwt.sign({ userId, provider }, REFRESH_SECRET, { expiresIn: "7d" });
   
     return { accessToken, refreshToken };
   }

@@ -222,11 +222,8 @@ export class UserController {
   }
 
   static async refresh(req: Request, res: Response) {
-    console.log("Todas las cookies:", req.cookies);
-    console.log("Headers:", req.headers);
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
-      console.log("No se encontró el refresh token");
       return res.status(401).json({ error: "No autorizado" });
     }
 
@@ -239,16 +236,15 @@ export class UserController {
 
       const user = await getUserById.execute((decoded as any).userId);
 
-      // Renovar también el refresh token
       const newRefreshToken = JwtService.generateRefreshToken(
-        (decoded as any).userId
+        (decoded as any).userId,
+        (decoded as any).provider
       );
 
       res.cookie("refreshToken", newRefreshToken, cookieOptions);
 
-      res.json({ accessToken, user });
+      res.json({ accessToken, user, provider: (decoded as any).provider });
     } catch (error: unknown) {
-      console.error("Error al verificar el refresh token:", error);
       return res.status(401).json({ error: "Token inválido" });
     }
   }

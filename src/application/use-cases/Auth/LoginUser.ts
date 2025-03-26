@@ -17,7 +17,7 @@ export class LoginUser {
     if (!isValid) throw new Error("Credenciales inválidas.");
 
     const accessToken = JwtService.generateAccessToken(user.id, user.role);
-    const refreshToken = JwtService.generateRefreshToken(user.id);
+    const refreshToken = JwtService.generateRefreshToken(user.id, 'credentials');
 
     await this.userRepository.updateRefreshToken(user.id, refreshToken);
 

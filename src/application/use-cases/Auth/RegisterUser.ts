@@ -27,7 +27,7 @@ export class RegisterUser {
     user.validate();
     await this.userRepository.create(user);
 
-    const { accessToken, refreshToken } = JwtService.generateTokens(user.id, user.role);
+    const { accessToken, refreshToken } = JwtService.generateTokens(user.id, user.role, 'credentials');
     await this.emailService.sendWelcomeEmail(user.email, user.name);
 
     return { user, accessToken, refreshToken };
