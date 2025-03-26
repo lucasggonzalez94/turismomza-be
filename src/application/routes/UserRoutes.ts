@@ -36,5 +36,6 @@ router.delete(
   UserController.delete
 );
 router.post("/refresh-token", UserController.refresh);
+router.get("/verify-session",authenticateToken, UserController.verify);
 
 export default router;

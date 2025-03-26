@@ -30,8 +30,7 @@ export class GoogleAuthUser {
       await this.userRepository.update(user);
     }
 
-    const accessToken = JwtService.generateAccessToken(user.id, user.role);
-    const refreshToken = JwtService.generateRefreshToken(user.id, 'google');
+    const { accessToken, refreshToken } = JwtService.generateTokens(user.id, user.role, "google");
 
     await this.userRepository.updateRefreshToken(user.id, refreshToken);
 

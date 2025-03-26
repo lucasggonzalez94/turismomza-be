@@ -15,6 +15,7 @@ import { JwtService } from "../services/JwtService";
 import { GoogleAuthUser } from "../../application/use-cases/Auth/GoogleAuthUser";
 import passport from "passport";
 import { GetUserByGoogleId } from "../../application/use-cases/Auth/GetUserByGoogleId";
+import { VerifySession } from "../../application/use-cases/Auth/VerifySession";
 
 const userRepository = new PrismaUserRepository();
 const emailService = new EmailService();
@@ -29,6 +30,7 @@ const listUsers = new ListUsers(userRepository);
 const getUserById = new GetUserById(userRepository);
 const getUserByGoogleId = new GetUserByGoogleId(userRepository);
 const getUserByEmail = new GetUserByEmail(userRepository);
+const verifySession = new VerifySession(userRepository);
 
 const cookieOptions = {
   httpOnly: true,
@@ -62,8 +64,9 @@ export class UserController {
         photos: image ? [{ value: image }] : [],
       });
 
+      res.cookie("accessToken", accessToken, cookieOptions);
       res.cookie("refreshToken", refreshToken, cookieOptions);
-      res.status(200).json({ user, accessToken });
+      res.status(200).json({ user });
     } catch (error) {
       console.error("Error in Google callback:", error);
       res.status(500).json({ error: "Authentication failed" });
@@ -81,10 +84,11 @@ export class UserController {
         req.body
       );
 
+      res.cookie("accessToken", accessToken, cookieOptions);
       res.cookie("refreshToken", refreshToken, cookieOptions);
 
       const { password, ...restUser } = user;
-      res.status(201).json({ accessToken, restUser });
+      res.status(201).json({ restUser });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
@@ -105,8 +109,9 @@ export class UserController {
         password
       );
 
+      res.cookie("accessToken", accessToken, cookieOptions);
       res.cookie("refreshToken", refreshToken, cookieOptions);
-      res.json({ accessToken, user });
+      res.json({ user });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
@@ -118,6 +123,7 @@ export class UserController {
     try {
       await logoutUser.execute(req.user!.userId);
 
+      res.clearCookie("accessToken", cookieOptions);
       res.clearCookie("refreshToken", cookieOptions);
       return res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
@@ -231,21 +237,35 @@ export class UserController {
       const decoded = JwtService.verifyRefreshToken(refreshToken);
       const accessToken = JwtService.generateAccessToken(
         (decoded as any).userId,
-        (decoded as any).userRole
+        (decoded as any).userRole,
+        (decoded as any).authProvider
       );
-
-      const user = await getUserById.execute((decoded as any).userId);
 
       const newRefreshToken = JwtService.generateRefreshToken(
         (decoded as any).userId,
-        (decoded as any).provider
+        (decoded as any).userRole,
+        (decoded as any).authProvider
       );
 
+      res.cookie("accessToken", accessToken, cookieOptions);
       res.cookie("refreshToken", newRefreshToken, cookieOptions);
 
-      res.json({ accessToken, user, provider: (decoded as any).provider });
+      res.json({ accessToken });
     } catch (error: unknown) {
       return res.status(401).json({ error: "Token inválido" });
+    }
+  }
+
+  static async verify(req: Request, res: Response) {
+    try {
+      const userId = req.user!.userId;
+      const authProvider = req.user!.authProvider;
+      const user = await verifySession.execute(userId);
+      res.status(200).json({ user, authProvider, ok: true });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(401).json({ error: errorMessage, ok: false });
     }
   }
 }

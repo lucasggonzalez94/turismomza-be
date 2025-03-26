@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { JwtService } from "../infrastructure/services/JwtService";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { AuthenticatedUser } from "../types/auth.types";
 
 export const authenticateToken = (
@@ -8,21 +7,34 @@ export const authenticateToken = (
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: "No autorizado" });
+  const token = req.cookies.accessToken;
 
-  try {
-    const token = authHeader.split(" ")[1];
-    const decoded = JwtService.verifyAccessToken(token) as AuthenticatedUser;
-    req.user = decoded;
-    next();
-  } catch {
-    return res.status(401).json({ error: "Token inválido" });
-  }
+  if (!token) return res.status(401).json({ error: "No token provided" });
+
+  jwt.verify(
+    token,
+    process.env.ACCESS_TOKEN_SECRET as string,
+    (err: Error | null, decoded: JwtPayload | string | undefined) => {
+      console.log(err);
+      console.log(decoded);
+      if (err) return res.status(403).json({ error: "Invalid token" });
+
+      if (decoded && typeof decoded !== "string") {
+        req.user = {
+          userId: decoded.userId,
+          role: decoded.userRole,
+          authProvider: decoded.authProvider
+        };
+        next();
+      } else {
+        res.status(403).json({ error: "Invalid token" });
+      }
+    }
+  );
 };
 
 export const getUser = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.cookies.authToken;
+  const token = req.cookies.accessToken;
 
   if (!token) return next();
 

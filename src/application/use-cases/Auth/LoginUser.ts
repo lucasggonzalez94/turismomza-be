@@ -16,8 +16,7 @@ export class LoginUser {
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) throw new Error("Credenciales inválidas.");
 
-    const accessToken = JwtService.generateAccessToken(user.id, user.role);
-    const refreshToken = JwtService.generateRefreshToken(user.id, 'credentials');
+    const { accessToken, refreshToken } = JwtService.generateTokens(user.id, user.role, "credentials");
 
     await this.userRepository.updateRefreshToken(user.id, refreshToken);
 
