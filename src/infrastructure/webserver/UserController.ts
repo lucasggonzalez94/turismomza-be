@@ -34,12 +34,19 @@ export class UserController {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { user, accessToken } = await registerUser.execute(req.body);
+      const { user, accessToken, refreshToken } = await registerUser.execute(req.body);
 
       res.cookie("authToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         maxAge: 3600000,
+        sameSite: "strict",
+      });
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 604800000,
         sameSite: "strict",
       });
 
