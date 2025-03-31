@@ -16,7 +16,6 @@ export class User {
     public twoFactorEnabled: boolean,
     public password?: string,
     public googleId?: string,
-    public googleImage?: string,
     public twoFactorCode?: string,
     public twoFactorExpires?: Date,
     public bio?: string,

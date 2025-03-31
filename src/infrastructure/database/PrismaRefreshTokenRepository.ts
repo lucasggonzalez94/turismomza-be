@@ -7,33 +7,49 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
   async save(userId: string, token: string): Promise<void> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { refreshToken: true },
+      include: { refreshToken: true },
     });
 
     if (user?.refreshToken) {
-      return;
-    } else {
-      await prisma.user.update({
-        where: { id: userId },
+      // Si ya existe un token, lo actualizamos
+      await prisma.refreshToken.update({
+        where: { userId: userId },
         data: {
-          refreshToken: token,
+          token: token,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 días
+        },
+      });
+    } else {
+      // Si no existe, lo creamos
+      await prisma.refreshToken.create({
+        data: {
+          id: userId, // Usando el userId como id del token
+          token: token,
+          userId: userId,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 días
         },
       });
     }
   }
 
   async findByToken(token: string): Promise<{ userId: string, userRole: string } | null> {
-    const user = await prisma.user.findUnique({
-      where: { refreshToken: token },
-      select: { id: true, role: true },
+    const refreshToken = await prisma.refreshToken.findUnique({
+      where: { token: token },
+      include: { user: true },
     });
-    return user ? { userId: user.id, userRole: user.role } : null;
+    
+    return refreshToken ? { userId: refreshToken.userId, userRole: refreshToken.user.role } : null;
   }
 
   async deleteByUserId(userId: string): Promise<void> {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { refreshToken: null },
+    const refreshToken = await prisma.refreshToken.findUnique({
+      where: { userId: userId },
     });
+    
+    if (refreshToken) {
+      await prisma.refreshToken.delete({
+        where: { userId: userId },
+      });
+    }
   }
 }

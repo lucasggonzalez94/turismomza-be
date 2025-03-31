@@ -26,8 +26,34 @@ export class PrismaUserRepository implements UserRepository {
   ): Promise<User> {
     const user = await prisma.user.upsert({
       where: { email },
-      update: { name, googleImage: image, googleId },
-      create: { email, name, googleImage: image, googleId, role: "viewer" },
+      update: {
+        name,
+        profilePicture: {
+          upsert: {
+            create: {
+              publicId: image,
+              url: image
+            },
+            update: {
+              publicId: image,
+              url: image
+            }
+          }
+        },
+        googleId,
+      },
+      create: {
+        email,
+        name,
+        profilePicture: {
+          create: {
+            publicId: image,
+            url: image
+          }
+        },
+        googleId,
+        role: "viewer",
+      },
     });
 
     return new User(
@@ -41,17 +67,23 @@ export class PrismaUserRepository implements UserRepository {
 
   async update(user: User): Promise<User | null> {
     if (user.profilePicture) {
-      await prisma.profilePicture.upsert({
-        where: { userId: user.id },
-        update: {
-          publicId: user.profilePicture.publicId,
-          url: user.profilePicture.url,
-        },
-        create: {
-          id: user.profilePicture.id,
-          userId: user.id,
-          publicId: user.profilePicture.publicId,
-          url: user.profilePicture.url,
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          profilePicture: {
+            upsert: {
+              where: { userId: user.id },
+              update: {
+                publicId: user.profilePicture.publicId,
+                url: user.profilePicture.url,
+              },
+              create: {
+                id: user.profilePicture.id,
+                publicId: user.profilePicture.publicId,
+                url: user.profilePicture.url,
+              },
+            },
+          },
         },
       });
     }
@@ -79,7 +111,6 @@ export class PrismaUserRepository implements UserRepository {
           updatedUser.twoFactorEnabled,
           updatedUser.password ?? undefined,
           updatedUser.googleId ?? undefined,
-          updatedUser.googleImage ?? undefined,
           updatedUser.twoFactorCode ?? undefined,
           updatedUser.twoFactorExpires ?? undefined,
           updatedUser.bio ?? undefined,
@@ -87,7 +118,7 @@ export class PrismaUserRepository implements UserRepository {
           updatedUser.website ?? undefined,
           updatedUser.language ?? undefined,
           updatedUser.verified ?? undefined,
-          updatedUser.createdAt,
+          new Date(updatedUser.createdAt),
           updatedUser.profilePicture
             ? new ProfilePicture(
                 updatedUser.profilePicture.id,
@@ -119,7 +150,6 @@ export class PrismaUserRepository implements UserRepository {
           user.twoFactorEnabled,
           user.password ?? undefined,
           user.googleId ?? undefined,
-          user.googleImage ?? undefined,
           user.twoFactorCode ?? undefined,
           user.twoFactorExpires ?? undefined,
           user.bio ?? undefined,
@@ -127,7 +157,7 @@ export class PrismaUserRepository implements UserRepository {
           user.website ?? undefined,
           user.language ?? undefined,
           user.verified ?? undefined,
-          user.createdAt,
+          new Date(user.createdAt),
           user.profilePicture
             ? new ProfilePicture(
                 user.profilePicture.id,
@@ -155,15 +185,14 @@ export class PrismaUserRepository implements UserRepository {
           user.twoFactorEnabled,
           user.password ?? undefined,
           user.googleId ?? undefined,
-          user.googleImage ?? undefined,
           user.twoFactorCode ?? undefined,
           user.twoFactorExpires ?? undefined,
           user.bio ?? undefined,
           user.location ?? undefined,
           user.website ?? undefined,
-          user.language ?? undefined,
+          user.language,
           user.verified ?? undefined,
-          user.createdAt,
+          new Date(user.createdAt),
           user.profilePicture
             ? new ProfilePicture(
                 user.profilePicture.id,
@@ -171,8 +200,8 @@ export class PrismaUserRepository implements UserRepository {
                 user.profilePicture.url
               )
             : undefined,
-          user?.places?.length || 0,
-          user?.reviews?.length || 0
+          user.places?.length || 0,
+          user.reviews?.length || 0
         )
       : null;
   }
@@ -191,7 +220,6 @@ export class PrismaUserRepository implements UserRepository {
           user.twoFactorEnabled,
           user.password ?? undefined,
           user.googleId ?? undefined,
-          user.googleImage ?? undefined,
           user.twoFactorCode ?? undefined,
           user.twoFactorExpires ?? undefined,
           user.bio ?? undefined,
@@ -199,7 +227,7 @@ export class PrismaUserRepository implements UserRepository {
           user.website ?? undefined,
           user.language ?? undefined,
           user.verified ?? undefined,
-          user.createdAt,
+          new Date(user.createdAt),
           user.profilePicture
             ? new ProfilePicture(
                 user.profilePicture.id,
@@ -231,7 +259,6 @@ export class PrismaUserRepository implements UserRepository {
           user.twoFactorEnabled,
           user.password ?? undefined,
           user.googleId ?? undefined,
-          user.googleImage ?? undefined,
           user.twoFactorCode ?? undefined,
           user.twoFactorExpires ?? undefined,
           user.bio ?? undefined,
@@ -239,7 +266,7 @@ export class PrismaUserRepository implements UserRepository {
           user.website ?? undefined,
           user.language ?? undefined,
           user.verified ?? undefined,
-          user.createdAt,
+          new Date(user.createdAt),
           user.profilePicture
             ? new ProfilePicture(
                 user.profilePicture.id,
