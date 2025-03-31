@@ -3,7 +3,6 @@ import { Advertisement } from "./Advertisement";
 import { Favorite } from "./Favorite";
 import { Like } from "../value-objects/Like";
 import { Place } from "./Place";
-import { RefreshToken } from "./RefreshToken";
 import { Review } from "./Review";
 import { Notification } from "./Notification";
 import { Report } from "./Report";
@@ -36,7 +35,7 @@ export class User {
     public likes?: Like[],
     public reports?: Report[],
     public advertisements?: Advertisement[],
-    public refreshToken?: RefreshToken,
+    public refreshToken?: string,
   ) {
     this.validate();
   }

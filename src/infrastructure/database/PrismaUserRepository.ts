@@ -141,6 +141,42 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
+  async getByGoogleId(id: string): Promise<User | null> {
+    const user = await prisma.user.findUnique({
+      where: { googleId: id },
+      include: { profilePicture: true, places: true, reviews: true },
+    });
+    return user
+      ? new User(
+          user.id,
+          user.name,
+          user.email,
+          user.role,
+          user.twoFactorEnabled,
+          user.password ?? undefined,
+          user.googleId ?? undefined,
+          user.googleImage ?? undefined,
+          user.twoFactorCode ?? undefined,
+          user.twoFactorExpires ?? undefined,
+          user.bio ?? undefined,
+          user.location ?? undefined,
+          user.website ?? undefined,
+          user.language ?? undefined,
+          user.verified ?? undefined,
+          user.createdAt,
+          user.profilePicture
+            ? new ProfilePicture(
+                user.profilePicture.id,
+                user.profilePicture.publicId,
+                user.profilePicture.url
+              )
+            : undefined,
+          user?.places?.length || 0,
+          user?.reviews?.length || 0
+        )
+      : null;
+  }
+
   async getByEmail(email: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: { email },

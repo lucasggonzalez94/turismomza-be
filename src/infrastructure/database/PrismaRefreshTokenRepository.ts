@@ -5,12 +5,12 @@ const prisma = new PrismaClient();
 
 export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
   async save(userId: string, token: string): Promise<void> {
-    const existingToken = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { refreshToken: true },
     });
 
-    if (existingToken) {
+    if (user?.refreshToken) {
       return;
     } else {
       await prisma.user.update({

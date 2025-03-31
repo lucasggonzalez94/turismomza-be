@@ -18,7 +18,7 @@ const refreshTokenRepository = new PrismaRefreshTokenRepository();
 const emailService = new EmailService();
 
 const registerUser = new RegisterUser(userRepository, emailService);
-const loginUser = new LoginUser(userRepository, emailService);
+const loginUser = new LoginUser(userRepository, refreshTokenRepository, emailService);
 const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);
@@ -71,6 +71,17 @@ export class UserController {
         sameSite: "none",
         domain: process.env.COOKIE_DOMAIN,
       });
+      
+      // Guardar el refreshToken en las cookies
+      if (req.refreshToken) {
+        res.cookie("refreshToken", req.refreshToken, {
+          httpOnly: true,
+          secure: true,
+          maxAge: 604800000, // 7 días
+          sameSite: "none",
+          domain: process.env.COOKIE_DOMAIN,
+        });
+      }
 
       res.redirect(`${process.env.FRONTEND_URL}/auth/callback?success=true`);
     } catch (error) {
@@ -204,7 +215,7 @@ export class UserController {
 
   static async refresh(req: Request, res: Response) {
     try {
-      const refreshToken = req.cookies?.refreshToken?.token;
+      const refreshToken = req.cookies?.refreshToken;
       if (!refreshToken) {
         return res.status(401).json({ error: "No refresh token provided" });
       }

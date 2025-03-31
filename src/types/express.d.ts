@@ -7,5 +7,6 @@ declare module 'express-serve-static-core' {
       role: string;
     } & JwtPayload;
     accessToken?: string;
+    refreshToken?: string;
   }
 }

@@ -7,6 +7,7 @@ import { JwtService } from "../../../infrastructure/services/JwtService";
 export class LoginUser {
   constructor(
     private userRepository: UserRepository,
+    private refreshTokenRepository: RefreshTokenRepository,
     private emailService: EmailService
   ) {}
 
@@ -26,9 +27,8 @@ export class LoginUser {
       return { user, message: "Código de 2FA enviado." };
     }
 
-    const accessToken = JwtService.generateAccessToken(user.id, user.role);
-    const refreshToken = JwtService.generateRefreshToken(user.id);
-
+    const { accessToken, refreshToken } = JwtService.generateTokens(user.id, user.role);
+    await this.refreshTokenRepository.save(user.id, refreshToken);
     return { user, accessToken, refreshToken };
   }
 }

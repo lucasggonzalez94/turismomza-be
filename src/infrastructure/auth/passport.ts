@@ -4,12 +4,12 @@ import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { LoginWithGoogle } from "../../application/use-cases/Auth/LoginWithGoogle";
 import { EmailService } from "../services/EmailService";
 import { Request } from "express";
-
-// No es necesario redefinir la interfaz Request aquí, ya está definida en src/types/express.d.ts
+import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
 
 const userRepository = new PrismaUserRepository();
+const refreshTokenRepository = new PrismaRefreshTokenRepository();
 const emailService = new EmailService();
-const loginWithGoogle = new LoginWithGoogle(userRepository, emailService);
+const loginWithGoogle = new LoginWithGoogle(userRepository, refreshTokenRepository, emailService);
 
 export const configurePassport = () => {
   passport.use(
@@ -31,7 +31,7 @@ export const configurePassport = () => {
             );
           }
 
-          const { user, accessToken: token } = await loginWithGoogle.execute(
+          const { user, accessToken: token, refreshToken: refToken } = await loginWithGoogle.execute(
             profile.displayName || "Usuario de Google",
             email,
             profile.photos?.[0]?.value || "",
@@ -40,6 +40,7 @@ export const configurePassport = () => {
 
           // Almacenar el token para usarlo en el callback
           req.accessToken = token;
+          req.refreshToken = refToken;
           req.user = {
             userId: user.id,
             role: user.role,
