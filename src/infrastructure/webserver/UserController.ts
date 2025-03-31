@@ -2,33 +2,29 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { EmailService } from "../services/EmailService";
-import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
 import { DeleteUser } from "../../application/use-cases/Auth/DeleteUser";
 import { ListUsers } from "../../application/use-cases/Auth/ListUsers";
 import { LoginUser } from "../../application/use-cases/Auth/LoginUser";
-import { LogoutUser } from "../../application/use-cases/Auth/LogoutUser";
 import { RegisterUser } from "../../application/use-cases/Auth/RegisterUser";
 import { UpdateUser } from "../../application/use-cases/Auth/UpdateUser";
 import { GetUserById } from "../../application/use-cases/Auth/GetUserById";
 import { NotFoundError } from "../../domain/errors/NotFoundError";
-import { LoginWithGoogle } from "../../application/use-cases/Auth/LoginWithGoogle";
+import { VerifySession } from "../../application/use-cases/Auth/VerifySession";
+import { RefreshTokenUseCase } from "../../application/use-cases/Auth/RefreshTokenUseCase";
+import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
 
 const userRepository = new PrismaUserRepository();
-const emailService = new EmailService();
 const refreshTokenRepository = new PrismaRefreshTokenRepository();
+const emailService = new EmailService();
 
 const registerUser = new RegisterUser(userRepository, emailService);
-const loginUser = new LoginUser(
-  userRepository,
-  refreshTokenRepository,
-  emailService
-);
-const loginWithGoogle = new LoginWithGoogle(userRepository, emailService);
-const logoutUser = new LogoutUser(refreshTokenRepository);
+const loginUser = new LoginUser(userRepository, emailService);
 const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);
 const getUserById = new GetUserById(userRepository);
+const refreshTokenUseCase = new RefreshTokenUseCase(refreshTokenRepository);
+const verifySession = new VerifySession(userRepository);
 
 export class UserController {
   static async register(req: Request, res: Response) {
@@ -57,36 +53,29 @@ export class UserController {
     }
   }
 
-  static async google(req: Request, res: Response) {
+  static async googleCallback(req: Request, res: Response) {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+      if (!req.accessToken || !req.user) {
+        console.error(
+          "Error: accessToken o user no están disponibles en la solicitud"
+        );
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/login?error=auth_failed`
+        );
       }
 
-      const { name, email, image, googleId } = req.body;
-
-      const { user, accessToken } = await loginWithGoogle.execute(
-        name,
-        email,
-        image,
-        googleId
-      );
-
-      res.cookie("authToken", accessToken, {
+      res.cookie("authToken", req.accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         maxAge: 3600000,
-        sameSite: "strict",
+        sameSite: "none",
+        domain: process.env.COOKIE_DOMAIN,
       });
 
-      const { password, ...restUser } = user;
-
-      res.status(201).json(restUser);
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?success=true`);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Error desconocido";
-      res.status(400).json({ error: errorMessage });
+      console.error("Error en Google callback:", error);
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
     }
   }
 
@@ -103,16 +92,18 @@ export class UserController {
 
       res.cookie("authToken", accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         maxAge: 3600000,
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        sameSite: "none",
+        domain: process.env.COOKIE_DOMAIN,
       });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 604800000, // 7 días
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        secure: true,
+        maxAge: 604800000,
+        sameSite: "none",
+        domain: process.env.COOKIE_DOMAIN,
       });
 
       const { password, ...restUser } = user;
@@ -127,18 +118,16 @@ export class UserController {
 
   static async logout(req: Request, res: Response) {
     try {
-      await logoutUser.execute(req.user!.userId);
-
       res.clearCookie("authToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        secure: true,
+        sameSite: "none",
       });
 
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        secure: true,
+        sameSite: "none",
       });
 
       return res.status(200).json({ message: "Logged out successfully" });
@@ -210,6 +199,50 @@ export class UserController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error listing users" });
+    }
+  }
+
+  static async refresh(req: Request, res: Response) {
+    try {
+      const refreshToken = req.cookies?.refreshToken?.token;
+      if (!refreshToken) {
+        return res.status(401).json({ error: "No refresh token provided" });
+      }
+
+      const { accessToken, refreshToken: newRefreshToken } =
+        await refreshTokenUseCase.execute(refreshToken);
+
+      res.cookie("authToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 3600000,
+        sameSite: "strict",
+      });
+
+      res.cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 604800000, // 7 días
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      });
+
+      res.status(200).json({ message: "Token refreshed." });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(403).json({ error: errorMessage });
+    }
+  }
+
+  static async verify(req: Request, res: Response) {
+    try {
+      const userId = req.user!.userId;
+      const user = await verifySession.execute(userId);
+      res.status(200).json(user);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(401).json({ error: errorMessage });
     }
   }
 }

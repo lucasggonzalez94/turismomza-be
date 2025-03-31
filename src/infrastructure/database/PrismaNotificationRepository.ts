@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { Notification } from "../../domain/entities/Notification";
 import { NotificationRepository } from "../../domain/ports/NotificationRepository";
+import { ProfilePicture } from "../../domain/value-objects/ProfilePicture";
 
 const prisma = new PrismaClient();
 
@@ -11,8 +12,8 @@ export class PrismaNotificationRepository implements NotificationRepository {
   ): Promise<Notification> {
     const createdNotification = await prisma.notification.create({
       data: {
-        user_id: userId,
-        triggeredBy_id: notification.userId,
+        userId: userId,
+        triggeredById: notification.userId,
         message: notification.message,
         type: notification.type,
       },
@@ -23,11 +24,11 @@ export class PrismaNotificationRepository implements NotificationRepository {
             name: true,
           },
         },
-        triggered_by: {
+        triggeredBy: {
           select: {
             id: true,
             name: true,
-            profile_picture: true,
+            profilePicture: true,
           },
         },
       },
@@ -35,18 +36,27 @@ export class PrismaNotificationRepository implements NotificationRepository {
 
     return new Notification(
       createdNotification.id,
-      createdNotification.user_id,
+      createdNotification.userId,
       createdNotification.type as "review" | "like",
       createdNotification.message,
       createdNotification.read,
-      createdNotification.triggered_by,
-      createdNotification.creation_date
+      createdNotification.triggeredBy ? {
+        id: createdNotification.triggeredBy.id,
+        name: createdNotification.triggeredBy.name,
+        profile_picture: createdNotification.triggeredBy.profilePicture ? 
+          new ProfilePicture(
+            createdNotification.triggeredBy.profilePicture.id,
+            createdNotification.triggeredBy.profilePicture.publicId,
+            createdNotification.triggeredBy.profilePicture.url
+          ) : null
+      } : undefined,
+      createdNotification.creationDate
     );
   }
 
   async listUnreadNotifications(userId: string): Promise<Notification[]> {
     const unreadNotifications = await prisma.notification.findMany({
-      where: { user_id: userId, read: false },
+      where: { userId: userId, read: false },
       include: {
         user: {
           select: {
@@ -54,28 +64,37 @@ export class PrismaNotificationRepository implements NotificationRepository {
             name: true,
           },
         },
-        triggered_by: {
+        triggeredBy: {
           select: {
             id: true,
             name: true,
-            profile_picture: true,
+            profilePicture: true,
           },
         },
       },
       orderBy: {
-        creation_date: "desc",
+        creationDate: "desc",
       },
     });
 
     return unreadNotifications.map((notification) => {
       return new Notification(
         notification.id,
-        notification.user_id,
+        notification.userId,
         notification.type as "review" | "like",
         notification.message,
         notification.read,
-        notification.triggered_by,
-        notification.creation_date
+        notification.triggeredBy ? {
+          id: notification.triggeredBy.id,
+          name: notification.triggeredBy.name,
+          profile_picture: notification.triggeredBy.profilePicture ? 
+            new ProfilePicture(
+              notification.triggeredBy.profilePicture.id,
+              notification.triggeredBy.profilePicture.publicId,
+              notification.triggeredBy.profilePicture.url
+            ) : null
+        } : undefined,
+        notification.creationDate
       );
     });
   }
@@ -85,7 +104,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
     take: number
   ): Promise<Notification[]> {
     const additionalNotifications = await prisma.notification.findMany({
-      where: { user_id: userId, read: true },
+      where: { userId: userId, read: true },
       include: {
         user: {
           select: {
@@ -93,16 +112,16 @@ export class PrismaNotificationRepository implements NotificationRepository {
             name: true,
           },
         },
-        triggered_by: {
+        triggeredBy: {
           select: {
             id: true,
             name: true,
-            profile_picture: true,
+            profilePicture: true,
           },
         },
       },
       orderBy: {
-        creation_date: "desc",
+        creationDate: "desc",
       },
       take,
     });
@@ -110,12 +129,21 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return additionalNotifications.map((notification) => {
       return new Notification(
         notification.id,
-        notification.user_id,
+        notification.userId,
         notification.type as "review" | "like",
         notification.message,
         notification.read,
-        notification.triggered_by,
-        notification.creation_date
+        notification.triggeredBy ? {
+          id: notification.triggeredBy.id,
+          name: notification.triggeredBy.name,
+          profile_picture: notification.triggeredBy.profilePicture ? 
+            new ProfilePicture(
+              notification.triggeredBy.profilePicture.id,
+              notification.triggeredBy.profilePicture.publicId,
+              notification.triggeredBy.profilePicture.url
+            ) : null
+        } : undefined,
+        notification.creationDate
       );
     });
   }

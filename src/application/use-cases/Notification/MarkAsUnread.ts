@@ -1,4 +1,3 @@
-import { Notification } from "../../../domain/entities/Notification";
 import { NotificationRepository } from "../../../domain/ports/NotificationRepository";
 
 export class MarkAsUnread {

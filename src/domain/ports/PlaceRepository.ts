@@ -31,5 +31,5 @@ export interface PlaceRepository {
     pagination: { page: number; pageSize: number }
   ): Promise<{ total: number; places: Place[] }>;
   deletePlace(placeId: string, userId: string): Promise<void>;
-  getImagesByPlaceId(placeId: string): Promise<{ public_id: string }[]>;
+  getImagesByPlaceId(placeId: string): Promise<{ publicId: string }[]>;
 }

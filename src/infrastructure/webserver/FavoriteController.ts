@@ -14,7 +14,7 @@ export class FavoriteController {
       const { placeId } = req.body;
       const userId = req.user?.userId;
 
-      const favorite = await addOrRemoveFavorite.execute(placeId, userId);
+      const favorite = await addOrRemoveFavorite.execute(placeId, userId as string);
       if (favorite) {
         return res.status(201).json(favorite);
       }

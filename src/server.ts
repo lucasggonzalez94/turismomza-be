@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
+import passport from "passport";
 
 import userRoutes from "./application/routes/UserRoutes";
 import placeRoutes from "./application/routes/PlaceRoutes";
@@ -12,8 +13,12 @@ import favoriteRoutes from "./application/routes/FavoriteRoutes";
 import reviewRoutes from "./application/routes/ReviewRoutes";
 import notificationRoutes from "./application/routes/NotificationRoutes";
 import contactRoutes from "./application/routes/ContactRoutes";
+import { configurePassport } from "./infrastructure/auth/passport";
 
-const allowedOrigins = ["http://localhost:3000", "https://turismomza.vercel.app"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://turismomza.vercel.app",
+];
 
 dotenv.config();
 
@@ -53,9 +58,13 @@ app.use(
       return callback(null, true);
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(cookieParser());
+app.use(passport.initialize());
+configurePassport();
 app.use(express.json());
 
 const userSockets: {

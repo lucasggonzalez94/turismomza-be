@@ -9,8 +9,7 @@ import {
 } from "../../middleware/authMiddleware";
 import { updateValidator } from "../../validators/auth/updateValidator";
 import { deleteValidator } from "../../validators/auth/deleteValidator";
-import { RefreshTokenController } from "../../infrastructure/webserver/RefreshTokenController";
-import { VerifyTokenController } from "../../infrastructure/webserver/VerifySessionController";
+import passport from "passport";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -21,6 +20,18 @@ router.get("/user/:userId", UserController.getById);
 router.post("/register", registerValidator, UserController.register);
 router.post("/login", loginValidator, UserController.login);
 router.post("/logout", authenticateToken, UserController.logout);
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: `${process.env.FRONTEND_URL}/login`,
+  }),
+  UserController.googleCallback
+);
 router.put(
   "/update",
   authenticateToken,
@@ -34,8 +45,7 @@ router.delete(
   deleteValidator,
   UserController.delete
 );
-router.post("/refresh-token", RefreshTokenController.refresh);
-router.get("/verify-session", authenticateToken, VerifyTokenController.handle);
-router.get("/google", UserController.google);
+router.post("/refresh-token", UserController.refresh);
+router.get("/verify-session", authenticateToken, UserController.verify);
 
 export default router;

@@ -8,7 +8,7 @@ export class DeletePlace {
     const images = await this.placeRepository.getImagesByPlaceId(placeId);
     await Promise.all(
       images.map(async (image) => {
-        await CloudinaryService.destroyImage(image.public_id);
+        await CloudinaryService.destroyImage(image.publicId);
       })
     );
     await this.placeRepository.deletePlace(placeId, userId);

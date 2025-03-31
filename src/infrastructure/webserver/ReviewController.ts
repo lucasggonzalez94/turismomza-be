@@ -16,7 +16,7 @@ const reviewRepository = new PrismaReviewRepository();
 const placeRepository = new PrismaPlaceRepository();
 const notificationRepository = new PrismaNotificationRepository();
 
-const editReview = new EditReview(reviewRepository, placeRepository);
+const editReview = new EditReview(reviewRepository);
 const deleteReview = new DeleteReview(reviewRepository);
 const reportReview = new ReportReview(reviewRepository);
 
@@ -42,7 +42,7 @@ export class ReviewController {
       const review = await addReview.execute(
         content,
         rating,
-        userId,
+        userId as string,
         new Date(),
         placeId
       );
@@ -74,7 +74,7 @@ export class ReviewController {
         reviewId,
         content,
         rating,
-        userId,
+        userId as string,
         placeId
       );
 
@@ -95,7 +95,7 @@ export class ReviewController {
     const userId = req.user?.userId;
 
     try {
-      await deleteReview.execute(reviewId, userId);
+      await deleteReview.execute(reviewId, userId as string);
       res.status(204);
     } catch (error) {
       if (error instanceof UnauthorizedError) {
@@ -114,7 +114,7 @@ export class ReviewController {
     const userId = req.user?.userId;
 
     try {
-      await reportReview.execute(reviewId, userId, reason);
+      await reportReview.execute(reviewId, userId as string, reason);
       res.status(201).json({ message: "Report submitted" });
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -137,7 +137,7 @@ export class ReviewController {
         socketService
       );
 
-      await likeDislikeReview.execute(reviewId, userId);
+      await likeDislikeReview.execute(reviewId, userId as string);
       res.status(200).json({ ok: true });
     } catch (error) {
       if (error instanceof UnauthorizedError) {

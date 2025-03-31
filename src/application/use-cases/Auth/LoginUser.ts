@@ -7,7 +7,6 @@ import { JwtService } from "../../../infrastructure/services/JwtService";
 export class LoginUser {
   constructor(
     private userRepository: UserRepository,
-    private refreshTokenRepository: RefreshTokenRepository,
     private emailService: EmailService
   ) {}
 
@@ -15,7 +14,7 @@ export class LoginUser {
     const user = await this.userRepository.getByEmail(data.email);
     if (!user) throw new Error("User not found.");
 
-    const isPasswordValid = await bcrypt.compare(data.password, user.password);
+    const isPasswordValid = await bcrypt.compare(data.password, user.password || "");
     if (!isPasswordValid) throw new Error("Incorrect password.");
 
     // TODO: Implementar 2FA
@@ -29,8 +28,6 @@ export class LoginUser {
 
     const accessToken = JwtService.generateAccessToken(user.id, user.role);
     const refreshToken = JwtService.generateRefreshToken(user.id);
-
-    await this.refreshTokenRepository.save(user.id, refreshToken);
 
     return { user, accessToken, refreshToken };
   }

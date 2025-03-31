@@ -15,7 +15,7 @@ export class NotificationsController {
     const userId = req.user?.userId;
 
     try {
-      const notifications = await listNotifications.execute(userId);
+      const notifications = await listNotifications.execute(userId as string);
 
       res.status(200).json(notifications);
     } catch (error) {

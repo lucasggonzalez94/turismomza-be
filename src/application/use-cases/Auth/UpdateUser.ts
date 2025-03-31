@@ -29,14 +29,14 @@ export class UpdateUser {
 
     if (
       !data?.currentPassword ||
-      !(await bcrypt.compare(data?.currentPassword, user?.password))
+      !(await bcrypt.compare(data?.currentPassword, user?.password || ""))
     ) {
       throw new Error("Current password is incorrect");
     }
 
     if (data.file) {
       if (user.profilePicture) {
-        await CloudinaryService.destroyImage(user.profilePicture.public_id);
+        await CloudinaryService.destroyImage(user.profilePicture.publicId);
       }
 
       const uploadResult = await CloudinaryService.uploadImage(data.file);

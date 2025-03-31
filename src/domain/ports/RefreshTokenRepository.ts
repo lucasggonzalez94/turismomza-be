@@ -1,7 +1,7 @@
-import { RefreshToken } from "../entities/RefreshToken";
+import { User } from "../entities/User";
 
 export interface RefreshTokenRepository {
-  save(userId: string, token: RefreshToken): Promise<void>;
-  findByToken(token: RefreshToken): Promise<RefreshToken | null>;
+  save(userId: string, token: string): Promise<void>;
+  findByToken(token: string): Promise<{ userId: string, userRole: string } | null>;
   deleteByUserId(userId: string): Promise<void>;
 }

@@ -226,7 +226,7 @@ export class PlaceController {
     const userId = req.user?.userId;
 
     try {
-      await deletePlace.execute(id, userId);
+      await deletePlace.execute(id, userId as string);
       res.status(204).send();
     } catch (error) {
       console.error(error);
