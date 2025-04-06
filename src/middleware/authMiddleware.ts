@@ -20,7 +20,7 @@ export const authenticateToken = (
       if (decoded && typeof decoded !== "string") {
         req.user = {
           userId: decoded.userId,
-          role: decoded.role,
+          role: decoded.userRole,
         };
         next();
       } else {
@@ -44,7 +44,7 @@ export const getUser = (req: Request, res: Response, next: NextFunction) => {
       if (decoded && typeof decoded !== "string") {
         req.user = {
           userId: decoded.userId,
-          role: decoded.role,
+          role: decoded.userRole,
         };
       }
       return next();
