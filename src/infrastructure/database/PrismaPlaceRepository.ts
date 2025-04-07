@@ -94,6 +94,11 @@ export class PrismaPlaceRepository implements PlaceRepository {
     },
     images: { url: string; publicId: string; order: number }[]
   ): Promise<Place> {
+    // Primero, eliminamos todas las imágenes existentes para evitar duplicación
+    await prisma.image.deleteMany({
+      where: { placeId: placeData.id },
+    });
+
     const newPlace = await prisma.place.update({
       where: { id: placeData.id },
       data: {

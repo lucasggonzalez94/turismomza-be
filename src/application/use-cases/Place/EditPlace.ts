@@ -19,6 +19,19 @@ export class EditPlace {
 
     const slug = await generateSlug(input.title);
 
+    // Obtener las imágenes existentes del lugar
+    const existingImages = await this.placeRepository.getImagesByPlaceId(placeId);
+    if (!existingImages) {
+      throw new Error("Place not found");
+    }
+
+    // Eliminar las imágenes antiguas de Cloudinary
+    for (const image of existingImages) {
+      if (image.publicId) {
+        await CloudinaryService.destroyImage(image.publicId);
+      }
+    }
+
     const uploadedImages: { id: string, url: string; publicId: string; order: number }[] =
       [];
     const uploadedPublicIds: string[] = [];
