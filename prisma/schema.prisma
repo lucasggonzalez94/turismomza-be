@@ -11,6 +11,7 @@ model User {
   id                     String          @id @default(uuid())
   name                   String
   email                  String          @unique
+  hasPassword            Boolean         @default(false)
   password               String?
   role                   Role
   twoFactorEnabled       Boolean         @default(false)

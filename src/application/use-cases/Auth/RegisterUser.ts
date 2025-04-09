@@ -21,6 +21,7 @@ export class RegisterUser {
       data.email,
       "viewer",
       false,
+      true,
       hashedPassword,
     );
 

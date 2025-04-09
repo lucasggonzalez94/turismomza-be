@@ -61,7 +61,8 @@ export class PrismaUserRepository implements UserRepository {
       user?.name,
       user?.email,
       user?.role,
-      user?.twoFactorEnabled
+      user?.twoFactorEnabled,
+      false,
     );
   }
 
@@ -109,6 +110,7 @@ export class PrismaUserRepository implements UserRepository {
           updatedUser.email,
           updatedUser.role,
           updatedUser.twoFactorEnabled,
+          updatedUser.password ? true : false,
           updatedUser.password ?? undefined,
           updatedUser.googleId ?? undefined,
           updatedUser.twoFactorCode ?? undefined,
@@ -148,6 +150,7 @@ export class PrismaUserRepository implements UserRepository {
           user.email,
           user.role,
           user.twoFactorEnabled,
+          user.hasPassword,
           user.password ?? undefined,
           user.googleId ?? undefined,
           user.twoFactorCode ?? undefined,
@@ -183,6 +186,7 @@ export class PrismaUserRepository implements UserRepository {
           user.email,
           user.role,
           user.twoFactorEnabled,
+          user.hasPassword,
           user.password ?? undefined,
           user.googleId ?? undefined,
           user.twoFactorCode ?? undefined,
@@ -218,6 +222,7 @@ export class PrismaUserRepository implements UserRepository {
           user.email,
           user.role,
           user.twoFactorEnabled,
+          user.hasPassword,
           user.password ?? undefined,
           user.googleId ?? undefined,
           user.twoFactorCode ?? undefined,
@@ -257,6 +262,7 @@ export class PrismaUserRepository implements UserRepository {
           user.email,
           user.role,
           user.twoFactorEnabled,
+          user.hasPassword,
           user.password ?? undefined,
           user.googleId ?? undefined,
           user.twoFactorCode ?? undefined,

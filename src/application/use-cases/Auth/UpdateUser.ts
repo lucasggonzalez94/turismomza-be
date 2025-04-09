@@ -28,7 +28,7 @@ export class UpdateUser {
     if (!user) throw new Error("User not found");
 
     if (
-      !data?.currentPassword ||
+      (user?.hasPassword && !data?.currentPassword) ||
       !(await bcrypt.compare(data?.currentPassword, user?.password || ""))
     ) {
       throw new Error("Current password is incorrect");

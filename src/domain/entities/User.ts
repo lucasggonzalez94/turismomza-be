@@ -14,6 +14,7 @@ export class User {
     public email: string,
     public role: "viewer" | "publisher" | "admin",
     public twoFactorEnabled: boolean,
+    public hasPassword: boolean,
     public password?: string,
     public googleId?: string,
     public twoFactorCode?: string,
