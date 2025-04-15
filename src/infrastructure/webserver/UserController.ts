@@ -5,12 +5,15 @@ import { EmailService } from "../services/EmailService";
 import { DeleteUser } from "../../application/use-cases/Auth/DeleteUser";
 import { ListUsers } from "../../application/use-cases/Auth/ListUsers";
 import { LoginUser } from "../../application/use-cases/Auth/LoginUser";
+import { LoginWithGoogle } from "../../application/use-cases/Auth/LoginWithGoogle";
 import { RegisterUser } from "../../application/use-cases/Auth/RegisterUser";
 import { UpdateUser } from "../../application/use-cases/Auth/UpdateUser";
 import { GetUserById } from "../../application/use-cases/Auth/GetUserById";
 import { NotFoundError } from "../../domain/errors/NotFoundError";
 import { VerifySession } from "../../application/use-cases/Auth/VerifySession";
 import { RefreshTokenUseCase } from "../../application/use-cases/Auth/RefreshTokenUseCase";
+import { LinkGoogleAccount } from "../../application/use-cases/Auth/LinkGoogleAccount";
+import { UnlinkGoogleAccount } from "../../application/use-cases/Auth/UnlinkGoogleAccount";
 import { PrismaRefreshTokenRepository } from "../database/PrismaRefreshTokenRepository";
 
 const userRepository = new PrismaUserRepository();
@@ -19,12 +22,15 @@ const emailService = new EmailService();
 
 const registerUser = new RegisterUser(userRepository, emailService);
 const loginUser = new LoginUser(userRepository, refreshTokenRepository, emailService);
+const loginWithGoogle = new LoginWithGoogle(userRepository, refreshTokenRepository, emailService);
 const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);
 const getUserById = new GetUserById(userRepository);
 const refreshTokenUseCase = new RefreshTokenUseCase(refreshTokenRepository);
 const verifySession = new VerifySession(userRepository);
+const linkGoogleAccount = new LinkGoogleAccount(userRepository);
+const unlinkGoogleAccount = new UnlinkGoogleAccount(userRepository);
 
 export class UserController {
   static async register(req: Request, res: Response) {
@@ -68,6 +74,16 @@ export class UserController {
         );
         return res.redirect(
           `${process.env.FRONTEND_URL}/login?error=auth_failed`
+        );
+      }
+
+      // Verificar si estamos vinculando una cuenta existente
+      const isLinking = req.query.state ? JSON.parse(req.query.state as string).linking === true : false;
+      
+      if (isLinking) {
+        // Si estamos vinculando, redirigir a la página de vinculación con el ID de Google
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/auth/link-callback?success=true&googleId=${req.user.googleId}`
         );
       }
 
@@ -261,6 +277,47 @@ export class UserController {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
       res.status(401).json({ error: errorMessage });
+    }
+  }
+
+  static async linkGoogle(req: Request, res: Response) {
+    try {
+      const userId = req.user!.userId;
+      const { googleId } = req.body;
+      
+      const updatedUser = await linkGoogleAccount.execute(userId, googleId);
+      
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json({ 
+        message: "Cuenta de Google vinculada correctamente", 
+        user: userWithoutPassword 
+      });
+    } catch (error) {
+      console.error("Error al vincular cuenta de Google:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(400).json({ error: errorMessage });
+    }
+  }
+
+  static async unlinkGoogle(req: Request, res: Response) {
+    try {
+      const userId = req.user!.userId;
+      
+      const updatedUser = await unlinkGoogleAccount.execute(userId);
+      
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json({ 
+        message: "Cuenta de Google desvinculada correctamente", 
+        user: userWithoutPassword 
+      });
+    } catch (error) {
+      console.error("Error al desvincular cuenta de Google:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(400).json({ error: errorMessage });
     }
   }
 }

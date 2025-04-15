@@ -22,7 +22,18 @@ router.post("/login", loginValidator, UserController.login);
 router.post("/logout", authenticateToken, UserController.logout);
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  (req, res, next) => {
+    // Guardar el parámetro linking en la query para usarlo más tarde
+    const linking = req.query.linking === 'true';
+    // Almacenar el estado en la sesión para recuperarlo después
+    req.authInfo = { linking };
+    // Modificar la URL de autenticación para incluir el estado
+    req.query.state = JSON.stringify({ linking });
+    next();
+  },
+  passport.authenticate("google", { 
+    scope: ["profile", "email"]
+  })
 );
 router.get(
   "/google/callback",
@@ -47,5 +58,7 @@ router.delete(
 );
 router.post("/refresh-token", UserController.refresh);
 router.get("/verify-session", authenticateToken, UserController.verify);
+router.post("/link-google", authenticateToken, UserController.linkGoogle);
+router.post("/unlink-google", authenticateToken, UserController.unlinkGoogle);
 
 export default router;

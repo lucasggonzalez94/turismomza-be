@@ -44,6 +44,7 @@ export const configurePassport = () => {
           req.user = {
             userId: user.id,
             role: user.role,
+            googleId: profile.id
           };
 
           return done(null, user);

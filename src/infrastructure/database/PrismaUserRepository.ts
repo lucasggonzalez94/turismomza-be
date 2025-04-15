@@ -89,19 +89,27 @@ export class PrismaUserRepository implements UserRepository {
       });
     }
 
+    const updateData: any = {
+      name: user.name,
+      email: user.email,
+      bio: user.bio,
+      location: user.location,
+      website: user.website,
+      language: user.language,
+      verified: user.verified,
+      password: user.password,
+      hasPassword: user.hasPassword,
+    };
+
+    if (user.googleId === undefined) {
+      updateData.googleId = null;
+    } else if (user.googleId !== null) {
+      updateData.googleId = user.googleId;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: {
-        name: user.name,
-        email: user.email,
-        bio: user.bio,
-        location: user.location,
-        website: user.website,
-        language: user.language,
-        verified: user.verified,
-        password: user.password,
-        hasPassword: user.hasPassword,
-      },
+      data: updateData,
       include: { profilePicture: true },
     });
 
