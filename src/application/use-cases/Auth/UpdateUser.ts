@@ -27,9 +27,11 @@ export class UpdateUser {
     const user = await this.userRepository.getById(data.userId);
     if (!user) throw new Error("User not found");
 
+    // TODO: Validar que al cambiar el password, no sea el mismo que el actual
     if (
-      (user?.hasPassword && !data?.currentPassword) ||
-      !(await bcrypt.compare(data?.currentPassword, user?.password || ""))
+      user?.hasPassword &&
+      (!data?.currentPassword ||
+        !(await bcrypt.compare(data?.currentPassword, user?.password || "")))
     ) {
       throw new Error("Current password is incorrect");
     }
@@ -58,6 +60,7 @@ export class UpdateUser {
     if (data.verified) user.verified = data.verified;
     if (data.password) {
       user.password = await bcrypt.hash(data.password, 12);
+      user.hasPassword = true;
       await this.emailService.sendPasswordUpdateEmail(user.email, user.name);
     }
 

@@ -99,6 +99,8 @@ export class PrismaUserRepository implements UserRepository {
         website: user.website,
         language: user.language,
         verified: user.verified,
+        password: user.password,
+        hasPassword: user.hasPassword,
       },
       include: { profilePicture: true },
     });
