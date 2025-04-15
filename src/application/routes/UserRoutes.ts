@@ -25,10 +25,15 @@ router.get(
   (req, res, next) => {
     // Guardar el parámetro linking en la query para usarlo más tarde
     const linking = req.query.linking === 'true';
-    // Almacenar el estado en la sesión para recuperarlo después
-    req.authInfo = { linking };
-    // Modificar la URL de autenticación para incluir el estado
-    req.query.state = JSON.stringify({ linking });
+    // Almacenar el estado en una cookie
+    if (linking) {
+      res.cookie('google_linking', 'true', { 
+        httpOnly: true, 
+        secure: true,
+        sameSite: 'none',
+        domain: process.env.COOKIE_DOMAIN
+      });
+    }
     next();
   },
   passport.authenticate("google", { 

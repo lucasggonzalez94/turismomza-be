@@ -22,7 +22,6 @@ const emailService = new EmailService();
 
 const registerUser = new RegisterUser(userRepository, emailService);
 const loginUser = new LoginUser(userRepository, refreshTokenRepository, emailService);
-const loginWithGoogle = new LoginWithGoogle(userRepository, refreshTokenRepository, emailService);
 const updateUser = new UpdateUser(userRepository, emailService);
 const deleteUser = new DeleteUser(userRepository);
 const listUsers = new ListUsers(userRepository);
@@ -78,9 +77,18 @@ export class UserController {
       }
 
       // Verificar si estamos vinculando una cuenta existente
-      const isLinking = req.query.state ? JSON.parse(req.query.state as string).linking === true : false;
+      // Obtener el estado de linking desde la cookie
+      const isLinking = req.cookies?.google_linking === 'true';
       
+      // Limpiar la cookie después de usarla
       if (isLinking) {
+        res.clearCookie('google_linking', {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none',
+          domain: process.env.COOKIE_DOMAIN
+        });
+        
         // Si estamos vinculando, redirigir a la página de vinculación con el ID de Google
         return res.redirect(
           `${process.env.FRONTEND_URL}/auth/link-callback?success=true&googleId=${req.user.googleId}`
