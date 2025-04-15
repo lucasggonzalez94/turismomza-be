@@ -5,7 +5,6 @@ import { EmailService } from "../services/EmailService";
 import { DeleteUser } from "../../application/use-cases/Auth/DeleteUser";
 import { ListUsers } from "../../application/use-cases/Auth/ListUsers";
 import { LoginUser } from "../../application/use-cases/Auth/LoginUser";
-import { LoginWithGoogle } from "../../application/use-cases/Auth/LoginWithGoogle";
 import { RegisterUser } from "../../application/use-cases/Auth/RegisterUser";
 import { UpdateUser } from "../../application/use-cases/Auth/UpdateUser";
 import { GetUserById } from "../../application/use-cases/Auth/GetUserById";
