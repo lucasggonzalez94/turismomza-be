@@ -1,7 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import { PlaceController } from "../../infrastructure/webserver/PlaceController";
-import { authenticateToken, getUser } from "../../middleware/authMiddleware";
+import { authenticateToken } from "../../middleware/authMiddleware";
 import { createPlaceValidator } from "../../validators/places/createPlaceValidator";
 import { editPlaceValidator } from "../../validators/places/editPlaceValidator";
 
@@ -24,7 +24,7 @@ router.put(
   PlaceController.edit
 );
 router.delete("/:id", authenticateToken, PlaceController.delete);
-router.get("/", getUser, PlaceController.list);
+router.get("/", PlaceController.list);
 router.get("/:slug", PlaceController.getBySlug);
 router.get("/user/:userId", authenticateToken, PlaceController.listByUser);
 

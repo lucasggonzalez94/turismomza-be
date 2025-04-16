@@ -4,7 +4,6 @@ import { PrismaPlaceRepository } from "../database/PrismaPlaceRepository";
 import { PrismaUserRepository } from "../database/PrismaUserRepository";
 import { ListPlaces } from "../../application/use-cases/Place/ListPlaces";
 import { GetPlaceBySlug } from "../../application/use-cases/Place/GetPlaceBySlug";
-import ListPlacesByUser from "../../application/use-cases/Place/ListPlacesByUser";
 import { EditPlace } from "../../application/use-cases/Place/EditPlace";
 import { DeletePlace } from "../../application/use-cases/Place/DeletePlace";
 
@@ -15,7 +14,6 @@ const createPlace = new CreatePlace(placeRepository, userRepository);
 const editPlace = new EditPlace(placeRepository);
 const listPlaces = new ListPlaces(placeRepository);
 const getPlaceBySlug = new GetPlaceBySlug(placeRepository);
-const listPlacesByUser = new ListPlacesByUser(placeRepository);
 const deletePlace = new DeletePlace(placeRepository);
 
 export class PlaceController {
@@ -133,11 +131,9 @@ export class PlaceController {
         page = "1",
         pageSize = "10",
       } = req.query;
-      const userId = req?.user?.userId;
 
       const filters = {
         searchTerm: searchTerm ? String(searchTerm) : undefined,
-        creatorId: userId ? String(userId) : undefined,
         categories: categories
           ? Array.isArray(categories)
             ? categories.map(String)
@@ -181,12 +177,12 @@ export class PlaceController {
   static async listByUser(req: Request, res: Response): Promise<void> {
     try {
       const {
-        title,
-        description,
+        searchTerm,
         categories,
         location,
         priceMin,
         priceMax,
+        sponsored,
         rating,
         page = "1",
         pageSize = "10",
@@ -195,8 +191,7 @@ export class PlaceController {
       const userId = req.user!.userId;
 
       const filters = {
-        title: title ? String(title) : undefined,
-        description: description ? String(description) : undefined,
+        searchTerm: searchTerm ? String(searchTerm) : undefined,
         creatorId: userId ? String(userId) : undefined,
         categories: categories
           ? Array.isArray(categories)
@@ -206,6 +201,7 @@ export class PlaceController {
         location: location ? String(location) : undefined,
         priceMin: priceMin ? parseFloat(String(priceMin)) : undefined,
         priceMax: priceMax ? parseFloat(String(priceMax)) : undefined,
+        sponsored: sponsored === "true" ? true : undefined,
         rating: rating ? parseInt(String(rating), 10) : undefined,
       };
 
@@ -214,7 +210,7 @@ export class PlaceController {
         pageSize: parseInt(String(pageSize), 10),
       };
 
-      const result = await listPlacesByUser.execute(filters, pagination);
+      const result = await listPlaces.execute(filters, pagination);
       res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({ error: "Error listing places" });
