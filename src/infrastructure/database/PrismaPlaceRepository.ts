@@ -588,13 +588,13 @@ export class PrismaPlaceRepository implements PlaceRepository {
     );
   }
 
-  async listPlacesByUser(
+  async listFavoritePlaces(
+    userId: string,
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
   ): Promise<{ total: number; places: Place[] }> {
     const {
       searchTerm,
-      creatorId,
       categories,
       location,
       priceMin,
@@ -633,7 +633,10 @@ export class PrismaPlaceRepository implements PlaceRepository {
         reviews: ratingRange
           ? { some: { rating: { gte: ratingRange.gte, lt: ratingRange.lt } } }
           : undefined,
-        creatorId: creatorId,
+        creatorId: userId,
+        favorites: {
+          some: { userId },
+        },
       },
     });
 
@@ -653,7 +656,10 @@ export class PrismaPlaceRepository implements PlaceRepository {
           gte: priceMin ? priceMin : undefined,
           lte: priceMax ? priceMax : undefined,
         },
-        creatorId: creatorId,
+        creatorId: userId,
+        favorites: {
+          some: { userId },
+        },
       },
       include: {
         advertisements: true,

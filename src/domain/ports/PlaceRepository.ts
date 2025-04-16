@@ -24,12 +24,13 @@ export interface PlaceRepository {
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
   ): Promise<{ total: number; allPlaces: Place[], places: Place[] }>;
-  getById(slug: string): Promise<Place | null>;
-  getBySlug(slug: string): Promise<Place | null>;
-  listPlacesByUser(
+  listFavoritePlaces(
+    userId: string,
     filters: ListPlacesFilters,
     pagination: { page: number; pageSize: number }
   ): Promise<{ total: number; places: Place[] }>;
+  getById(slug: string): Promise<Place | null>;
+  getBySlug(slug: string): Promise<Place | null>;
   deletePlace(placeId: string, userId: string): Promise<void>;
   getImagesByPlaceId(placeId: string): Promise<{ publicId: string }[]>;
 }

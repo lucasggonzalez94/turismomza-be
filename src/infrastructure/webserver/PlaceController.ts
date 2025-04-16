@@ -6,6 +6,7 @@ import { ListPlaces } from "../../application/use-cases/Place/ListPlaces";
 import { GetPlaceBySlug } from "../../application/use-cases/Place/GetPlaceBySlug";
 import { EditPlace } from "../../application/use-cases/Place/EditPlace";
 import { DeletePlace } from "../../application/use-cases/Place/DeletePlace";
+import { ListFavoritePlaces } from "../../application/use-cases/Place/ListFavoritePlaces";
 
 const placeRepository = new PrismaPlaceRepository();
 const userRepository = new PrismaUserRepository();
@@ -15,6 +16,7 @@ const editPlace = new EditPlace(placeRepository);
 const listPlaces = new ListPlaces(placeRepository);
 const getPlaceBySlug = new GetPlaceBySlug(placeRepository);
 const deletePlace = new DeletePlace(placeRepository);
+const listFavoritePlaces = new ListFavoritePlaces(placeRepository);
 
 export class PlaceController {
   static async create(req: Request, res: Response) {
@@ -214,6 +216,48 @@ export class PlaceController {
       res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({ error: "Error listing places" });
+    }
+  }
+
+  static async listFavorites(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        searchTerm,
+        categories,
+        location,
+        priceMin,
+        priceMax,
+        sponsored,
+        rating,
+        page = "1",
+        pageSize = "10",
+      } = req.query;
+
+      const userId = req.user!.userId;
+
+      const filters = {
+        searchTerm: searchTerm ? String(searchTerm) : undefined,
+        categories: categories
+          ? Array.isArray(categories)
+            ? categories.map(String)
+            : [String(categories)]
+          : undefined,
+        location: location ? String(location) : undefined,
+        priceMin: priceMin ? parseFloat(String(priceMin)) : undefined,
+        priceMax: priceMax ? parseFloat(String(priceMax)) : undefined,
+        sponsored: sponsored === "true" ? true : undefined,
+        rating: rating ? parseInt(String(rating), 10) : undefined,
+      };
+
+      const pagination = {
+        page: parseInt(String(page), 10),
+        pageSize: parseInt(String(pageSize), 10),
+      };
+
+      const result = await listFavoritePlaces.execute(userId, filters, pagination);
+      res.status(200).json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: "Error listing favorite places" });
     }
   }
 
