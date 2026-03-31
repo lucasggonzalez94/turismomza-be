@@ -23,10 +23,10 @@ router.put(
   editPlaceValidator,
   PlaceController.edit
 );
-router.delete("/:id", authenticateToken, PlaceController.delete);
 router.get("/", PlaceController.list);
 router.get("/favorites", authenticateToken, PlaceController.listFavorites);
-router.get("/:slug", PlaceController.getBySlug);
-router.get("/user/:userId", authenticateToken, PlaceController.listByUser);
+router.get("/user", authenticateToken, PlaceController.listByUser);
+router.get("/slug/:slug", PlaceController.getBySlug);
+router.delete("/:id", authenticateToken, PlaceController.delete);
 
 export default router;
