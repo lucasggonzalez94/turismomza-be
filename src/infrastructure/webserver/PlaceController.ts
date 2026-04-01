@@ -156,7 +156,8 @@ export class PlaceController {
       const result = await listPlaces.execute(filters, pagination);
       res.status(200).json(result);
     } catch (error: any) {
-      res.status(500).json({ error: "Error listing places" });
+      console.error("Error in PlaceController.list:", error);
+      res.status(500).json({ error: "Error listing places", details: error.message });
     }
   }
 
