@@ -88,12 +88,12 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
       take: pageSizeNumber,
     });
 
-    const favoritePlaces = favorites.map((favorite) => favorite.place);
+    const favoritePlaces = favorites.map((favorite: any) => favorite.place);
 
     return {
       total: totalPlaces,
       places: favoritePlaces.map(
-        (place) =>
+        (place: any) =>
           new Place(
             place.id,
             place.title,
@@ -105,7 +105,7 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
             place.createdAt,
             place.services,
             place.schedule,
-            place.images.map((image) => ({
+            place.images.map((image: any) => ({
               id: image.id,
               url: image.url,
               publicId: image.publicId,

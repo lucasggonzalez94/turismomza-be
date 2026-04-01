@@ -265,7 +265,7 @@ export class PrismaUserRepository implements UserRepository {
       },
     });
     return users.map(
-      (user) =>
+      (user: any) =>
         new User(
           user.id,
           user.name,

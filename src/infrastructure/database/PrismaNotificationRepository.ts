@@ -77,7 +77,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
       },
     });
 
-    return unreadNotifications.map((notification) => {
+    return unreadNotifications.map((notification: any) => {
       return new Notification(
         notification.id,
         notification.userId,
@@ -126,7 +126,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
       take,
     });
 
-    return additionalNotifications.map((notification) => {
+    return additionalNotifications.map((notification: any) => {
       return new Notification(
         notification.id,
         notification.userId,
