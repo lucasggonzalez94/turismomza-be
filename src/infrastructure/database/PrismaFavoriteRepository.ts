@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
 import { FavoriteRepository } from "../../domain/ports/FavoriteRepository";
 import { Favorite } from "../../domain/entities/Favorite";
 import { Place } from "../../domain/entities/Place";
-
-const prisma = new PrismaClient();
+import prisma from "./prismaClient";
 
 export class PrismaFavoriteRepository implements FavoriteRepository {
   async addOrRemove(placeId: string, userId: string): Promise<Favorite | void> {

@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 import { Review } from "../../domain/entities/Review";
 import { ReviewRepository } from "../../domain/ports/ReviewRepository";
-
-const prisma = new PrismaClient();
+import prisma from "./prismaClient";
 
 export class PrismaReviewRepository implements ReviewRepository {
   async addReview(review: Review): Promise<Review> {

@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import { RefreshTokenRepository } from "../../domain/ports/RefreshTokenRepository";
-
-const prisma = new PrismaClient();
+import prisma from "./prismaClient";
 
 export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
   async save(userId: string, token: string): Promise<void> {

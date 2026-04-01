@@ -1,12 +1,10 @@
-import { PrismaClient } from "@prisma/client";
 import { Place } from "../../domain/entities/Place";
 import {
   ListPlacesFilters,
   PlaceRepository,
 } from "../../domain/ports/PlaceRepository";
 import { generateSlug } from "../../helpers/generateSlug";
-
-const prisma = new PrismaClient();
+import prisma from "./prismaClient";
 
 export class PrismaPlaceRepository implements PlaceRepository {
   async createPlace(

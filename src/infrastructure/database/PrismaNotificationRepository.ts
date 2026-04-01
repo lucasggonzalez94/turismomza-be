@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
 import { Notification } from "../../domain/entities/Notification";
 import { NotificationRepository } from "../../domain/ports/NotificationRepository";
 import { ProfilePicture } from "../../domain/value-objects/ProfilePicture";
-
-const prisma = new PrismaClient();
+import prisma from "./prismaClient";
 
 export class PrismaNotificationRepository implements NotificationRepository {
   async createNotification(
