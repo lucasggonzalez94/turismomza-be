@@ -2,7 +2,7 @@
   "name": "turismomza-be",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "concurrently \"docker-compose up -d\" \"tsc --watch\" \"node --watch dist/server.js\"",
     "start": "node dist/server.js",
