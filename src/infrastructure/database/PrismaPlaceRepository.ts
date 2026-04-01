@@ -166,7 +166,7 @@ export class PrismaPlaceRepository implements PlaceRepository {
         publicId: image.publicId,
         order: image.order,
       })),
-      newPlace.reviews.map((review) => ({
+      newPlace.reviews.map((review: any) => ({
         id: review.id,
         content: review.content,
         rating: review.rating,
@@ -174,11 +174,11 @@ export class PrismaPlaceRepository implements PlaceRepository {
         creationDate: review.creationDate,
         placeId: review.placeId,
       })),
-      newPlace.favorites.map((fav) => ({
+      newPlace.favorites.map((fav: any) => ({
         id: fav.id,
         userId: fav.userId,
       })),
-      newPlace.advertisements.map((ad) => ({
+      newPlace.advertisements.map((ad: any) => ({
         id: ad.id,
         placeId: ad.placeId,
         userId: ad.userId,
@@ -462,13 +462,13 @@ export class PrismaPlaceRepository implements PlaceRepository {
       place.createdAt,
       place.services,
       place.schedule,
-      place.images.map((image) => ({
+      place.images.map((image: any) => ({
         id: image.id,
         url: image.url,
         publicId: image.publicId,
         order: image.order,
       })),
-      place.reviews.map((review) => ({
+      place.reviews.map((review: any) => ({
         id: review.id,
         content: review.content,
         rating: review.rating,
@@ -476,11 +476,11 @@ export class PrismaPlaceRepository implements PlaceRepository {
         creationDate: review.creationDate,
         placeId: review.placeId,
       })),
-      place.favorites.map((fav) => ({
+      place.favorites.map((fav: any) => ({
         id: fav.id,
         userId: fav.userId,
       })),
-      place.advertisements.map((ad) => ({
+      place.advertisements.map((ad: any) => ({
         id: ad.id,
         placeId: ad.placeId,
         userId: ad.userId,
@@ -540,13 +540,13 @@ export class PrismaPlaceRepository implements PlaceRepository {
       place.createdAt,
       place.services,
       place.schedule,
-      place.images.map((image) => ({
+      place.images.map((image: any) => ({
         id: image.id,
         url: image.url,
         publicId: image.publicId,
         order: image.order,
       })),
-      place.reviews.map((review) => ({
+      place.reviews.map((review: any) => ({
         id: review.id,
         content: review.content,
         rating: review.rating,
@@ -562,11 +562,11 @@ export class PrismaPlaceRepository implements PlaceRepository {
           creationDate: like.creationDate,
         })),
       })),
-      place.favorites.map((fav) => ({
+      place.favorites.map((fav: any) => ({
         id: fav.id,
         userId: fav.userId,
       })),
-      place.advertisements.map((ad) => ({
+      place.advertisements.map((ad: any) => ({
         id: ad.id,
         placeId: ad.placeId,
         userId: ad.userId,
