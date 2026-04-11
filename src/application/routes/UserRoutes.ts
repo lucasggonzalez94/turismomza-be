@@ -14,6 +14,8 @@ import passport from "passport";
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+const isProduction = process.env.NODE_ENV === "production";
+const cookieDomain = process.env.COOKIE_DOMAIN;
 
 router.get("/users", authenticateToken, authorizeAdmin, UserController.list);
 router.get("/user/:userId", UserController.getById);
@@ -29,9 +31,11 @@ router.get(
     if (linking) {
       res.cookie('google_linking', 'true', { 
         httpOnly: true, 
-        secure: true,
-        sameSite: 'none',
-        domain: process.env.COOKIE_DOMAIN
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        ...(cookieDomain && cookieDomain !== "localhost"
+          ? { domain: cookieDomain }
+          : {})
       });
     }
     next();

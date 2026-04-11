@@ -30,6 +30,17 @@ const verifySession = new VerifySession(userRepository);
 const linkGoogleAccount = new LinkGoogleAccount(userRepository);
 const unlinkGoogleAccount = new UnlinkGoogleAccount(userRepository);
 
+const isProduction = process.env.NODE_ENV === "production";
+const cookieDomain = process.env.COOKIE_DOMAIN;
+const crossDomainCookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
+  ...(cookieDomain && cookieDomain !== "localhost"
+    ? { domain: cookieDomain }
+    : {}),
+};
+
 export class UserController {
   static async register(req: Request, res: Response) {
     try {
@@ -41,17 +52,13 @@ export class UserController {
       const { user, accessToken, refreshToken } = await registerUser.execute(req.body);
 
       res.cookie("authToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
         maxAge: 3600000,
-        sameSite: "strict",
+        ...crossDomainCookieOptions,
       });
 
       res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
         maxAge: 604800000,
-        sameSite: "strict",
+        ...crossDomainCookieOptions,
       });
 
       const { password, ...restUser } = user;
@@ -82,10 +89,7 @@ export class UserController {
       // Limpiar la cookie después de usarla
       if (isLinking) {
         res.clearCookie('google_linking', {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'none',
-          domain: process.env.COOKIE_DOMAIN
+          ...crossDomainCookieOptions,
         });
         
         // Si estamos vinculando, redirigir a la página de vinculación con el ID de Google
@@ -95,21 +99,15 @@ export class UserController {
       }
 
       res.cookie("authToken", req.accessToken, {
-        httpOnly: true,
-        secure: true,
         maxAge: 3600000,
-        sameSite: "none",
-        domain: process.env.COOKIE_DOMAIN,
+        ...crossDomainCookieOptions,
       });
       
       // Guardar el refreshToken en las cookies
       if (req.refreshToken) {
         res.cookie("refreshToken", req.refreshToken, {
-          httpOnly: true,
-          secure: true,
           maxAge: 604800000, // 7 días
-          sameSite: "none",
-          domain: process.env.COOKIE_DOMAIN,
+          ...crossDomainCookieOptions,
         });
       }
 
@@ -132,19 +130,13 @@ export class UserController {
       );
 
       res.cookie("authToken", accessToken, {
-        httpOnly: true,
-        secure: true,
         maxAge: 3600000,
-        sameSite: "none",
-        domain: process.env.COOKIE_DOMAIN,
+        ...crossDomainCookieOptions,
       });
 
       res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
         maxAge: 604800000,
-        sameSite: "none",
-        domain: process.env.COOKIE_DOMAIN,
+        ...crossDomainCookieOptions,
       });
 
       const { password, ...restUser } = user;
@@ -160,15 +152,11 @@ export class UserController {
   static async logout(req: Request, res: Response) {
     try {
       res.clearCookie("authToken", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        ...crossDomainCookieOptions,
       });
 
       res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        ...crossDomainCookieOptions,
       });
 
       return res.status(200).json({ message: "Logged out successfully" });
@@ -254,17 +242,13 @@ export class UserController {
         await refreshTokenUseCase.execute(refreshToken);
 
       res.cookie("authToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
         maxAge: 3600000,
-        sameSite: "strict",
+        ...crossDomainCookieOptions,
       });
 
       res.cookie("refreshToken", newRefreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
         maxAge: 604800000, // 7 días
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        ...crossDomainCookieOptions,
       });
 
       res.status(200).json({ message: "Token refreshed." });

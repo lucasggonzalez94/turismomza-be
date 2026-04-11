@@ -26,6 +26,7 @@ jspm_packages/
 Thumbs.db
 
 # Editor directories and files
+.*
 .vscode/
 .idea/
 
@@ -36,6 +37,8 @@ coverage/
 
 # Environment files
 .env
+skills-lock.json
+opencode.json
 
 # PostgreSQL data (if using Docker volumes, this may not be needed)
 postgres_data/

@@ -15,12 +15,21 @@ import notificationRoutes from "./application/routes/NotificationRoutes";
 import contactRoutes from "./application/routes/ContactRoutes";
 import { configurePassport } from "./infrastructure/auth/passport";
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://turismomza.vercel.app",
-];
-
 dotenv.config();
+
+const envOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins: string[] = Array.from(
+  new Set([
+    "http://localhost:3000",
+    "https://turismomza.vercel.app",
+    process.env.FRONTEND_URL,
+    ...envOrigins,
+  ].filter((origin): origin is string => Boolean(origin)))
+);
 
 const app: Application = express();
 const server = http.createServer(app);
@@ -66,6 +75,10 @@ app.use(cookieParser());
 app.use(passport.initialize());
 configurePassport();
 app.use(express.json());
+
+app.get("/health", (_, res) => {
+  res.status(200).json({ status: "ok" });
+});
 
 const userSockets: {
   [userId: string]: string;
